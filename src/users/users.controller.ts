@@ -15,27 +15,27 @@ import {
 export class UsersController {
   constructor(private readonly UsersService: UsersService) {}
   @Get()
-  async getAllUsers(): Promise<User[]> {
+  async getAllUsers(): Promise<Partial<User>[]> {
     return this.UsersService.getUsers();
   }
   @Post()
-  async createUser(@Body() body: CreateUserDto): Promise<User> {
+  async createUser(@Body() body: CreateUserDto): Promise<Partial<User>> {
     return this.UsersService.createUser(body);
   }
   @Get(':id')
-  async getUserById(@Param('id') id: string): Promise<User> {
+  async getUserById(@Param('id') id: string): Promise<Partial<User>> {
     return this.UsersService.getUserById(Number(id));
   }
 
   @Delete(':id')
-  async deleteUser(@Param('id') id: string): Promise<User> {
+  async deleteUser(@Param('id') id: string): Promise<Partial<User>> {
     return this.UsersService.deleteUser(Number(id));
   }
   @Put(':id')
   async updateUser(
     @Param('id') id: string,
     @Body() body: UpdateUserDto,
-  ): Promise<User> {
+  ): Promise<Partial<User>> {
     return this.UsersService.updateUser(Number(id), body);
   }
 }
