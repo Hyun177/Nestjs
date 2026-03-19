@@ -1,5 +1,14 @@
 import { PostsService } from './posts.service';
-import { Body, Controller, Post, Put, Delete, Param, ParseIntPipe, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Post,
+  Put,
+  Delete,
+  Param,
+  ParseIntPipe,
+  UseGuards,
+} from '@nestjs/common';
 import { Posts } from './entities/post.entity';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import type { UserPayload } from 'src/users/types/user-payload.type';
