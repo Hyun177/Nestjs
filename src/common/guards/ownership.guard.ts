@@ -6,24 +6,12 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { OWNER_KEY, OwnerConfig } from '../decorators/owner.decorator';
-import { RequestWithUser } from '../types/request-with-user';
-
-interface Service {
-  findOneBy(
-    criteria: Record<string, unknown>,
-  ): Promise<Record<string, unknown> | undefined>;
-}
-
-interface ServiceMap {
-  [key: string]: Service | undefined;
-}
-
 @Injectable()
 export class OwnershipGuard implements CanActivate {
   constructor(
     private reflector: Reflector,
-    private postsService: Service,
-    private usersService: Service,
+    private postsService: any, // inject thật vào
+    private usersService: any,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -34,14 +22,14 @@ export class OwnershipGuard implements CanActivate {
 
     if (!config) return true;
 
-    const request = context.switchToHttp().getRequest<RequestWithUser>();
+    const request = context.switchToHttp().getRequest();
     const user = request.user;
 
     if (!user) throw new ForbiddenException('Unauthorized');
-    if (user.role === 'admin') return true;
-    const id = request.params[config.paramKey] as string | undefined;
+    if (user.roles === 'admin') return true;
+    const id = request.params[config.paramKey];
     if (!id) throw new ForbiddenException('Missing resource id');
-    const serviceMap: ServiceMap = {
+    const serviceMap = {
       post: this.postsService,
       user: this.usersService,
     };

@@ -8,12 +8,12 @@ import {
   UseGuards,
   Req,
 } from '@nestjs/common';
-import { User } from 'src/users/entities/user.entity';
+import { User } from '../users/entities/user.entity';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { ApiBearerAuth } from '@nestjs/swagger';
-import type { RequestWithUser } from 'src/common/types/request-with-user';
+import type { RequestWithUser } from '../common/types/request-with-user';
 import { RoleGuard } from './role.guard';
 import { Roles } from './decorators/roles.decorator';
 @Controller('auth')

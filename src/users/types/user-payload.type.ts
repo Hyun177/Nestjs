@@ -1,7 +1,8 @@
+import { Request } from 'express';
 export type UserPayload = {
   userId: number;
   email: string;
-  role: string;
+  roles: string[];
 };
 export type RequestWithUser = Request & {
   user: UserPayload;

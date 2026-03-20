@@ -1,6 +1,7 @@
-import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToMany } from 'typeorm';
+import { Role } from './role.entity';
 
-@Entity()
+@Entity('users')
 export class User {
   @PrimaryGeneratedColumn()
   id: number;
@@ -10,10 +11,13 @@ export class User {
 
   @Column({ unique: true })
   email: string;
+
   @Column()
   password: string;
+
   @Column({ nullable: true })
   refreshToken: string;
-  @Column({ default: 'user' })
-  role: string;
+
+  @ManyToMany(() => Role, (role) => role.users)
+  roles: Role[];
 }

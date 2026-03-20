@@ -10,9 +10,9 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { Posts } from './entities/post.entity';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
-import type { UserPayload } from 'src/users/types/user-payload.type';
-import { CurrentUser } from 'src/decorators/current-user.decorator';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import type { UserPayload } from '../users/types/user-payload.type';
+import { CurrentUser } from '../decorators/current-user.decorator';
 import { PostDto } from './dto/post.dto';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { PostOwnershipGuard } from './guards/post-ownership.guard';

@@ -3,7 +3,7 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import { User } from 'src/users/entities/user.entity';
+import { User } from '../users/entities/user.entity';
 import * as bcrypt from 'bcrypt';
 import { RegisterDto } from './dto/register.dto';
 import { InjectRepository } from '@nestjs/typeorm/dist/common/typeorm.decorators';
@@ -31,7 +31,10 @@ export class AuthService {
     return await this.userRepo.save(newUser);
   }
   async login(data: RegisterDto): Promise<LoginDto> {
-    const user = await this.userRepo.findOne({ where: { email: data.email } });
+    const user = await this.userRepo.findOne({
+      where: { email: data.email },
+      relations: ['roles'],
+    });
     if (!user) {
       throw new UnauthorizedException('User not found');
     }
@@ -42,8 +45,9 @@ export class AuthService {
     const payload = {
       sub: user.id,
       email: user.email,
-      role: user.role,
+      roles: user.roles?.map((r) => r.name) || ['user'],
     };
+    if (payload.roles.length === 0) payload.roles = ['user'];
     const access_token = this.jwtService.sign({
       ...payload,
       type: 'access',

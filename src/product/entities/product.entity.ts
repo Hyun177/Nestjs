@@ -10,21 +10,21 @@ export class Product {
   price: number;
   @Column()
   description: string;
-  @Column()
-  image: string;
+  @Column({ nullable: true })
+  image?: string;
   @Column()
   category: string;
   @Column()
   brand: string;
-  @Column()
+  @Column({ default: 0 })
   stock: number;
-  @Column()
+  @Column({ default: 0, type: 'decimal', precision: 3, scale: 2 })
   rating: number;
-  @Column()
+  @Column({ default: 0 })
   numReviews: number;
-  @Column()
+  @Column({ default: false })
   isFeatured: boolean;
-  @Column()
+  @Column({ default: false })
   isArchived: boolean;
   @Column()
   userId: number;
