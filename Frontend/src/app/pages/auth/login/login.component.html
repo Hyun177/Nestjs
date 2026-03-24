@@ -1,0 +1,77 @@
+<div class="auth-page">
+    <div class="auth-card">
+        <!-- Slider Section (Hidden on small screens) -->
+        <div class="auth-left">
+            <img [src]="images[currentIndex]" class="slider-bg" alt="Slider Image">
+            <div class="overlay"></div>
+            <div class="left-header">
+                <div class="logo">AMU</div>
+            </div>
+            <div class="left-content">
+                <h2>Welcome Back</h2>
+                <div class="dots-container">
+                    @for (img of images; track $index) {
+                    <span class="dot" [class.active]="$index === currentIndex" (click)="setSlide($index)"></span>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Section -->
+        <div class="auth-right">
+            <div class="form-wrapper">
+                <h1 class="title">Log in</h1>
+                <p class="subtitle">Enter your details to continue</p>
+
+                <form class="auth-form" [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+                    <div class="input-group input-icon" [class.error]="loginForm.get('email')?.invalid && loginForm.get('email')?.dirty">
+                        <span class="main-icon" nz-icon nzType="mail" nzTheme="outline"></span>
+                        <input type="email" placeholder="Email Address" formControlName="email" required>
+                    </div>
+
+                    <div class="input-group input-icon" [class.error]="loginForm.get('password')?.invalid && loginForm.get('password')?.dirty">
+                        <span class="main-icon" nz-icon nzType="lock" nzTheme="outline"></span>
+                        <input [type]="passwordVisible ? 'text' : 'password'" placeholder="Password" formControlName="password" required>
+                        <span class="action-icon" nz-icon [nzType]="passwordVisible ? 'eye-invisible' : 'eye'" 
+                              (click)="passwordVisible = !passwordVisible"></span>
+                    </div>
+
+                    <div class="login-options">
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="remember" formControlName="remember">
+                            <label for="remember">Remember</label>
+                        </div>
+                        <a href="#" class="forgot-pass">Forgot?</a>
+                    </div>
+
+                    <button type="submit" class="btn-primary" [disabled]="loading">
+                        @if (loading) {
+                            <span nz-icon nzType="loading"></span>
+                        } @else {
+                            Log in
+                        }
+                    </button>
+
+                    <div class="divider">
+                        <span>OR</span>
+                    </div>
+
+                    <div class="social-buttons">
+                        <button type="button" class="btn-social">
+                            <span nz-icon nzType="google"></span>
+                            Google
+                        </button>
+                        <button type="button" class="btn-social">
+                            <span nz-icon nzType="apple"></span>
+                            Apple
+                        </button>
+                    </div>
+
+                    <p class="subtitle" style="margin-top: 20px;">
+                        Need an account? <a routerLink="/register">Sign up</a>
+                    </p>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

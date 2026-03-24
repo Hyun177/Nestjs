@@ -1,0 +1,124 @@
+<div class="product-page" *ngIf="product">
+    <div class="container">
+      <!-- Breadcrumb -->
+      <nav class="breadcrumb">
+        <a routerLink="/home">Shop</a>
+        <span nz-icon nzType="right"></span>
+        <span class="active">{{ product.name }}</span>
+      </nav>
+  
+      <div class="product-main-grid">
+        <!-- Gallery Section -->
+        <div class="gallery-section">
+          <div class="thumbnails">
+            <div class="thumb" [class.active]="selectedImage === product.image" (click)="selectedImage = product.image">
+              <img [src]="'http://localhost:3000' + product.image" [alt]="product.name">
+            </div>
+            <div class="thumb" *ngFor="let img of product.images" [class.active]="selectedImage === img" (click)="selectedImage = img">
+              <img [src]="'http://localhost:3000' + img" [alt]="product.name">
+            </div>
+          </div>
+          <div class="main-image">
+            <img [src]="'http://localhost:3000' + selectedImage" [alt]="product.name">
+          </div>
+        </div>
+  
+        <!-- Info Section -->
+        <div class="info-section">
+          <h1 class="product-name">{{ product.name }}</h1>
+          
+          <div class="rating-row">
+            <nz-rate [ngModel]="product.rating" nzDisabled></nz-rate>
+            <span class="rating-text">{{ product.rating }}/5</span>
+            <span class="review-count">({{ product.numReviews }} Reviews)</span>
+          </div>
+  
+          <div class="price-row">
+            <span class="current-price">{{ product.price | vndCurrency }}</span>
+            <span class="old-price" *ngIf="product.originalPrice && product.originalPrice > product.price">
+              {{ product.originalPrice | vndCurrency }}
+            </span>
+            <span class="discount-badge" *ngIf="getDiscountPercent(product) > 0">
+              -{{ getDiscountPercent(product) }}%
+            </span>
+          </div>
+  
+          <p class="product-desc">{{ product.description }}</p>
+  
+          <hr class="divider">
+  
+          <!-- Attributes Pattern -->
+          <div class="attributes">
+            <div class="attribute-group" *ngFor="let attr of product.attributes">
+              <h3 class="attr-label">Chọn {{ attr.name }}</h3>
+              
+              <div class="options-row">
+                <!-- Color Pattern -->
+                <ng-container *ngIf="isColorAttr(attr.name); else defaultOptions">
+                  <div class="color-option" 
+                       *ngFor="let opt of attr.options" 
+                       [style.background-color]="opt"
+                       [class.active]="selectedAttributes[attr.name] === opt"
+                       (click)="selectAttribute(attr.name, opt)"
+                       [title]="opt">
+                    <span nz-icon nzType="check" *ngIf="selectedAttributes[attr.name] === opt"></span>
+                  </div>
+                </ng-container>
+  
+                <!-- Default Pattern (Size, Storage, etc.) -->
+                <ng-template #defaultOptions>
+                  <div class="size-option" 
+                       *ngFor="let opt of attr.options" 
+                       [class.active]="selectedAttributes[attr.name] === opt"
+                       (click)="selectAttribute(attr.name, opt)">
+                    {{ opt }}
+                  </div>
+                </ng-template>
+              </div>
+            </div>
+          </div>
+  
+          <hr class="divider">
+  
+          <!-- Actions -->
+          <div class="actions">
+            <div class="quantity-picker">
+              <button (click)="updateQuantity(-1)"><span nz-icon nzType="minus"></span></button>
+              <input type="number" [(ngModel)]="quantity" disabled>
+              <button (click)="updateQuantity(1)"><span nz-icon nzType="plus"></span></button>
+            </div>
+            
+            <button nz-button class="add-to-cart-btn" (click)="addToCart()">Add to Cart</button>
+          </div>
+        </div>
+      </div>
+  
+      <!-- Tabs Section -->
+      <div class="tabs-container">
+        <div class="tabs-header">
+          <div class="tab-item">Product Details</div>
+          <div class="tab-item active">Rating & Reviews</div>
+          <div class="tab-item">FAQs</div>
+        </div>
+        
+        <div class="reviews-section">
+          <div class="section-top">
+            <h2>All Reviews <span>({{ product.numReviews }})</span></h2>
+            <div class="filter-actions">
+              <button class="filter-btn"><span nz-icon nzType="filter"></span></button>
+              <select name="sort" class="sort-select">
+                <option value="latest">Latest</option>
+              </select>
+              <button class="write-btn">Write a Review</button>
+            </div>
+          </div>
+  
+          <!-- Placeholder Reviews logic -->
+          <div class="reviews-grid">
+            <!-- Review cards would go here -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  

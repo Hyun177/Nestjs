@@ -1,0 +1,21 @@
+/* You can add global styles to this file, and also import other style files */
+
+@import 'tailwindcss';
+
+.container {
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+}
+
+body {
+    background-color: #f8fafc;
+}
+
+.font-archivo {
+    font-family: 'Archivo Black', sans-serif;
+}
+
+.anticon svg {
+    display: block;
+}

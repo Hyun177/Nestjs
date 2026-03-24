@@ -1,0 +1,66 @@
+<header class="app-header">
+    <div class="top-banner">
+        Sign up and get 20% off to your first order. <a href="#">Sign Up Now</a>
+        <span class="close-banner" nz-icon nzType="close"></span>
+    </div>
+    <div class="container header-container">
+        <div class="logo-section">
+            <h1 class="logo-text" routerLink="/home">SOFTBEE</h1>
+        </div>
+
+        <nav class="nav-links">
+            <div class="nav-item">
+                <a nz-dropdown [nzDropdownMenu]="shopMenu" nzTrigger="hover">Shop <span nz-icon nzType="down"></span></a>
+                <nz-dropdown-menu #shopMenu="nzDropdownMenu">
+                    <div class="shop-dropdown">
+                        <div class="column">
+                            <h4>Categories</h4>
+                            <ul>
+                                <li *ngFor="let cat of categories"><a [routerLink]="['/category', cat.id]">{{ cat.name }}</a></li>
+                            </ul>
+                        </div>
+                        <div class="column">
+                            <h4>Brands</h4>
+                            <ul>
+                                <li *ngFor="let brand of brands"><a [routerLink]="['/brand', brand.id]">{{ brand.name }}</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </nz-dropdown-menu>
+            </div>
+            <a href="#">On Sale</a>
+            <a href="#">New Arrivals</a>
+            <a href="#">Brands</a>
+        </nav>
+
+        <div class="search-bar">
+            <span class="search-icon" nz-icon nzType="search"></span>
+            <input type="text" placeholder="Search for products...">
+        </div>
+
+        <div class="header-actions">
+            <span class="action-btn cart-container" routerLink="/cart">
+                <span nz-icon nzType="shopping-cart"></span>
+                <span class="cart-badge" *ngIf="(cartCount$ | async) as count">{{ count }}</span>
+            </span>
+
+            <ng-container *ngIf="(currentUser$ | async) as user; else guest">
+                <span class="action-btn" nz-icon nzType="user" nz-dropdown [nzDropdownMenu]="userMenu"></span>
+                <nz-dropdown-menu #userMenu="nzDropdownMenu">
+                    <ul nz-menu>
+                        <li nz-menu-item *ngIf="user.roles.includes('admin')" routerLink="/admin/products">Admin Panel
+                        </li>
+                        <li nz-menu-item *ngIf="user.roles.includes('manager')" routerLink="/manager/home">Manager Panel
+                        </li>
+                        <li nz-divider></li>
+                        <li nz-menu-item (click)="logout()">Logout</li>
+                    </ul>
+                </nz-dropdown-menu>
+            </ng-container>
+
+            <ng-template #guest>
+                <span class="action-btn" nz-icon nzType="user" routerLink="/login"></span>
+            </ng-template>
+        </div>
+    </div>
+</header>

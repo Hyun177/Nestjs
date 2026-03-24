@@ -1,0 +1,149 @@
+<div class="admin-container">
+    <div class="admin-header">
+        <div class="header-left">
+            <h2>Hệ thống Quản lý Sản phẩm</h2>
+            <p>Thêm sản phẩm mới với đầy đủ thông tin chi tiết</p>
+        </div>
+        <div class="header-right">
+            <button nz-button routerLink="/home" nzType="default" nzShape="round">
+                <span nz-icon nzType="home"></span> Trang chủ
+            </button>
+            <button nz-button nzType="text" nzDanger (click)="logout()" style="margin-left: 1rem;">Đăng xuất</button>
+        </div>
+    </div>
+
+    <div class="upload-wrapper">
+        <form nz-form [formGroup]="productForm" (ngSubmit)="onSubmit()" nzLayout="vertical" class="product-form">
+            <div class="form-grid">
+                <!-- Left Column: Core Info -->
+                <div class="form-section">
+                    <h3><nz-icon nzType="form" nzTheme="outline" />Thông tin cơ bản</h3>
+
+                    <nz-form-item>
+                        <nz-form-label nzRequired>Tên sản phẩm</nz-form-label>
+                        <nz-form-control nzErrorTip="Vui lòng nhập tên">
+                            <input nz-input formControlName="name" placeholder="Ví dụ: iPhone 15 Pro Max" />
+                        </nz-form-control>
+                    </nz-form-item>
+
+                    <div class="price-grid">
+                        <nz-form-item>
+                            <nz-form-label nzRequired>Giá bán (VND)</nz-form-label>
+                            <nz-form-control nzErrorTip="Vui lòng nhập giá">
+                                <input nz-input type="number" formControlName="price" placeholder="Giá hiện tại" />
+                            </nz-form-control>
+                        </nz-form-item>
+
+                        <nz-form-item>
+                            <nz-form-label>Giá gốc (để tính % giảm giá)</nz-form-label>
+                            <nz-form-control>
+                                <input nz-input type="number" formControlName="originalPrice"
+                                    placeholder="Giá chưa giảm" />
+                            </nz-form-control>
+                        </nz-form-item>
+                    </div>
+
+                    <nz-form-item>
+                        <nz-form-label nzRequired>Số lượng trong kho</nz-form-label>
+                        <nz-form-control nzErrorTip="Vui lòng nhập số lượng">
+                            <input nz-input type="number" formControlName="stock" />
+                        </nz-form-control>
+                    </nz-form-item>
+
+                    <div class="brand-cat-grid">
+                        <nz-form-item>
+                            <nz-form-label nzRequired>Danh mục</nz-form-label>
+                            <nz-form-control nzErrorTip="Vui lòng chọn danh mục">
+                                <nz-select formControlName="categoryId" nzPlaceHolder="Chọn danh mục">
+                                    <nz-option *ngFor="let item of categories" [nzValue]="item.id"
+                                        [nzLabel]="item.name"></nz-option>
+                                </nz-select>
+                            </nz-form-control>
+                        </nz-form-item>
+
+                        <nz-form-item>
+                            <nz-form-label nzRequired>Thương hiệu</nz-form-label>
+                            <nz-form-control nzErrorTip="Vui lòng chọn thương hiệu">
+                                <nz-select formControlName="brandId" nzPlaceHolder="Chọn thương hiệu">
+                                    <nz-option *ngFor="let item of brands" [nzValue]="item.id"
+                                        [nzLabel]="item.name"></nz-option>
+                                </nz-select>
+                            </nz-form-control>
+                        </nz-form-item>
+                    </div>
+
+                    <nz-form-item>
+                        <nz-form-label nzRequired>Mô tả chi tiết</nz-form-label>
+                        <nz-form-control nzErrorTip="Vui lòng nhập mô tả">
+                            <textarea nz-input formControlName="description" rows="5"
+                                placeholder="Mô tả các đặc điểm nổi bật..."></textarea>
+                        </nz-form-control>
+                    </nz-form-item>
+                </div>
+
+                <!-- Right Column: Extras -->
+                <div class="form-section">
+                    <h3><nz-icon nzType="solution" nzTheme="outline" />Nhãn & Ưu đãi</h3>
+
+                    <nz-form-item>
+                        <nz-form-label>Nhãn (Labels)</nz-form-label>
+                        <nz-form-control>
+                            <nz-select nzMode="tags" formControlName="labels"
+                                nzPlaceHolder="Gõ và nhấn Enter (VD: HOT, FREESHIP, BÁN CHẠY)">
+                            </nz-select>
+                        </nz-form-control>
+                    </nz-form-item>
+
+                    <nz-form-item>
+                        <nz-form-label>Ghi chú ưu đãi (Promo Note)</nz-form-label>
+                        <nz-form-control>
+                            <input nz-input formControlName="promoNote"
+                                placeholder="Ví dụ: Trả góp 0%, Tặng quà 200k..." />
+                        </nz-form-control>
+                    </nz-form-item>
+
+                    <div class="specs-section">
+                        <div class="specs-header">
+                            <label>Thông số tóm tắt (Specs)</label>
+                            <button nz-button nzType="dashed" type="button" (click)="addSpec()" nzSize="small">
+                                <span nz-icon nzType="plus"></span> Thêm thông số
+                            </button>
+                        </div>
+
+                        <div formArrayName="specs">
+                            <div *ngFor="let spec of specs.controls; let i=index" [formGroupName]="i" class="spec-row">
+                                <nz-select formControlName="icon" style="width: 120px;">
+                                    <nz-option *ngFor="let ico of availableIcons" [nzValue]="ico"
+                                        [nzLabel]="ico"></nz-option>
+                                </nz-select>
+                                <input nz-input formControlName="text" placeholder="VD: Pin 5000mAh" />
+                                <button nz-button nzType="text" nzDanger type="button" (click)="removeSpec(i)">
+                                    <span nz-icon nzType="delete"></span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <nz-form-item style="margin-top: 2rem;">
+                        <nz-form-label nzRequired>Hình ảnh sản phẩm</nz-form-label>
+                        <nz-form-control>
+                            <nz-upload nzType="drag" [(nzFileList)]="fileList" [nzBeforeUpload]="beforeUpload"
+                                [nzLimit]="1">
+                                <p class="ant-upload-drag-icon">
+                                    <span nz-icon nzType="inbox"></span>
+                                </p>
+                                <p class="ant-upload-text">Click hoặc Kéo thả ảnh vào đây</p>
+                            </nz-upload>
+                        </nz-form-control>
+                    </nz-form-item>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button nz-button nzType="primary" [nzLoading]="loading" nzSize="large" class="submit-btn">
+                    XÁC NHẬN THÊM SẢN PHẨM
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

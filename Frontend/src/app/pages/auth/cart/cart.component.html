@@ -1,0 +1,127 @@
+<div class="container">
+    <div class="cart-page">
+        <nav class="breadcrumb">
+            <a routerLink="/home">Trang chủ</a>
+            <span nz-icon nzType="right"></span>
+            <span class="active">Giỏ hàng</span>
+        </nav>
+
+        <h1 class="page-title">GIỎ HÀNG CỦA BẠN</h1>
+
+        <div class="cart-grid">
+            <!-- Cột danh sách sản phẩm -->
+            <div class="cart-items-column">
+                @if (cartItems.length > 0) {
+                <div class="items-list">
+                    @for (item of cartItems; track item.id) {
+                    <div class="cart-item">
+                        <div class="item-img">
+                            <img [src]="'http://localhost:3000' + item.product.image" [alt]="item.product.name">
+                        </div>
+                        <div class="item-details">
+                            <div class="item-row">
+                                <h3 class="item-name">{{ item.product.name }}</h3>
+                                <button class="remove-btn" (click)="removeItem(item.id)">
+                                    <span nz-icon nzType="delete" nzTheme="fill"></span>
+                                </button>
+                            </div>
+                            <p class="item-meta">Thương hiệu: <span>{{ item.product.brand?.name }}</span></p>
+                            
+                            <div class="item-row bottom-row">
+                                <div class="item-price-info">
+                                    <span class="item-price">{{ item.product.price | vndCurrency }}</span>
+                                    <span class="item-old-price" *ngIf="item.product.originalPrice && item.product.originalPrice > item.product.price">
+                                        {{ item.product.originalPrice | vndCurrency }}
+                                    </span>
+                                </div>
+                                
+                                <div class="quantity-picker">
+                                    <button (click)="updateQuantity(item, item.quantity - 1)" [disabled]="item.quantity <= 1">
+                                        <span nz-icon nzType="minus"></span>
+                                    </button>
+                                    <span class="quantity-val">{{ item.quantity }}</span>
+                                    <button (click)="updateQuantity(item, item.quantity + 1)">
+                                        <span nz-icon nzType="plus"></span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    }
+                </div>
+                } @else {
+                <div class="empty-cart">
+                    <span nz-icon nzType="shopping-cart"></span>
+                    <p>Giỏ hàng của bạn đang trống.</p>
+                    <button nz-button nzType="primary" routerLink="/home">Tiếp tục mua sắm</button>
+                </div>
+                }
+            </div>
+
+            <!-- Cột tổng kết đơn hàng -->
+            <div class="summary-column">
+                <div class="summary-card">
+                    <h2 class="summary-title">TỔNG KẾT ĐƠN HÀNG</h2>
+                    
+                    <div class="summary-row">
+                        <span class="label">Tạm tính (Giá gốc)</span>
+                        <span class="value">{{ subtotal | vndCurrency }}</span>
+                    </div>
+                    
+                    <div class="summary-row" *ngIf="discountValue > 0">
+                        <span class="label">Giảm giá mã/sale ({{ discountPercent }}%)</span>
+                        <span class="value discount-val">-{{ discountValue | vndCurrency }}</span>
+                    </div>
+                    
+                    <div class="summary-row" *ngIf="appliedVoucher">
+                        <span class="label">Mã giảm giá ({{ voucherCode }})</span>
+                        <span class="value discount-val">-{{ appliedVoucher.discount | vndCurrency }}</span>
+                    </div>
+                    
+                    <div class="summary-row">
+                        <span class="label">Phí vận chuyển</span>
+                        <span class="value">{{ deliveryFee | vndCurrency }}</span>
+                    </div>
+                    
+                    <hr class="summary-divider">
+                    
+                    <div class="summary-row total-row">
+                        <span class="label">Tổng cộng</span>
+                        <span class="value font-bold">{{ total | vndCurrency }}</span>
+                    </div>
+
+                    <div class="promo-section">
+                        @if (!appliedVoucher) {
+                            <div class="promo-input-wrapper">
+                                <div class="promo-input">
+                                    <span nz-icon nzType="tag"></span>
+                                    <input type="text" placeholder="Thêm mã giảm giá" [(ngModel)]="voucherCode" (keyup.enter)="applyVoucher()">
+                                </div>
+                                <button class="apply-btn" (click)="applyVoucher()">Áp dụng</button>
+                            </div>
+                        } @else {
+                            <div class="applied-voucher-info">
+                                <div class="voucher-tag">
+                                    <span nz-icon nzType="check-circle" nzTheme="fill"></span>
+                                    <span>{{ voucherCode }}</span>
+                                    <button class="remove-voucher" (click)="removeVoucher()">
+                                        <span nz-icon nzType="close"></span>
+                                    </button>
+                                </div>
+                                <p class="voucher-success-msg">Đã áp dụng thành công mã giảm giá!</p>
+                            </div>
+                        }
+                    </div>
+
+                    <button class="checkout-btn" (click)="checkout()">
+                        Thanh toán ngay
+                        <span nz-icon nzType="arrow-right"></span>
+                    </button>
+                </div>
+                <div class="safe-checkout">
+                    <p><span nz-icon nzType="safety" nzTheme="outline"></span> Cam kết chính hãng 100%</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

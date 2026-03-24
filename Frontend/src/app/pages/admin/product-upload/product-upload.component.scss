@@ -1,0 +1,125 @@
+.admin-container {
+    max-width: 1440px;
+    margin: 3rem auto;
+    padding: 0 2rem;
+    font-family: 'Inter', sans-serif;
+}
+
+.admin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 3rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid #eee;
+
+    h2 {
+        font-family: 'Archivo Black', sans-serif;
+        font-size: 2.5rem;
+        margin-bottom: 0.5rem;
+        color: #000;
+    }
+
+    p {
+        color: #666;
+        font-size: 1.1rem;
+        margin: 0;
+    }
+}
+
+.upload-wrapper {
+    background: #fff;
+    padding: 3rem;
+    border-radius: 20px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.04);
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+}
+
+.form-section {
+    h3 {
+        font-weight: 800;
+        font-size: 1.3rem;
+        margin-bottom: 2rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 2px solid #f0f0f0;
+
+        [nz-icon] {
+            color: #1890ff;
+        }
+    }
+}
+
+.price-grid, .brand-cat-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+}
+
+.specs-section {
+    margin-top: 1.5rem;
+
+    .specs-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+
+        label {
+            font-weight: 600;
+            color: #444;
+        }
+    }
+
+    .spec-row {
+        display: flex;
+        gap: 0.75rem;
+        margin-bottom: 0.75rem;
+        align-items: center;
+        background: #fafafa;
+        padding: 0.5rem;
+        border-radius: 8px;
+        border: 1px solid #efefef;
+    }
+}
+
+.form-actions {
+    margin-top: 4rem;
+    display: flex;
+    justify-content: center;
+
+    .submit-btn {
+        width: 100%;
+        max-width: 500px;
+        height: 60px;
+        border-radius: 30px;
+        font-family: 'Archivo Black', sans-serif;
+        font-size: 1.25rem;
+        background: #000;
+        border-color: #000;
+        
+        &:hover {
+            background: #333;
+            border-color: #333;
+        }
+    }
+}
+
+:host ::ng-deep {
+    .ant-upload.ant-upload-drag {
+        background: #fbfbfb;
+        border: 2px dashed #d9d9d9;
+        border-radius: 12px;
+        
+        &:hover {
+            border-color: #1890ff;
+        }
+    }
+}

@@ -1,0 +1,72 @@
+<div class="auth-page">
+    <div class="auth-card">
+        <!-- Slider Section -->
+        <div class="auth-left">
+            <img [src]="images[currentIndex]" class="slider-bg" alt="Slider Image">
+            <div class="overlay"></div>
+            <div class="left-header">
+                <div class="logo">AMU</div>
+            </div>
+            <div class="left-content">
+                <h2>Join Us</h2>
+                <div class="dots-container">
+                    @for (img of images; track $index) {
+                    <span class="dot" [class.active]="$index === currentIndex" (click)="setSlide($index)"></span>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Section -->
+        <div class="auth-right">
+            <div class="form-wrapper">
+                <h1 class="title">Register</h1>
+                <p class="subtitle">Create a new account</p>
+
+                <form class="auth-form" [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+                    <div class="input-group input-icon" [class.error]="registerForm.get('name')?.invalid && registerForm.get('name')?.dirty">
+                        <span class="main-icon" nz-icon nzType="user" nzTheme="outline"></span>
+                        <input type="text" formControlName="name" placeholder="Full Name" required>
+                    </div>
+
+                    <div class="input-group input-icon" [class.error]="registerForm.get('email')?.invalid && registerForm.get('email')?.dirty">
+                        <span class="main-icon" nz-icon nzType="mail" nzTheme="outline"></span>
+                        <input type="email" formControlName="email" placeholder="Email Address" required>
+                    </div>
+
+                    <div class="input-group input-icon" [class.error]="registerForm.get('password')?.invalid && registerForm.get('password')?.dirty">
+                        <span class="main-icon" nz-icon nzType="lock" nzTheme="outline"></span>
+                        <input [type]="passwordVisible ? 'text' : 'password'" formControlName="password" placeholder="Password" required>
+                        <span class="action-icon" nz-icon [nzType]="passwordVisible ? 'eye-invisible' : 'eye'"
+                            (click)="passwordVisible = !passwordVisible"></span>
+                    </div>
+
+                    <div class="input-group input-icon" [class.error]="registerForm.hasError('mismatch') && registerForm.get('confirmPassword')?.dirty">
+                        <span class="main-icon" nz-icon nzType="lock" nzTheme="outline"></span>
+                        <input [type]="confirmPasswordVisible ? 'text' : 'password'" formControlName="confirmPassword" placeholder="Confirm Password" required>
+                        <span class="action-icon" nz-icon [nzType]="confirmPasswordVisible ? 'eye-invisible' : 'eye'"
+                            (click)="confirmPasswordVisible = !confirmPasswordVisible"></span>
+                    </div>
+
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="terms" formControlName="agree">
+                        <label for="terms" style="font-size: 0.9rem; padding-left: 10px; padding-bottom: 15px;">I agree
+                            to <a href="#">Terms</a></label>
+                    </div>
+
+                    <button type="submit" class="btn-primary" [disabled]="loading">
+                        @if (loading) {
+                            <span nz-icon nzType="loading"></span>
+                        } @else {
+                            Sign up
+                        }
+                    </button>
+
+                    <p class="subtitle" style="margin-top: 20px;">
+                        Already have an account? <a routerLink="/login">Log in</a>
+                    </p>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

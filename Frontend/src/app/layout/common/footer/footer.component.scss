@@ -1,0 +1,160 @@
+.app-footer {
+    background-color: #F0F0F0;
+    padding: 10rem 0 2rem 0;
+    position: relative;
+    margin-top: 10rem;
+    font-family: 'Inter', sans-serif;
+}
+
+.container {
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
+.newsletter-card {
+    background-color: #000;
+    border-radius: 20px;
+    padding: 2.5rem 4rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: calc(100% - 2rem);
+    max-width: 1240px;
+    gap: 2rem;
+
+    .newsletter-title {
+        font-family: 'Archivo Black', 'Inter', sans-serif;
+        color: #fff;
+        font-size: 2.5rem;
+        margin: 0;
+        max-width: 550px;
+        line-height: 1;
+    }
+
+    .newsletter-form {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        width: 350px;
+
+        .input-wrapper {
+            background: #fff;
+            border-radius: 99px;
+            padding: 0.75rem 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+
+            [nz-icon] { color: #00000066; font-size: 1.25rem; }
+            input { border: none; outline: none; flex: 1; font-size: 0.875rem; }
+        }
+
+        .btn-subscribe {
+            background: #fff;
+            color: #000;
+            border-radius: 99px;
+            padding: 0.75rem;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+            width: 100%;
+        }
+    }
+}
+
+.footer-main {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr 1fr 1fr 1fr;
+    gap: 2rem;
+    padding: 4rem 0;
+}
+
+.footer-col {
+    h3 {
+        font-size: 1rem;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        margin-bottom: 1.5rem;
+        color: #000;
+    }
+
+    ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    a {
+        text-decoration: none;
+        color: #00000099;
+        font-size: 1rem;
+        &:hover { color: #000; }
+    }
+}
+
+.brand-col {
+    .footer-logo {
+        font-family: 'Archivo Black', 'Inter', sans-serif;
+        font-weight: 900;
+        font-size: 2rem;
+        margin-bottom: 1.5rem;
+        color: #000;
+    }
+
+    .brand-desc {
+        color: #00000099;
+        line-height: 1.5;
+        margin-bottom: 2rem;
+        max-width: 250px;
+    }
+
+    .social-links {
+        display: flex;
+        gap: 0.75rem;
+        [nz-icon] {
+            font-size: 1.25rem;
+            background: #fff;
+            padding: 0.5rem;
+            border-radius: 50%;
+            border: 1px solid #0000001a;
+            cursor: pointer;
+            &:hover { background: #000; color: #fff; }
+        }
+    }
+}
+
+.footer-divider {
+    border: none;
+    border-top: 1px solid #0000001a;
+    margin-bottom: 1.5rem;
+}
+
+.footer-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #00000099;
+    font-size: 0.875rem;
+
+    .payment-methods {
+        display: flex;
+        gap: 0.75rem;
+        
+        .payment-icon {
+            background: #fff;
+            padding: 0.25rem 0.75rem;
+            border-radius: 6px;
+            border: 1px solid #0000001a;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+    }
+}
