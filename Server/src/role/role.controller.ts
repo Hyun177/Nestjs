@@ -31,6 +31,13 @@ export class RoleController {
     return this.roleService.assignPermissions(roleName, body.permissions);
   }
 
+  @Post('grant-all/:roleName')
+  @ApiOperation({ summary: 'Grant ALL permissions to a role (admin only)' })
+  async grantAllPermissions(@Param('roleName') roleName: string) {
+    const allPermissions = Object.values(Permission);
+    return this.roleService.assignPermissions(roleName, allPermissions);
+  }
+
   @Post('assign-role/:userEmail/:roleName')
   @ApiOperation({ summary: 'Assign a role to a user (admin only)' })
   async assignRoleToUser(

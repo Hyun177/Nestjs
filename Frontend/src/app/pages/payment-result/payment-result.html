@@ -1,0 +1,13 @@
+<div class="result-container py-20 animate-in zoom-in-95 duration-700">
+    <nz-result 
+        [nzStatus]="status" 
+        [nzTitle]="title" 
+        [nzSubTitle]="subTitle">
+        <div nz-result-extra>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <button nz-button nzType="primary" routerLink="/profile" class="h-12 px-8 rounded-2xl font-black uppercase tracking-widest text-[10px]">Lịch sử đơn hàng</button>
+                <button nz-button nzType="default" routerLink="/home" class="h-12 px-8 rounded-2xl font-black uppercase tracking-widest text-[10px]">Tiếp tục mua sắm</button>
+            </div>
+        </div>
+    </nz-result>
+</div>

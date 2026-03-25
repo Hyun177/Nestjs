@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { MainLayoutComponent } from './layout/main-layout/main-layout.component';
+import { AdminLayoutComponent } from './layout/admin-layout/admin-layout.component';
 import { roleGuard } from './core/guards/role.guard';
 
 export const routes: Routes = [
@@ -22,15 +23,103 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./pages/auth/cart/cart.component').then((m) => m.CartComponent),
       },
+      {
+        path: 'products',
+        loadComponent: () =>
+          import('./pages/products/products.component').then((m) => m.ProductsComponent),
+      },
+      {
+        path: 'profile',
+        loadComponent: () =>
+          import('./pages/profile/profile.component').then((m) => m.ProfileComponent),
+      },
+      {
+        path: 'product/:id',
+        loadComponent: () =>
+          import('./pages/product-detail/product-detail.component').then(
+            (m) => m.ProductDetailComponent,
+          ),
+      },
+      {
+        path: 'payment-success',
+        loadComponent: () =>
+          import('./pages/payment-result/payment-result').then((m) => m.PaymentResultComponent),
+      },
+      {
+        path: 'payment-failed',
+        loadComponent: () =>
+          import('./pages/payment-result/payment-result').then((m) => m.PaymentResultComponent),
+      },
     ],
   },
   {
-    path: 'admin/products',
+    path: 'admin',
+    component: AdminLayoutComponent,
+    canActivate: [roleGuard],
+    data: { roles: ['admin', 'manager'] },
+    children: [
+      {
+        path: '',
+        redirectTo: 'dashboard',
+        pathMatch: 'full',
+      },
+      {
+        path: 'dashboard',
+        loadComponent: () =>
+          import('./pages/admin/dashboard/admin-dashboard.component').then(
+            (m) => m.AdminDashboardComponent,
+          ),
+      },
+      {
+        path: 'users',
+        loadComponent: () =>
+          import('./pages/admin/users/admin-users.component').then((m) => m.AdminUsersComponent),
+      },
+      {
+        path: 'orders',
+        loadComponent: () =>
+          import('./pages/admin/orders/admin-orders.component').then((m) => m.AdminOrdersComponent),
+      },
+      {
+        path: 'products',
+        loadComponent: () =>
+          import('./pages/admin/products/admin-products.component').then(
+            (m) => m.AdminProductsComponent,
+          ),
+      },
+      {
+        path: 'categories',
+        loadComponent: () =>
+          import('./pages/admin/categories/admin-categories.component').then(
+            (m) => m.AdminCategoriesComponent,
+          ),
+      },
+      {
+        path: 'brands',
+        loadComponent: () =>
+          import('./pages/admin/brands/admin-brands.component').then((m) => m.AdminBrandsComponent),
+      },
+      {
+        path: 'favorites',
+        loadComponent: () =>
+          import('./pages/admin/favorites/admin-favorites.component').then(
+            (m) => m.AdminFavoritesComponent,
+          ),
+      },
+      {
+        path: 'profile',
+        loadComponent: () =>
+          import('./pages/profile/profile.component').then((m) => m.ProfileComponent),
+      },
+    ],
+  },
+  {
+    path: 'admin/product-upload',
     canActivate: [roleGuard],
     data: { roles: ['admin', 'manager'] },
     loadComponent: () =>
       import('./pages/admin/product-upload/product-upload.component').then(
-        (m) => m.ProductUploadComponent
+        (m) => m.ProductUploadComponent,
       ),
   },
   {
@@ -39,7 +128,7 @@ export const routes: Routes = [
     data: { roles: ['manager'] },
     loadComponent: () =>
       import('./pages/manager/manager-home/manager-home.component').then(
-        (m) => m.ManagerHomeComponent
+        (m) => m.ManagerHomeComponent,
       ),
   },
   {

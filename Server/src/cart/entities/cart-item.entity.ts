@@ -33,6 +33,15 @@ export class CartItem {
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   price: number;
 
+  @Column({ nullable: true })
+  size?: string;
+
+  @Column({ nullable: true })
+  color?: string;
+
+  @Column({ nullable: true })
+  variantSku?: string;
+
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;
 }

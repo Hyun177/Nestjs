@@ -159,23 +159,35 @@ export class HomeComponent implements OnInit {
   }
 
   addToCart(product: Product) {
+    if (product.attributes && product.attributes.length > 0) {
+      // Products with variants MUST be selected on detail page
+      this.message.info('Vui lòng chọn Màu sắc/Dung lượng tại trang chi tiết');
+      this.router.navigate(['/product', product.id]);
+      return;
+    }
+
     this.cartService.addToCart(product.id, 1).subscribe({
       next: () => {
-        this.message.success('Added to cart!');
+        this.message.success('Đã thêm sản phẩm vào giỏ hàng!');
       },
       error: () => {
-        this.message.error('Failed to add to cart. Are you logged in?');
+        this.message.error('Vui lòng đăng nhập để mua hàng');
       }
     });
   }
 
   buyNow(product: Product) {
+    if (product.attributes && product.attributes.length > 0) {
+      this.router.navigate(['/product', product.id]);
+      return;
+    }
+
     this.cartService.addToCart(product.id, 1).subscribe({
       next: () => {
         this.router.navigate(['/cart']);
       },
       error: () => {
-        this.message.error('Failed to process. Are you logged in?');
+        this.message.error('Vui lòng đăng nhập để tiếp tục');
       }
     });
   }

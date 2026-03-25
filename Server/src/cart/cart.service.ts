@@ -26,7 +26,7 @@ export class CartService {
   async getOrCreateCart(userId: number): Promise<Cart> {
     let cart = await this.cartRepository.findOne({
       where: { userId },
-      relations: ['items', 'items.product'],
+      relations: ['items', 'items.product', 'items.product.brand', 'items.product.category'],
     });
 
     if (!cart) {
@@ -41,7 +41,7 @@ export class CartService {
   async getCart(userId: number): Promise<Cart> {
     const cart = await this.cartRepository.findOne({
       where: { userId },
-      relations: ['items', 'items.product'],
+      relations: ['items', 'items.product', 'items.product.brand', 'items.product.category'],
     });
 
     if (!cart) {
@@ -56,24 +56,53 @@ export class CartService {
     userId: number,
     createCartItemDto: CreateCartItemDto,
   ): Promise<Cart> {
-    const { productId, quantity } = createCartItemDto;
+    const { productId, quantity, size, color } = createCartItemDto;
 
-    // Verify product exists and get its price
+    // Verify product exists
     const product = await this.productRepository.findOneBy({ id: productId });
     if (!product) {
       throw new NotFoundException('Product not found');
     }
 
-    if (product.stock < quantity) {
-      throw new BadRequestException('Not enough stock available');
+    // Determine variant and check stock
+    let variantSku: string | undefined = undefined;
+    let availableStock = product.stock;
+
+    if (product.variants && product.variants.length > 0 && (size || color)) {
+      // Value-based matching: check if sent values appear anywhere in variant attributes
+      const variant = product.variants.find((v: any) => {
+        const attrValues = Object.values(v.attributes).map((val: any) =>
+          String(val).toLowerCase().trim()
+        );
+        const sMatch = !size || attrValues.includes(size.toLowerCase().trim());
+        const cMatch = !color || attrValues.includes(color.toLowerCase().trim());
+        return sMatch && cMatch;
+      });
+
+      if (!variant) {
+        throw new BadRequestException(
+          `Biến thể "${[color, size].filter(Boolean).join(' / ')}" không tồn tại hoặc đã hết hàng`
+        );
+      }
+      variantSku = (variant as any).sku;
+      availableStock = (variant as any).stock;
+    }
+
+    if (availableStock < quantity) {
+      throw new BadRequestException('Not enough stock available for this variation');
     }
 
     // Get or create cart
     const cart = await this.getOrCreateCart(userId);
 
-    // Check if item already exists in cart
+    // Check if item already exists in cart with SAME attributes
     let cartItem = await this.cartItemRepository.findOne({
-      where: { cartId: cart.id, productId },
+      where: { 
+        cartId: cart.id, 
+        productId,
+        size: size || null as any, 
+        color: color || null as any 
+      },
     });
 
     if (cartItem) {
@@ -87,11 +116,13 @@ export class CartService {
         productId,
         quantity,
         price: product.price,
+        size,
+        color,
+        variantSku,
       });
       await this.cartItemRepository.save(cartItem);
     }
 
-    // Return updated cart
     return this.getCart(userId);
   }
 

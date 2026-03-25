@@ -1,0 +1,165 @@
+<div class="admin-favorites-container">
+  <!-- Page Header -->
+  <div class="mb-6">
+    <div class="flex items-center gap-4">
+      <button nz-button nzType="text" nzSize="large" routerLink="/admin/dashboard">
+        <span nz-icon nzType="arrow-left" nzTheme="outline"></span>
+      </button>
+      <div>
+        <h2 class="text-2xl font-bold text-gray-800 mb-1">Sản phẩm yêu thích</h2>
+        <p class="text-gray-500 text-sm">Danh sách những sản phẩm bạn đã đánh dấu yêu thích</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading()" class="flex items-center justify-center h-96">
+    <nz-spin nzSimple nzSize="large"></nz-spin>
+  </div>
+
+  <!-- Content -->
+  <ng-container *ngIf="!loading()">
+    <!-- Empty State -->
+    <div *ngIf="favoriteProducts().length === 0" class="bg-white rounded-lg p-12">
+      <nz-empty
+        nzNotFoundContent="Chưa có sản phẩm yêu thích"
+        [nzNotFoundImage]="'simple'"
+      ></nz-empty>
+      <div class="text-center mt-6">
+        <button nz-button nzType="primary" routerLink="/admin/products">
+          <span nz-icon nzType="shopping-cart" nzTheme="outline" class="mr-2"></span>
+          Xem danh sách sản phẩm
+        </button>
+      </div>
+    </div>
+
+    <!-- Search and Stats -->
+    <div *ngIf="favoriteProducts().length > 0" class="bg-white rounded-lg shadow-md p-6 mb-6">
+      <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between mb-4">
+        <input
+          type="text"
+          placeholder="Tìm kiếm theo tên, SKU hoặc thương hiệu..."
+          class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          (keyup)="onSearch($event.target.value)"
+          [value]="searchValue()"
+        />
+      </div>
+      <div class="text-sm text-gray-600">
+        Tổng cộng: <strong>{{ favoriteProducts().length }}</strong> sản phẩm yêu thích
+      </div>
+    </div>
+
+    <!-- Products Table -->
+    <nz-card *ngIf="favoriteProducts().length > 0" nzTitle="Danh sách sản phẩm yêu thích">
+      <nz-table
+        #basicTable
+        [nzData]="filteredProducts()"
+        [nzScroll]="{ x: '1400px' }"
+        [nzPageSize]="pageSize()"
+        [nzPageIndex]="pageIndex()"
+        [nzTotal]="filteredProducts().length"
+        [nzLoading]="loading()"
+        nzShowSizeChanger
+        [nzShowTotal]="totalTemplate"
+      >
+        <thead>
+          <tr>
+            <th>Hình ảnh</th>
+            <th>Sản phẩm</th>
+            <th nzAlign="right">Giá</th>
+            <th>Thương hiệu</th>
+            <th nzAlign="center">Đánh giá</th>
+            <th nzAlign="center">Kho</th>
+            <th nzAlign="center">Thao tác</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let data of basicTable.data">
+            <!-- Hình ảnh -->
+            <td>
+              <img
+                [src]="data.image"
+                alt="{{ data.name }}"
+                class="w-12 h-12 rounded object-cover"
+              />
+            </td>
+
+            <!-- Sản phẩm và SKU -->
+            <td>
+              <div class="flex flex-col">
+                <strong class="text-gray-800">{{ data.name }}</strong>
+                <span class="text-xs text-gray-500">ID: {{ data.id }}</span>
+                <div class="mt-1">
+                  <nz-tag nzColor="blue">{{ data.category?.name || 'N/A' }}</nz-tag>
+                </div>
+              </div>
+            </td>
+
+            <!-- Giá -->
+            <td nzAlign="right">
+              <div class="flex flex-col items-end">
+                <span class="font-bold text-green-600">{{ formatCurrency(data.price) }}</span>
+                <span *ngIf="data.originalPrice && data.originalPrice > data.price" class="text-xs text-gray-500 line-through">
+                  {{ formatCurrency(data.originalPrice) }}
+                </span>
+                <span *ngIf="data.originalPrice && data.originalPrice > data.price" class="text-xs font-semibold text-red-500">
+                  -{{ getPriceDiscount(data.originalPrice, data.price) }}%
+                </span>
+              </div>
+            </td>
+
+            <!-- Thương hiệu -->
+            <td>
+              <nz-tag nzColor="purple">{{ data.brand?.name || 'N/A' }}</nz-tag>
+            </td>
+
+            <!-- Đánh giá -->
+            <td nzAlign="center">
+              <div class="flex flex-col items-center gap-1">
+                <nz-rate
+                  [(ngModel)]="data.rating"
+                  nzDisabled
+                  nzSize="small"
+                ></nz-rate>
+                <span class="text-xs text-gray-500">({{ data.numReviews || 0 }} đánh giá)</span>
+              </div>
+            </td>
+
+            <!-- Kho -->
+            <td nzAlign="center">
+              <nz-tag [nzColor]="getStockStatus(data.stock).color">
+                {{ getStockStatus(data.stock).label }}
+              </nz-tag>
+            </td>
+
+            <!-- Thao tác -->
+            <td nzAlign="center">
+              <div class="flex justify-center gap-2">
+                <button
+                  nz-button
+                  nzType="text"
+                  nzDanger
+                  nz-popconfirm
+                  nzPopconfirmTitle="Xóa khỏi yêu thích?"
+                  nzPopconfirmPlacement="topRight"
+                  (nzOnConfirm)="removeFavorite(data.id)"
+                >
+                  <span nz-icon nzType="delete" nzTheme="outline"></span>
+                </button>
+                <button nz-button nzType="primary" nzSize="small">
+                  <span nz-icon nzType="shopping-cart" nzTheme="outline" class="mr-1"></span>
+                  Mua
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </nz-table>
+    </nz-card>
+  </ng-container>
+
+  <!-- Template for pagination total -->
+  <ng-template #totalTemplate let-total let-range="range">
+    {{ range[0] }} - {{ range[1] }} of {{ total }}
+  </ng-template>
+</div>

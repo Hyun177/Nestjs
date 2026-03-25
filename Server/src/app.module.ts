@@ -17,6 +17,9 @@ import { CartModule } from './cart/cart.module';
 import { FavoriteModule } from './favorite/favorite.module';
 import { VoucherModule } from './voucher/voucher.module';
 import { OrderModule } from './order/order.module';
+import { ReviewModule } from './review/review.module';
+import { PaymentModule } from './payment/payment.module';
+import { DashboardModule } from './dashboard/dashboard.module';
 
 @Module({
   imports: [
@@ -53,6 +56,9 @@ import { OrderModule } from './order/order.module';
     FavoriteModule,
     VoucherModule,
     OrderModule,
+    ReviewModule,
+    PaymentModule,
+    DashboardModule,
   ],
   controllers: [MessageController],
   providers: [],

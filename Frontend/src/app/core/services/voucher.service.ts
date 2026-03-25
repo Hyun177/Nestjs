@@ -14,7 +14,7 @@ export interface VoucherApplyResult {
   providedIn: 'root',
 })
 export class VoucherService {
-  private apiUrl = 'http://localhost:3000/voucher';
+  private apiUrl = 'http://127.0.0.1:3000/api/voucher';
   private http = inject(HttpClient);
   private platformId = inject(PLATFORM_ID);
   private isBrowser: boolean;

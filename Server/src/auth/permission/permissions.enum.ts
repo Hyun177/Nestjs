@@ -1,7 +1,6 @@
 /**
  * Unified permission enum for the e-commerce platform.
  * Format: resource:action (e.g. product:create)
- * The PermissionGuard normalizes these when comparing with DB values.
  */
 export enum Permission {
   // ── Product ──────────────────────────────────────
@@ -52,19 +51,28 @@ export enum Permission {
   PAYMENT_READ = 'payment:read',
   PAYMENT_UPDATE = 'payment:update',
   PAYMENT_DELETE = 'payment:delete',
+  PAYMENT_CANCEL = 'payment:cancel',
+  PAYMENT_REFUND = 'payment:refund',
+  PAYMENT_MANAGE = 'payment:manage',
 
   // ── Review ───────────────────────────────────────
   REVIEW_CREATE = 'review:create',
   REVIEW_READ = 'review:read',
   REVIEW_UPDATE = 'review:update',
   REVIEW_DELETE = 'review:delete',
+  REVIEW_APPROVE = 'review:approve',
 
   // ── Order ────────────────────────────────────────
   ORDER_CREATE = 'order:create',
   ORDER_READ = 'order:read',
   ORDER_UPDATE = 'order:update',
   ORDER_DELETE = 'order:delete',
+  ORDER_CANCEL = 'order:cancel',
+  ORDER_MANAGE = 'order:manage',
+  ORDER_SHIP = 'order:ship',
+  ORDER_DELIVER = 'order:deliver',
 
   // ── Role / permission management (admin only) ────
   ROLE_MANAGE = 'role:manage',
+  PERMISSION_MANAGE = 'permission:manage',
 }

@@ -24,7 +24,7 @@ export interface Cart {
   providedIn: 'root',
 })
 export class CartService {
-  private apiUrl = 'http://localhost:3000/cart';
+  private apiUrl = 'http://127.0.0.1:3000/api/cart';
   private http = inject(HttpClient);
   private platformId = inject(PLATFORM_ID);
   private isBrowser: boolean;
@@ -70,8 +70,11 @@ export class CartService {
     });
   }
 
-  addToCart(productId: number, quantity: number, size: string = 'M', color: string = 'Black'): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/items`, { productId, quantity, size, color }, { headers: this.getHeaders() })
+  addToCart(productId: number, quantity: number, size: string = '', color: string = ''): Observable<any> {
+    const body: any = { productId, quantity };
+    if (size) body.size = size;
+    if (color) body.color = color;
+    return this.http.post<any>(`${this.apiUrl}/items`, body, { headers: this.getHeaders() })
       .pipe(tap(() => this.refreshCart()));
   }
 

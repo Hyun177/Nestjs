@@ -1,12 +1,6 @@
 /**
  * Seed script — create roles & assign permissions in the database.
  * Run once: node seed-roles.js
- *
- * Roles:
- *  admin    – full access
- *  manager  – manage products/categories/brands/orders, view users
- *  customer – place orders, browse shop
- *  guest    – read-only browse (useful if you add public JWT later)
  */
 const mysql = require('mysql2/promise');
 
@@ -17,106 +11,105 @@ const DB = {
   database: 'nestjs_db',
 };
 
-// Must match Permission enum values in auth/permission/permissions.enum.ts
 const ALL_PERMISSIONS = [
+  // Product
   'product:create',
   'product:read',
   'product:update',
   'product:delete',
+
+  // Category
   'category:create',
   'category:read',
   'category:update',
   'category:delete',
+
+  // Brand
   'brand:create',
   'brand:read',
   'brand:update',
   'brand:delete',
+
+  // User
   'user:read',
   'user:create',
   'user:update',
   'user:delete',
-  'order:create',
-  'order:read',
-  'order:update',
-  'order:delete',
+
+  // Post
   'post:create',
   'post:read',
   'post:update',
   'post:delete',
-  'role:manage',
+
+  // Voucher
   'voucher:create',
   'voucher:read',
   'voucher:update',
   'voucher:delete',
+  'voucher:apply',
+
+  // Cart
   'cart:create',
   'cart:read',
   'cart:update',
   'cart:delete',
+
+  // Payment
   'payment:create',
   'payment:read',
   'payment:update',
   'payment:delete',
+  'payment:cancel',
+  'payment:refund',
+  'payment:manage',
+
+  // Review
   'review:create',
   'review:read',
   'review:update',
   'review:delete',
-  'voucher:apply',
+  'review:approve',
+
+  // Order
+  'order:create',
+  'order:read',
+  'order:update',
+  'order:delete',
+  'order:cancel',
+  'order:manage',
+  'order:ship',
+  'order:deliver',
+
+  // Role/Permission
+  'role:manage',
+  'permission:manage'
 ];
 
 const ROLE_PERMISSIONS = {
   admin: ALL_PERMISSIONS,
   manager: [
-    'product:create',
-    'product:read',
-    'product:update',
-    'product:delete',
-    'category:create',
-    'category:read',
-    'category:update',
-    'category:delete',
-    'brand:create',
-    'brand:read',
-    'brand:update',
-    'brand:delete',
-    'order:read',
-    'order:update',
+    'product:create', 'product:read', 'product:update', 'product:delete',
+    'category:create', 'category:read', 'category:update', 'category:delete',
+    'brand:create', 'brand:read', 'brand:update', 'brand:delete',
+    'order:read', 'order:update', 'order:manage', 'order:ship',
     'user:read',
-    'post:create',
-    'post:read',
-    'post:update',
-    'post:delete',
-    'voucher:create',
-    'voucher:read',
-    'voucher:update',
-    'voucher:delete',
-    'voucher:apply',
+    'voucher:create', 'voucher:read', 'voucher:update', 'voucher:delete',
+    'payment:read', 'payment:manage'
   ],
-  user: [
+  customer: [
     'product:read',
     'category:read',
     'brand:read',
-    'order:create',
-    'order:read',
-    'post:read',
-    'post:create',
-    'post:update',
-    'post:delete',
-    'voucher:read',
-    'cart:create',
-    'cart:read',
-    'cart:update',
-    'cart:delete',
-    'payment:create',
-    'payment:read',
-    'payment:update',
-    'payment:delete',
-    'review:create',
-    'review:read',
-    'review:update',
-    'review:delete',
-    'voucher:apply',
+    'cart:create', 'cart:read', 'cart:update', 'cart:delete',
+    'order:create', 'order:read', 'order:cancel',
+    'payment:create', 'payment:read',
+    'review:create', 'review:read', 'review:update', 'review:delete',
+    'voucher:read', 'voucher:apply'
   ],
-  guest: ['product:read', 'category:read', 'brand:read', 'post:read'],
+  guest: [
+    'product:read', 'category:read', 'brand:read', 'post:read', 'review:read'
+  ],
 };
 
 async function seed() {
@@ -149,14 +142,12 @@ async function seed() {
         [roleName],
       );
       if (!role) {
-        console.warn(`⚠️  Role not found: ${roleName}`);
+        console.warn(`⚠️ Role not found: ${roleName}`);
         continue;
       }
 
-      // Remove old mappings for this role then re-insert (idempotent)
-      await conn.execute('DELETE FROM role_permission WHERE rolesId = ?', [
-        role.id,
-      ]);
+      // Clear existing for idempotency
+      await conn.execute('DELETE FROM role_permission WHERE rolesId = ?', [role.id]);
 
       for (const permName of perms) {
         const [[perm]] = await conn.execute(
@@ -164,7 +155,7 @@ async function seed() {
           [permName],
         );
         if (!perm) {
-          console.warn(`⚠️  Permission not found: ${permName}`);
+          console.warn(`⚠️ Permission not found: ${permName}`);
           continue;
         }
         await conn.execute(
@@ -172,13 +163,12 @@ async function seed() {
           [role.id, perm.id],
         );
       }
-      console.log(`✅ Role '${roleName}' → ${perms.length} permissions`);
+      console.log(`✅ Role '${roleName}' -> ${perms.length} permissions`);
     }
 
     console.log('\n🎉 Seeding complete!');
   } catch (err) {
     console.error('❌ Error:', err.message);
-    throw err;
   } finally {
     await conn.end();
   }

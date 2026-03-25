@@ -30,7 +30,7 @@
                             </div>
                             <span class="brand-logo">{{ product.brand?.name }}</span>
                         </div>
-                        
+
                         <div class="overlay-right">
                             <div class="label-badges">
                                 @for (label of product.labels; track label) {
@@ -38,10 +38,9 @@
                                 }
                             </div>
                             <div class="spec-icons">
-                                @for (spec of (product.specs || []); track spec.text) {
+                                @for (spec of (product.specs || []).slice(0, 3); track spec.text) {
                                 <div class="spec-item">
                                     <span nz-icon [nzType]="spec.icon || 'info-circle'"></span>
-                                    <div>{{ spec.text }}</div>
                                 </div>
                                 }
                             </div>
@@ -55,7 +54,8 @@
                     <div class="product-info">
                         <h3 class="product-name" [routerLink]="['/product', product.id]">{{ product.name }}</h3>
                         <div class="price-container">
-                            <span class="old-price" *ngIf="product.originalPrice && product.originalPrice > product.price">
+                            <span class="old-price"
+                                *ngIf="product.originalPrice && product.originalPrice > product.price">
                                 {{ product.originalPrice | vndCurrency }}
                             </span>
                             <span class="current-price">{{ product.price | vndCurrency }}</span>
@@ -67,7 +67,8 @@
 
                     <div class="card-footer">
                         <div class="rating-stars">
-                            <span nz-icon nzType="star" nzTheme="fill" style="color: #fadb14; margin-right: 4px;"></span>
+                            <span nz-icon nzType="star" nzTheme="fill"
+                                style="color: #fadb14; margin-right: 4px;"></span>
                             <span class="rating-text" style="font-weight: 600;">{{ +product.rating }}/5</span>
                         </div>
 
@@ -114,7 +115,7 @@
                             </div>
                             <span class="brand-logo">{{ product.brand?.name }}</span>
                         </div>
-                        
+
                         <div class="overlay-right">
                             <div class="label-badges">
                                 @for (label of product.labels; track label) {
@@ -122,7 +123,7 @@
                                 }
                             </div>
                             <div class="spec-icons">
-                                @for (spec of (product.specs || []); track spec.text) {
+                                @for (spec of (product.specs || []).slice(0, 3); track spec.text) {
                                 <div class="spec-item">
                                     <span nz-icon [nzType]="spec.icon || 'info-circle'"></span>
                                     <div>{{ spec.text }}</div>
@@ -139,7 +140,8 @@
                     <div class="product-info">
                         <h3 class="product-name" [routerLink]="['/product', product.id]">{{ product.name }}</h3>
                         <div class="price-container">
-                            <span class="old-price" *ngIf="product.originalPrice && product.originalPrice > product.price">
+                            <span class="old-price"
+                                *ngIf="product.originalPrice && product.originalPrice > product.price">
                                 {{ product.originalPrice | vndCurrency }}
                             </span>
                             <span class="current-price">{{ product.price | vndCurrency }}</span>
@@ -151,7 +153,8 @@
 
                     <div class="card-footer">
                         <div class="rating-stars">
-                            <span nz-icon nzType="star" nzTheme="fill" style="color: #fadb14; margin-right: 4px;"></span>
+                            <span nz-icon nzType="star" nzTheme="fill"
+                                style="color: #fadb14; margin-right: 4px;"></span>
                             <span class="rating-text" style="font-weight: 600;">{{ +product.rating }}/5</span>
                         </div>
 

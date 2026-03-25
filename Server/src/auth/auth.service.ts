@@ -61,17 +61,16 @@ export class AuthService {
       roles: user.roles?.map((r) => r.name) || ['user'],
     };
     if (payload.roles.length === 0) payload.roles = ['user'];
-    const access_token = this.jwtService.sign({
-      ...payload,
-      type: 'access',
-      expiresIn: '1h',
-    });
+    
+    const access_token = this.jwtService.sign(
+      { ...payload, type: 'access' },
+      { expiresIn: '30d' }
+    );
 
-    const refresh_token = this.jwtService.sign({
-      ...payload,
-      type: 'refresh',
-      expiresIn: '30d',
-    });
+    const refresh_token = this.jwtService.sign(
+      { ...payload, type: 'refresh' },
+      { expiresIn: '90d' }
+    );
     const hashedRt = await bcrypt.hash(refresh_token, 10);
     user.refreshToken = hashedRt;
     await this.userRepo.save(user);

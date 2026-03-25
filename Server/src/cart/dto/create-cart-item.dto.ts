@@ -1,4 +1,4 @@
-import { IsNumber, Min } from 'class-validator';
+import { IsNumber, Min, IsString, IsOptional } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class CreateCartItemDto {
@@ -10,4 +10,12 @@ export class CreateCartItemDto {
   @IsNumber()
   @Min(1)
   quantity: number;
+
+  @IsString()
+  @IsOptional()
+  size?: string;
+
+  @IsString()
+  @IsOptional()
+  color?: string;
 }

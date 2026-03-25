@@ -58,6 +58,14 @@ export class Product {
   @Column({ type: 'json', nullable: true })
   attributes?: { name: string; options: string[] }[];
 
+  @Column({ type: 'json', nullable: true })
+  variants?: { 
+    sku: string; 
+    price: number; 
+    stock: number; 
+    attributes: { [key: string]: string } 
+  }[];
+
   @Column({ nullable: true })
   promoNote?: string;
 

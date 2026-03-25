@@ -9,20 +9,20 @@ import {
   Put,
   UseGuards,
   Req,
-  UploadedFile,
+  UploadedFiles,
   UseInterceptors,
+  Query,
 } from '@nestjs/common';
 import { ProductService } from './product.service';
 import { CreateProductDto, UpdateProductDto } from './dto/product.dto';
-import { ApiBearerAuth, ApiTags, ApiOperation } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags, ApiOperation, ApiConsumes, ApiBody } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Permissions } from '../auth/permission/permissions.decorator';
 import { PermissionGuard } from '../auth/permission/permission.guard';
 import { Permission } from '../auth/permission/permissions.enum';
 import type { RequestWithUser } from '../common/types/request-with-user';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { AnyFilesInterceptor } from '@nestjs/platform-express';
 import type { Express } from 'express';
-import { ApiConsumes, ApiBody } from '@nestjs/swagger';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 
@@ -37,7 +37,7 @@ export class ProductController {
   @Permissions(Permission.PRODUCT_CREATE)
   @ApiOperation({ summary: 'Create a product (admin/manager)' })
   @UseInterceptors(
-    FileInterceptor('image', {
+    AnyFilesInterceptor({
       storage: diskStorage({
         destination: './uploads',
         filename: (req, file, cb) => {
@@ -68,25 +68,58 @@ export class ProductController {
         numReviews: { type: 'number' },
         isFeatured: { type: 'boolean' },
         isArchived: { type: 'boolean' },
-        image: { type: 'string', format: 'binary' },
+        image: { type: 'string', format: 'binary', description: 'Main Image' },
+        images: {
+          type: 'array',
+          items: { type: 'string', format: 'binary' },
+          description: 'Gallery Images',
+        },
       },
     },
   })
   async createProduct(
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFiles() files: Express.Multer.File[],
     @Body() body: CreateProductDto,
     @Req() req: RequestWithUser,
   ) {
-    const imageUrl = file ? `/uploads/${file.filename}` : undefined;
+    // Separate main image from gallery
+    const mainFile = files.find(f => f.fieldname === 'image');
+    const galleryFiles = files.filter(f => f.fieldname === 'images');
+
+    const imageUrl = mainFile ? `/uploads/${mainFile.filename}` : undefined;
+    const galleryUrls = galleryFiles.map(f => `/uploads/${f.filename}`);
+
     if (imageUrl) body.image = imageUrl;
-    return this.ProductService.createProduct({ ...body, image: imageUrl }, req.user.userId);
+    if (galleryUrls.length > 0) body.images = galleryUrls;
+
+    return this.ProductService.createProduct(body, req.user.userId);
   }
 
   // Public — shoppers can browse products without logging in
   @Get()
   @ApiOperation({ summary: 'Get all products (public)' })
-  async getProducts() {
-    return this.ProductService.getProducts();
+  async getProducts(
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('search') search?: string,
+    @Query('categoryId') categoryId?: string,
+    @Query('brandId') brandId?: string,
+    @Query('sort') sort?: string,
+    @Query('color') color?: string,
+    @Query('minPrice') minPrice?: string,
+    @Query('maxPrice') maxPrice?: string,
+  ) {
+    return this.ProductService.getProducts({
+      page: page ? Number(page) : 1,
+      limit: limit ? Number(limit) : 10,
+      search,
+      categoryId: categoryId ? Number(categoryId) : undefined,
+      brandId: brandId ? Number(brandId) : undefined,
+      sort,
+      color: color || undefined,
+      minPrice: minPrice ? Number(minPrice) : undefined,
+      maxPrice: maxPrice ? Number(maxPrice) : undefined,
+    });
   }
 
   @Get('top-selling')
@@ -106,10 +139,38 @@ export class ProductController {
   @UseGuards(JwtAuthGuard, PermissionGuard)
   @Permissions(Permission.PRODUCT_UPDATE)
   @ApiOperation({ summary: 'Update a product (admin/manager)' })
+  @UseInterceptors(
+    AnyFilesInterceptor({
+      storage: diskStorage({
+        destination: './uploads',
+        filename: (req, file, cb) => {
+          const uniqueName = Date.now() + '-' + Math.round(Math.random() * 1e9);
+          const ext = extname(file.originalname);
+          cb(null, `${uniqueName}${ext}`);
+        },
+      }),
+      limits: { fileSize: 5 * 1024 * 1024 },
+      fileFilter: (req, file, cb) => {
+        if (file.mimetype.startsWith('image/')) cb(null, true);
+        else cb(new Error('Only image files are allowed!'), false);
+      },
+    }),
+  )
+  @ApiConsumes('multipart/form-data')
   async updateProduct(
     @Param('id', ParseIntPipe) id: number,
+    @UploadedFiles() files: Express.Multer.File[],
     @Body() body: UpdateProductDto,
   ) {
+    const mainFile = files?.find(f => f.fieldname === 'image');
+    const galleryFiles = files?.filter(f => f.fieldname === 'images') || [];
+    
+    if (mainFile) {
+      body.image = `/uploads/${mainFile.filename}`;
+    }
+    if (galleryFiles.length > 0) {
+      body.images = galleryFiles.map(f => `/uploads/${f.filename}`);
+    }
     return this.ProductService.updateProduct(id, body);
   }
 

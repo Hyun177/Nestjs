@@ -57,6 +57,33 @@ export class ProductService {
       }
     }
 
+    let attributes = data.attributes;
+    if (typeof attributes === 'string') {
+      try {
+        attributes = JSON.parse(attributes);
+      } catch (e) {
+        attributes = [];
+      }
+    }
+
+    let variants = data.variants;
+    if (typeof variants === 'string') {
+      try {
+        variants = JSON.parse(variants);
+      } catch (e) {
+        variants = [];
+      }
+    }
+
+    let extraImages = data.images;
+    if (typeof extraImages === 'string') {
+      try {
+        extraImages = JSON.parse(extraImages);
+      } catch (e) {
+        extraImages = [];
+      }
+    }
+
     return await this.productRepository.save({
       ...data,
       categoryId,
@@ -73,13 +100,53 @@ export class ProductService {
       originalPrice,
       labels,
       specs,
+      attributes,
+      variants,
+      images: extraImages,
       promoNote: data.promoNote,
     } as any);
   }
-  async getProducts(): Promise<Product[]> {
-    return await this.productRepository.find({
-      relations: ['category', 'brand'],
-    });
+  async getProducts(params?: any): Promise<any> {
+    const query = this.productRepository.createQueryBuilder('product')
+      .leftJoinAndSelect('product.category', 'category')
+      .leftJoinAndSelect('product.brand', 'brand');
+
+    if (params?.search) {
+      query.andWhere('product.name LIKE :search', { search: `%${params.search}%` });
+    }
+    if (params?.categoryId) {
+      query.andWhere('product.categoryId = :categoryId', { categoryId: params.categoryId });
+    }
+    if (params?.brandId) {
+      query.andWhere('product.brandId = :brandId', { brandId: params.brandId });
+    }
+    if (params?.minPrice) {
+      query.andWhere('product.price >= :minPrice', { minPrice: Number(params.minPrice) });
+    }
+    if (params?.maxPrice) {
+      query.andWhere('product.price <= :maxPrice', { maxPrice: Number(params.maxPrice) });
+    }
+    if (params?.color) {
+      // Filter products whose attributes JSON contains the given color value (MySQL uses AS CHAR instead of AS TEXT)
+      query.andWhere('LOWER(CAST(product.attributes AS CHAR)) LIKE :color', {
+        color: `%${String(params.color).toLowerCase()}%`,
+      });
+    }
+
+    if (params?.sort === 'price_asc') {
+      query.orderBy('product.price', 'ASC');
+    } else if (params?.sort === 'price_desc') {
+      query.orderBy('product.price', 'DESC');
+    } else {
+      query.orderBy('product.id', 'DESC');
+    }
+
+    const page = params?.page || 1;
+    const limit = params?.limit || 10;
+    query.skip((page - 1) * limit).take(limit);
+
+    const [data, total] = await query.getManyAndCount();
+    return { data, total, page, limit };
   }
   async getProductById(id: number): Promise<Product | null> {
     return await this.productRepository.findOne({
@@ -87,24 +154,46 @@ export class ProductService {
       relations: ['category', 'brand'],
     });
   }
-  async updateProduct(id: number, data: Partial<Product>): Promise<Product> {
+  async updateProduct(id: number, data: Partial<Product> | any): Promise<Product> {
     if (data.categoryId) {
+      data.categoryId = Number(data.categoryId);
       const category = await this.categoryRepository.findOne({
         where: { id: data.categoryId },
       });
-      if (!category) {
-        throw new Error('Category not found');
-      }
+      if (!category) throw new Error('Category not found');
     }
     if (data.brandId) {
+      data.brandId = Number(data.brandId);
       const brand = await this.brandRepository.findOne({
-        where: { id: Number(data.brandId) },
+        where: { id: data.brandId },
       });
-      if (!brand) {
-        throw new Error('Brand not found');
+      if (!brand) throw new Error('Brand not found');
+    }
+    
+    if (data.price !== undefined) data.price = Number(data.price);
+    if (data.stock !== undefined) data.stock = Number(data.stock);
+    if (data.originalPrice !== undefined) data.originalPrice = Number(data.originalPrice);
+    if (data.isFeatured !== undefined) data.isFeatured = String(data.isFeatured) === 'true';
+    if (data.isArchived !== undefined) data.isArchived = String(data.isArchived) === 'true';
+
+    // Parse JSON
+    const jsonFields = ['labels', 'specs', 'attributes', 'variants', 'images'];
+    for (const field of jsonFields) {
+      if (typeof data[field] === 'string') {
+        try {
+          data[field] = JSON.parse(data[field]);
+        } catch {
+          data[field] = [];
+        }
       }
     }
-    await this.productRepository.update(id, data);
+
+    // Clean up empty data
+    if (Object.keys(data).length === 0) {
+      throw new Error('No valid update values provided');
+    }
+
+    await this.productRepository.update(id, data as Partial<Product>);
     const updatedProduct = await this.productRepository.findOne({
       where: { id },
       relations: ['category', 'brand'],

@@ -1,0 +1,129 @@
+<div class="dashboard">
+  <!-- Header -->
+  <div class="dash-header">
+    <div>
+      <h2 class="dash-title">Tổng quan hệ thống</h2>
+      <p class="dash-sub">Báo cáo dữ liệu kinh doanh thời gian thực</p>
+    </div>
+    <div class="date-badge">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      {{ today | date:'dd MMMM, yyyy' }}
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading()" class="loading-state">
+    <nz-spin nzSimple nzSize="large"></nz-spin>
+    <p>Đang tải dữ liệu...</p>
+  </div>
+
+  <ng-container *ngIf="!loading()">
+    <!-- Stat Cards -->
+    <div class="stats-grid">
+      <div *ngFor="let card of statCards" class="stat-card">
+        <div class="stat-card-inner">
+          <div class="stat-icon" [style.background]="card.bgColor" [style.color]="card.color" [innerHTML]="card.svgIcon"></div>
+          <div class="stat-body">
+            <p class="stat-title">{{ card.title }}</p>
+            <div class="stat-value">
+              <span *ngIf="card.unit !== 'VND'">{{ getStatValue(card.key) | number:'1.0-0' }}</span>
+              <span *ngIf="card.unit === 'VND'">{{ getStatValue(card.key) | vndCurrency }}</span>
+            </div>
+            <div class="stat-trend up" *ngIf="getTrendValue(card.key) > 0">
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+              +{{ getTrendValue(card.key) }}% so với tháng trước
+            </div>
+            <div class="stat-unit" *ngIf="card.unit !== 'VND' && getTrendValue(card.key) === 0">
+              {{ card.unit }}
+            </div>
+          </div>
+        </div>
+        <div class="stat-accent" [style.background]="card.color"></div>
+      </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="charts-row">
+      <!-- Bar Chart: Monthly Revenue -->
+      <div class="chart-card wide">
+        <div class="chart-card-header">
+          <div>
+            <h4 class="chart-title">Doanh thu 6 tháng gần đây</h4>
+            <p class="chart-sub">Tổng doanh thu từ đơn hàng đã thanh toán</p>
+          </div>
+          <div class="chart-badge green">Dữ liệu thực</div>
+        </div>
+        <div class="chart-body">
+          <canvas id="salesChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Doughnut Chart: Order Status -->
+      <div class="chart-card narrow">
+        <div class="chart-card-header">
+          <div>
+            <h4 class="chart-title">Phân bổ trạng thái</h4>
+            <p class="chart-sub">Tổng hợp tình trạng đơn hàng</p>
+          </div>
+        </div>
+        <div class="chart-body doughnut-wrap">
+          <canvas id="statusChart"></canvas>
+          <div *ngIf="recentOrders().length === 0" class="chart-empty">
+            <p>Chưa có đơn hàng nào</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Row: Recent Orders + Top Products -->
+    <div class="bottom-row">
+      <!-- Recent Orders -->
+      <div class="panel wide">
+        <div class="panel-header">
+          <h4 class="panel-title">Giao dịch gần đây</h4>
+          <a routerLink="/admin/orders" class="panel-link">Xem tất cả →</a>
+        </div>
+        <div class="orders-list">
+          <div *ngFor="let o of recentOrders()" class="order-item">
+            <div class="order-code">{{ o.orderCode }}</div>
+            <div class="order-customer">{{ o.customer }}</div>
+            <div class="order-total">{{ o.total | vndCurrency }}</div>
+            <div class="order-status-wrap">
+              <span class="order-status-dot" [style.background]="getStatusCfg(o.status).color"></span>
+              <span class="order-status-label">{{ getStatusCfg(o.status).label }}</span>
+            </div>
+            <div class="order-date">{{ o.date }}</div>
+          </div>
+          <div *ngIf="recentOrders().length === 0" class="empty-list">
+            Chưa có đơn hàng nào
+          </div>
+        </div>
+      </div>
+
+      <!-- Top Products -->
+      <div class="panel narrow">
+        <div class="panel-header">
+          <h4 class="panel-title">Sản phẩm nổi bật</h4>
+          <a routerLink="/admin/products" class="panel-link">Xem tất cả →</a>
+        </div>
+        <div class="product-list">
+          <div *ngFor="let p of topProducts(); let i = index" class="product-item">
+            <div class="product-rank" [class]="i < 3 ? 'rank-top' : ''">{{ i + 1 }}</div>
+            <div class="product-thumb">
+              <img *ngIf="p.image" [src]="'http://localhost:3000' + p.image" [alt]="p.name" />
+              <div *ngIf="!p.image" class="thumb-empty">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+              </div>
+            </div>
+            <div class="product-info">
+              <div class="product-name">{{ p.name }}</div>
+              <div class="product-sold">Đã bán: {{ p.soldCount || 0 }}</div>
+            </div>
+            <div class="product-price">{{ p.price | vndCurrency }}</div>
+          </div>
+          <div *ngIf="topProducts().length === 0" class="empty-list">Chưa có sản phẩm</div>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+</div>

@@ -1,15 +1,15 @@
 <div class="auth-page">
     <div class="auth-card">
-        <!-- Slider Section (Hidden on small screens) -->
+        <!-- Visual Side -->
         <div class="auth-left">
-            <img [src]="images[currentIndex]" class="slider-bg" alt="Slider Image">
+            <img [src]="'/' + images[currentIndex]" class="slider-img" [class.zoom-effect]="true" alt="Banner">
             <div class="overlay"></div>
-            <div class="left-header">
+            <div class="branding">
                 <div class="logo">AMU</div>
             </div>
-            <div class="left-content">
-                <h2>Welcome Back</h2>
-                <div class="dots-container">
+            <div class="content-overlay">
+                <h2>Welcome<br>Back</h2>
+                <div class="dots">
                     @for (img of images; track $index) {
                     <span class="dot" [class.active]="$index === currentIndex" (click)="setSlide($index)"></span>
                     }
@@ -17,61 +17,57 @@
             </div>
         </div>
 
-        <!-- Form Section -->
+        <!-- Form Side -->
         <div class="auth-right">
-            <div class="form-wrapper">
-                <h1 class="title">Log in</h1>
-                <p class="subtitle">Enter your details to continue</p>
-
-                <form class="auth-form" [formGroup]="loginForm" (ngSubmit)="onSubmit()">
-                    <div class="input-group input-icon" [class.error]="loginForm.get('email')?.invalid && loginForm.get('email')?.dirty">
-                        <span class="main-icon" nz-icon nzType="mail" nzTheme="outline"></span>
-                        <input type="email" placeholder="Email Address" formControlName="email" required>
-                    </div>
-
-                    <div class="input-group input-icon" [class.error]="loginForm.get('password')?.invalid && loginForm.get('password')?.dirty">
-                        <span class="main-icon" nz-icon nzType="lock" nzTheme="outline"></span>
-                        <input [type]="passwordVisible ? 'text' : 'password'" placeholder="Password" formControlName="password" required>
-                        <span class="action-icon" nz-icon [nzType]="passwordVisible ? 'eye-invisible' : 'eye'" 
-                              (click)="passwordVisible = !passwordVisible"></span>
-                    </div>
-
-                    <div class="login-options">
-                        <div class="checkbox-group">
-                            <input type="checkbox" id="remember" formControlName="remember">
-                            <label for="remember">Remember</label>
-                        </div>
-                        <a href="#" class="forgot-pass">Forgot?</a>
-                    </div>
-
-                    <button type="submit" class="btn-primary" [disabled]="loading">
-                        @if (loading) {
-                            <span nz-icon nzType="loading"></span>
-                        } @else {
-                            Log in
-                        }
-                    </button>
-
-                    <div class="divider">
-                        <span>OR</span>
-                    </div>
-
-                    <div class="social-buttons">
-                        <button type="button" class="btn-social">
-                            <span nz-icon nzType="google"></span>
-                            Google
-                        </button>
-                        <button type="button" class="btn-social">
-                            <span nz-icon nzType="apple"></span>
-                            Apple
-                        </button>
-                    </div>
-
-                    <p class="subtitle" style="margin-top: 20px;">
-                        Need an account? <a routerLink="/register">Sign up</a>
-                    </p>
-                </form>
+            <div class="form-header">
+                <div class="status-badge">
+                    <span class="pulse"></span>
+                    <span>Hệ thống an toàn</span>
+                </div>
+                <h1>Đăng nhập</h1>
+                <p>Tiếp tục hành trình của bạn</p>
             </div>
+
+            <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="auth-form">
+                <div class="form-group">
+                    <label>Email Address</label>
+                    <div class="input-container">
+                        <span nz-icon nzType="mail" class="icon"></span>
+                        <input type="email" placeholder="example@email.com" formControlName="email" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="flex justify-between items-center pr-2">
+                        <label>Mật khẩu</label>
+                        <a href="#" class="text-[10px] font-black uppercase tracking-widest text-gray-900 hover:text-blue-600 transition-colors">Quên mật khẩu?</a>
+                    </div>
+                    <div class="input-container">
+                        <span nz-icon nzType="lock" class="icon"></span>
+                        <input [type]="passwordVisible ? 'text' : 'password'" placeholder="••••••••" formControlName="password" required>
+                        <span nz-icon [nzType]="passwordVisible ? 'eye-invisible' : 'eye'" 
+                              (click)="passwordVisible = !passwordVisible"
+                              style="position: absolute; right: 24px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #d1d5db;"></span>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2 py-2">
+                    <input type="checkbox" id="rem" class="w-4 h-4 rounded border-gray-200 accent-black">
+                    <label for="rem" class="text-xs font-bold text-gray-500 cursor-pointer">Ghi nhớ tôi</label>
+                </div>
+
+                <button type="submit" class="btn-main" [disabled]="loading">
+                    @if (loading) {
+                        <span nz-icon nzType="loading"></span>
+                    } @else {
+                        Đăng nhập ngay
+                    }
+                </button>
+
+                <div class="auth-footer">
+                    Chưa có tài khoản? <a routerLink="/register">Đăng ký ngay</a>
+                </div>
+            </form>
         </div>
     </div>
 </div>

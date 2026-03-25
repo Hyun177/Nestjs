@@ -1,15 +1,15 @@
 <div class="auth-page">
     <div class="auth-card">
-        <!-- Slider Section -->
+        <!-- Visual Side -->
         <div class="auth-left">
-            <img [src]="images[currentIndex]" class="slider-bg" alt="Slider Image">
+            <img [src]="'/' + images[currentIndex]" class="slider-img" [class.zoom-effect]="true" alt="Banner">
             <div class="overlay"></div>
-            <div class="left-header">
+            <div class="branding">
                 <div class="logo">AMU</div>
             </div>
-            <div class="left-content">
-                <h2>Join Us</h2>
-                <div class="dots-container">
+            <div class="content-overlay">
+                <h2>Join Our<br>Community</h2>
+                <div class="dots">
                     @for (img of images; track $index) {
                     <span class="dot" [class.active]="$index === currentIndex" (click)="setSlide($index)"></span>
                     }
@@ -17,56 +17,73 @@
             </div>
         </div>
 
-        <!-- Form Section -->
+        <!-- Form Side -->
         <div class="auth-right">
-            <div class="form-wrapper">
-                <h1 class="title">Register</h1>
-                <p class="subtitle">Create a new account</p>
-
-                <form class="auth-form" [formGroup]="registerForm" (ngSubmit)="onSubmit()">
-                    <div class="input-group input-icon" [class.error]="registerForm.get('name')?.invalid && registerForm.get('name')?.dirty">
-                        <span class="main-icon" nz-icon nzType="user" nzTheme="outline"></span>
-                        <input type="text" formControlName="name" placeholder="Full Name" required>
-                    </div>
-
-                    <div class="input-group input-icon" [class.error]="registerForm.get('email')?.invalid && registerForm.get('email')?.dirty">
-                        <span class="main-icon" nz-icon nzType="mail" nzTheme="outline"></span>
-                        <input type="email" formControlName="email" placeholder="Email Address" required>
-                    </div>
-
-                    <div class="input-group input-icon" [class.error]="registerForm.get('password')?.invalid && registerForm.get('password')?.dirty">
-                        <span class="main-icon" nz-icon nzType="lock" nzTheme="outline"></span>
-                        <input [type]="passwordVisible ? 'text' : 'password'" formControlName="password" placeholder="Password" required>
-                        <span class="action-icon" nz-icon [nzType]="passwordVisible ? 'eye-invisible' : 'eye'"
-                            (click)="passwordVisible = !passwordVisible"></span>
-                    </div>
-
-                    <div class="input-group input-icon" [class.error]="registerForm.hasError('mismatch') && registerForm.get('confirmPassword')?.dirty">
-                        <span class="main-icon" nz-icon nzType="lock" nzTheme="outline"></span>
-                        <input [type]="confirmPasswordVisible ? 'text' : 'password'" formControlName="confirmPassword" placeholder="Confirm Password" required>
-                        <span class="action-icon" nz-icon [nzType]="confirmPasswordVisible ? 'eye-invisible' : 'eye'"
-                            (click)="confirmPasswordVisible = !confirmPasswordVisible"></span>
-                    </div>
-
-                    <div class="checkbox-group">
-                        <input type="checkbox" id="terms" formControlName="agree">
-                        <label for="terms" style="font-size: 0.9rem; padding-left: 10px; padding-bottom: 15px;">I agree
-                            to <a href="#">Terms</a></label>
-                    </div>
-
-                    <button type="submit" class="btn-primary" [disabled]="loading">
-                        @if (loading) {
-                            <span nz-icon nzType="loading"></span>
-                        } @else {
-                            Sign up
-                        }
-                    </button>
-
-                    <p class="subtitle" style="margin-top: 20px;">
-                        Already have an account? <a routerLink="/login">Log in</a>
-                    </p>
-                </form>
+            <div class="form-header">
+                <div class="status-badge">
+                    <span class="pulse"></span>
+                    <span>Tạo tài khoản mới</span>
+                </div>
+                <h1>Đăng ký</h1>
+                <p>Tham gia cùng chúng tôi ngay hôm nay</p>
             </div>
+
+            <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="auth-form">
+                <div class="form-group">
+                    <label>Họ và tên</label>
+                    <div class="input-container">
+                        <span nz-icon nzType="user" class="icon"></span>
+                        <input type="text" placeholder="Tên đầy đủ của bạn" formControlName="name" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Địa chỉ Email</label>
+                    <div class="input-container">
+                        <span nz-icon nzType="mail" class="icon"></span>
+                        <input type="email" placeholder="example@email.com" formControlName="email" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Mật khẩu</label>
+                    <div class="input-container">
+                        <span nz-icon nzType="lock" class="icon"></span>
+                        <input [type]="passwordVisible ? 'text' : 'password'" placeholder="••••••••" formControlName="password" required>
+                        <span nz-icon [nzType]="passwordVisible ? 'eye-invisible' : 'eye'" 
+                              (click)="passwordVisible = !passwordVisible"
+                              style="position: absolute; right: 24px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #d1d5db;"></span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Xác nhận mật khẩu</label>
+                    <div class="input-container">
+                        <span nz-icon nzType="check-circle" class="icon"></span>
+                        <input [type]="confirmPasswordVisible ? 'text' : 'password'" placeholder="••••••••" formControlName="confirmPassword" required>
+                        <span nz-icon [nzType]="confirmPasswordVisible ? 'eye-invisible' : 'eye'" 
+                              (click)="confirmPasswordVisible = !confirmPasswordVisible"
+                              style="position: absolute; right: 24px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #d1d5db;"></span>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2 py-2">
+                    <input type="checkbox" id="terms" formControlName="agree" class="w-4 h-4 rounded border-gray-200 accent-black">
+                    <label for="terms" class="text-xs font-bold text-gray-400 cursor-pointer">Tôi đồng ý với các <span class="text-black underline cursor-help">Điều khoản dịch vụ</span></label>
+                </div>
+
+                <button type="submit" class="btn-main" [disabled]="loading">
+                    @if (loading) {
+                        <span nz-icon nzType="loading"></span>
+                    } @else {
+                        Đăng ký ngay
+                    }
+                </button>
+
+                <div class="auth-footer">
+                    Đã có tài khoản? <a routerLink="/login">Đăng nhập</a>
+                </div>
+            </form>
         </div>
     </div>
 </div>

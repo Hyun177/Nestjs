@@ -1,0 +1,403 @@
+<div class="container animate-in">
+
+  <!-- ===== Page Header ===== -->
+  <div class="page-header">
+    <div>
+      <h2 class="page-title">Tài khoản</h2>
+      <p class="page-sub">Quản lý cài đặt &amp; đơn hàng của bạn</p>
+    </div>
+    <div class="tab-navigation">
+      <button [class.active]="activeTab === 'info'" (click)="activeTab = 'info'">Thông tin</button>
+      <button [class.active]="activeTab === 'password'" (click)="activeTab = 'password'">Bảo mật</button>
+      <button [class.active]="activeTab === 'orders'" (click)="activeTab = 'orders'">Đơn hàng</button>
+      <button [class.active]="activeTab === 'favorites'" (click)="activeTab = 'favorites'">Yêu thích</button>
+    </div>
+  </div>
+
+  <!-- ===== Info Tab ===== -->
+  <div *ngIf="activeTab === 'info'" class="profile-card">
+    <div class="info-layout">
+
+      <!-- Avatar Column -->
+      <div class="avatar-col">
+        <div class="avatar-wrapper">
+          <div class="avatar-ring" (click)="triggerAvatarUpload()">
+            <img [src]="getImageUrl(userProfile.avatar)" [alt]="userProfile.firstname">
+            <div class="avatar-overlay">
+              <span nz-icon nzType="camera" class="nz"></span>
+              <span class="overlay-text">Thay ảnh</span>
+            </div>
+          </div>
+          <div class="status-dot"></div>
+        </div>
+
+        <input type="file" id="avatarInput" class="hidden" (change)="onAvatarSelected($event)" accept="image/*">
+
+        <h4 class="user-name">{{ userProfile.firstname }} {{ userProfile.lastname }}</h4>
+        <span class="user-role-badge">{{ userRoleName }}</span>
+
+        <button class="url-toggle-btn" nz-button nzType="text" (click)="showUrlInput = !showUrlInput">
+          {{ showUrlInput ? 'Đóng liên kết URL' : 'Dùng URL ảnh từ web' }}
+        </button>
+
+        <div *ngIf="showUrlInput" class="url-input-wrap">
+          <input nz-input [(ngModel)]="userProfile.avatar" placeholder="https://..." />
+        </div>
+
+        <div class="avatar-stats">
+          <div>
+            <p class="stat-label">Đơn hàng</p>
+            <p class="stat-value">{{ orderHistory.length }}</p>
+          </div>
+          <div>
+            <p class="stat-label">Thành viên</p>
+            <p class="stat-value">2026</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Form Column -->
+      <div class="form-col">
+        <div class="section-label">
+          <div class="dot"></div>
+          <h3>Thông tin cá nhân</h3>
+          <div class="divider"></div>
+          <button class="edit-btn" (click)="toggleEdit()">
+            {{ isEditing ? 'Hủy bỏ' : 'Thay đổi' }}
+          </button>
+        </div>
+
+        <div class="form-grid-2">
+          <div class="form-group" [class.is-disabled]="!isEditing">
+            <label>Họ</label>
+            <input nz-input [(ngModel)]="userProfile.firstname" [disabled]="!isEditing" placeholder="Nhập họ..." />
+          </div>
+          <div class="form-group" [class.is-disabled]="!isEditing">
+            <label>Tên</label>
+            <input nz-input [(ngModel)]="userProfile.lastname" [disabled]="!isEditing" placeholder="Nhập tên..." />
+          </div>
+        </div>
+
+        <div class="form-group is-disabled" style="margin-bottom: 20px;">
+          <label>Email tài khoản</label>
+          <div class="input-wrap has-icon">
+            <span nz-icon nzType="mail" class="input-icon"></span>
+            <input nz-input [(ngModel)]="userProfile.email" disabled />
+          </div>
+        </div>
+
+        <div class="form-group" [class.is-disabled]="!isEditing" style="margin-bottom: 20px;">
+          <label>Số điện thoại</label>
+          <div class="input-wrap has-icon">
+            <span nz-icon nzType="phone" class="input-icon"></span>
+            <input nz-input [(ngModel)]="userProfile.phone" [disabled]="!isEditing" placeholder="Chưa có..." />
+          </div>
+        </div>
+
+        <div class="form-group" [class.is-disabled]="!isEditing">
+          <label>Địa chỉ giao hàng</label>
+          <div class="input-wrap">
+            <textarea nz-input [(ngModel)]="userProfile.address" [disabled]="!isEditing" rows="4"
+              placeholder="Nhập địa chỉ..."></textarea>
+          </div>
+        </div>
+
+        <button *ngIf="isEditing" class="save-btn" [disabled]="isUpdatingProfile" (click)="updateProfile()">
+          <span>Lưu thông tin hồ sơ</span>
+          <span nz-icon nzType="check-circle" style="font-size:18px"></span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Password Tab ===== -->
+  <div *ngIf="activeTab === 'password'" class="profile-card">
+    <div class="password-tab">
+      <div class="lock-icon-wrap">
+        <span nz-icon nzType="lock" nzTheme="outline"></span>
+      </div>
+      <h3 class="pw-title">Mật khẩu &amp; Bảo mật</h3>
+      <p class="pw-sub">Bảo vệ tài khoản của bạn bằng mật khẩu an toàn và phức tạp.</p>
+
+      <div class="pw-form">
+        <div class="form-group">
+          <label>Mật khẩu hiện tại</label>
+          <div class="input-wrap has-icon">
+            <span nz-icon nzType="key" class="input-icon"></span>
+            <input nz-input type="password" [(ngModel)]="passwordData.oldPassword" placeholder="••••••••" />
+          </div>
+        </div>
+
+        <div class="pw-divider"></div>
+
+        <div class="form-group">
+          <label>Mật khẩu mới</label>
+          <div class="input-wrap has-icon">
+            <span nz-icon nzType="lock" class="input-icon"></span>
+            <input nz-input type="password" [(ngModel)]="passwordData.newPassword" placeholder="••••••••" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Xác nhận mật khẩu</label>
+          <div class="input-wrap has-icon">
+            <span nz-icon nzType="check-circle" class="input-icon"></span>
+            <input nz-input type="password" [(ngModel)]="passwordData.confirmPassword" placeholder="••••••••" />
+          </div>
+        </div>
+
+        <button class="save-btn" [disabled]="isChangingPassword" (click)="changePassword()">
+          Thay đổi mật khẩu ngay
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Orders Tab ===== -->
+  <div *ngIf="activeTab === 'orders'" class="profile-card">
+    <div class="orders-tab">
+      <div class="section-label">
+        <div class="dot"></div>
+        <h3>Lịch sử mua hàng</h3>
+        <div class="divider"></div>
+      </div>
+
+      <nz-table *ngIf="orderHistory.length > 0" #orderTable [nzData]="orderHistory" [nzShowPagination]="true"
+        [nzPageSize]="5">
+        <thead>
+          <tr>
+            <th>Đơn hàng</th>
+            <th>Thời gian</th>
+            <th>Sản phẩm</th>
+            <th>Tổng chi phí</th>
+            <th>Trạng thái</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let order of orderTable.data" class="group transition-all hover:bg-gray-50 cursor-pointer" 
+              (click)="viewOrderDetails(order.id)">
+            <td class="!font-bold text-gray-900">#{{ order.id }}</td>
+            <td class="text-xs text-gray-500 font-semibold">{{ order.createdAt | date:'MMM dd, yyyy · HH:mm' }}</td>
+            <td>
+              <div class="flex -space-x-3 group-hover:space-x-1 transition-all duration-300">
+                <div *ngFor="let item of order.items.slice(0, 3)"
+                  class="w-10 h-10 rounded-full border-2 border-white bg-white overflow-hidden shadow-sm shadow-black/5">
+                  <img [src]="'http://localhost:3000' + item.product?.image" class="w-full h-full object-cover">
+                </div>
+                <div *ngIf="order.items.length > 3"
+                  class="w-10 h-10 rounded-full border-2 border-white bg-gray-100 flex items-center justify-center text-[10px] font-black text-gray-600">
+                  +{{ order.items.length - 3 }}
+                </div>
+              </div>
+            </td>
+            <td>
+              <span class="text-lg font-black text-gray-900 tracking-tighter">{{ order.totalAmount | vndCurrency }}</span>
+            </td>
+            <td>
+              <span
+                class="inline-flex items-center px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest border"
+                [ngClass]="{
+                  'bg-yellow-50 text-yellow-600 border-yellow-100': order.status === 'PENDING',
+                  'bg-emerald-50 text-emerald-600 border-emerald-100': order.status === 'PAID',
+                  'bg-sky-50 text-sky-600 border-sky-100': order.status === 'SHIPPED',
+                  'bg-green-50 text-green-600 border-green-100': order.status === 'DELIVERED' || order.status === 'COMPLETED',
+                  'bg-rose-50 text-rose-600 border-rose-100': order.status === 'CANCELLED'
+                }">
+                {{ order.status === 'DELIVERED' ? 'Đã giao' : (order.status === 'SHIPPED' ? 'Đang giao' : (order.status === 'PAID' ? 'Đã thanh toán' : (order.status === 'PENDING' ? 'Chờ xử lý' : order.status))) }}
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </nz-table>
+
+      <div *ngIf="orderHistory.length === 0" class="text-center py-16">
+        <span nz-icon nzType="inbox" class="text-6xl text-gray-200 block mb-4"></span>
+        <p class="text-[11px] font-black uppercase tracking-[0.2em] text-gray-400 mb-6">
+          Danh sách đơn hàng trống
+        </p>
+        <button nz-button routerLink="/products" class="h-11 px-8 rounded-xl font-black text-xs uppercase tracking-wider">
+          Bắt đầu mua sắm
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Order Detail Modal -->
+  <nz-modal [(nzVisible)]="isOrderModalVisible" nzTitle="Chi tiết đơn hàng" [nzFooter]="null" (nzOnCancel)="isOrderModalVisible = false" nzWidth="700px">
+    <ng-container *nzModalContent>
+      <div *ngIf="isLoadingOrderDetails" class="text-center py-10">
+        <span nz-icon nzType="loading" class="text-3xl text-black"></span>
+        <p class="mt-4 text-gray-400">Đang tải chi tiết...</p>
+      </div>
+
+      <div *ngIf="!isLoadingOrderDetails && selectedOrder">
+        <div class="order-detail-header mb-6">
+          <div class="flex justify-between items-center bg-gray-50 p-4 rounded-2xl">
+            <div>
+              <p class="text-xs uppercase font-black text-gray-400 mb-1">Mã đơn hàng</p>
+              <h3 class="text-xl font-black">#{{ selectedOrder.id }}</h3>
+            </div>
+            <div class="text-right">
+              <p class="text-xs uppercase font-black text-gray-400 mb-1">Trạng thái</p>
+              <span class="px-3 py-1 bg-black text-white text-[10px] font-black rounded-lg uppercase tracking-widest">
+                {{ selectedOrder.status }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="order-items-list mb-6">
+          <h4 class="text-sm font-black uppercase tracking-widest mb-4">Sản phẩm đã chọn</h4>
+          <div class="space-y-4">
+            <div *ngFor="let item of selectedOrder.items" class="flex gap-4 items-center p-3 border border-gray-100 rounded-2xl relative">
+              <div class="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 bg-gray-50">
+                <img [src]="'http://localhost:3000' + item.product?.image" class="w-full h-full object-cover">
+              </div>
+              <div class="flex-grow">
+                <h5 class="font-bold text-gray-900 leading-tight">{{ item.product?.name }}</h5>
+                <p class="text-xs text-gray-400 mt-1">
+                  Phân loại: <span class="font-semibold text-gray-600">{{ item.color }} / {{ item.size }}</span>
+                </p>
+              </div>
+              <div class="text-right flex-shrink-0 flex flex-col items-end">
+                <p class="font-black text-gray-900">{{ item.price | vndCurrency }}</p>
+                <p class="text-xs font-bold text-gray-400">x{{ item.quantity }}</p>
+                
+                <!-- Review Button -->
+                <button *ngIf="['PAID', 'SHIPPED', 'DELIVERED', 'COMPLETED'].includes(selectedOrder.status)"
+                  nz-button nzType="text" nzSize="small" 
+                  class="mt-2 text-primary font-bold text-[10px] uppercase tracking-tighter flex items-center gap-1 hover:bg-primary/5 p-1 rounded-lg"
+                  (click)="openReviewModal(item, selectedOrder.id)">
+                  <span nz-icon nzType="star" nzTheme="fill"></span>
+                  Đánh giá
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="order-summary bg-gray-50 p-6 rounded-3xl">
+          <div class="space-y-2 text-sm">
+            <div class="flex justify-between text-gray-500">
+              <span>Tạm tính</span>
+              <span>{{ (selectedOrder.totalAmount + selectedOrder.discountAmount) | vndCurrency }}</span>
+            </div>
+            <div class="flex justify-between text-rose-500" *ngIf="selectedOrder.discountAmount > 0">
+              <span>Giảm giá</span>
+              <span>-{{ selectedOrder.discountAmount | vndCurrency }}</span>
+            </div>
+            <div class="pt-2 mt-2 border-t border-gray-200 flex justify-between">
+              <span class="font-black text-base">Tổng thanh toán</span>
+              <span class="font-black text-xl text-black">{{ selectedOrder.totalAmount | vndCurrency }}</span>
+            </div>
+          </div>
+          
+          <div class="mt-6 pt-4 border-t border-dashed border-gray-300 text-xs text-gray-400 font-medium">
+             <p class="flex items-center gap-2">
+               <span nz-icon nzType="calendar"></span> Ngày đặt: {{ selectedOrder.createdAt | date:'HH:mm · dd/MM/yyyy' }}
+             </p>
+             <p class="flex items-center gap-2 mt-1">
+               <span nz-icon nzType="wallet"></span> Thanh toán: {{ selectedOrder.paymentMethod }}
+             </p>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+  </nz-modal>
+
+  <!-- Product Review Modal -->
+  <nz-modal [(nzVisible)]="isReviewModalVisible" [nzTitle]="'Đánh giá: ' + reviewData.productName" 
+            (nzOnCancel)="isReviewModalVisible = false" (nzOnOk)="submitReview()"
+            [nzOkLoading]="isSubmittingReview" nzOkText="Gửi đánh giá" nzCancelText="Hủy">
+    <ng-container *nzModalContent>
+      <div class="review-modal-content space-y-6">
+        <div class="rating-section text-center">
+          <p class="text-sm font-bold text-gray-500 uppercase tracking-widest mb-2">Chất lượng sản phẩm</p>
+          <nz-rate [(ngModel)]="reviewData.rating" [nzAllowHalf]="false" style="font-size: 32px;"></nz-rate>
+          <p class="text-xs font-black text-amber-500 mt-2">
+            {{ reviewData.rating === 5 ? 'TUYỆT VỜI' : reviewData.rating >= 4 ? 'HÀI LÒNG' : reviewData.rating >= 3 ? 'BÌNH THƯỜNG' : 'KHÔNG TỐT' }}
+          </p>
+        </div>
+
+        <div class="comment-section">
+          <label class="text-xs font-black uppercase tracking-widest text-gray-400 mb-2 block">Cảm nhận của bạn</label>
+          <textarea nz-input [(ngModel)]="reviewData.comment" rows="4" 
+                    placeholder="Hãy chia sẻ trải nghiệm của bạn về sản phẩm này..."></textarea>
+        </div>
+
+        <div class="image-upload-section">
+          <label class="text-xs font-black uppercase tracking-widest text-gray-400 mb-2 block">Thêm hình ảnh thực tế</label>
+          <div class="flex gap-4 items-center">
+            <div (click)="reviewPhotoInput.click()" 
+                 class="w-20 h-20 border-2 border-dashed border-gray-200 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50 transition-all">
+              <span nz-icon nzType="camera" class="text-xl text-gray-300"></span>
+              <span class="text-[9px] font-black text-gray-400 mt-1">THÊM ẢNH</span>
+            </div>
+            <div *ngIf="reviewData.imagePreview" class="relative group">
+              <img [src]="reviewData.imagePreview" class="w-20 h-20 object-cover rounded-2xl border border-gray-100">
+              <div class="absolute inset-0 bg-black/40 rounded-2xl opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all cursor-pointer"
+                   (click)="reviewData.imagePreview = ''; reviewData.imageFile = null">
+                <span nz-icon nzType="delete" class="text-white text-lg"></span>
+              </div>
+            </div>
+          </div>
+          <input #reviewPhotoInput type="file" class="hidden" (change)="onReviewImageSelected($event)" accept="image/*">
+        </div>
+      </div>
+    </ng-container>
+  </nz-modal>
+
+  <!-- ===== Favorites Tab ===== -->
+  <div *ngIf="activeTab === 'favorites'" class="profile-card">
+    <div class="favorites-tab">
+      <div class="section-label mb-6">
+        <div class="dot"></div>
+        <h3>Sản phẩm yêu thích của bạn</h3>
+        <div class="divider"></div>
+      </div>
+
+      <div *ngIf="favoriteProducts.length > 0" class="favorites-grid grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div *ngFor="let fav of favoriteProducts" 
+             class="fav-card group relative bg-white border border-gray-100 rounded-3xl overflow-hidden hover:shadow-2xl hover:shadow-black/5 transition-all duration-500 cursor-pointer" 
+             (click)="goToProduct(fav.product?.id)">
+          
+          <div class="aspect-square relative overflow-hidden bg-gray-50 flex items-center justify-center">
+            <img [src]="'http://localhost:3000' + fav.product?.image" 
+                 class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-[1.5s]">
+            
+            <div class="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-500"></div>
+
+            <button class="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center text-rose-500 shadow-sm border border-white hover:bg-rose-500 hover:text-white transition-all duration-300 z-10"
+                    (click)="removeFavorite(fav.product?.id, $event)">
+              <span nz-icon nzType="heart" nzTheme="fill" class="text-xl"></span>
+            </button>
+          </div>
+
+          <div class="p-5">
+            <p class="text-[10px] font-black uppercase text-gray-400 tracking-widest mb-1">{{ fav.product?.brand?.name || 'Thương hiệu' }}</p>
+            <h4 class="text-sm font-bold text-gray-900 line-clamp-2 h-10 mb-4 group-hover:text-primary transition-colors duration-300">{{ fav.product?.name }}</h4>
+            <div class="flex items-center justify-between mt-auto">
+              <span class="text-lg font-black text-gray-900 tracking-tighter">{{ fav.product?.price | vndCurrency }}</span>
+              <div class="w-8 h-8 rounded-full bg-black text-white flex items-center justify-center transform group-hover:scale-110 transition-all duration-300">
+                <span nz-icon nzType="arrow-right"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="favoriteProducts.length === 0" class="text-center py-20">
+        <div class="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
+            <span nz-icon nzType="heart" class="text-5xl text-gray-100"></span>
+        </div>
+        <h4 class="text-base font-black text-gray-900 uppercase tracking-widest mb-2">Chưa có gì ở đây</h4>
+        <p class="text-xs font-bold text-gray-400 mb-8 lowercase tracking-tight">
+          Hãy thêm những sản phẩm bạn yêu thích vào danh sách này để theo dõi.
+        </p>
+        <button nz-button routerLink="/products" class="h-12 px-10 rounded-2xl bg-black text-white border-0 font-black text-xs uppercase tracking-[0.2em] hover:scale-105 active:scale-95 transition-all duration-300">
+          Khám phá ngay
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

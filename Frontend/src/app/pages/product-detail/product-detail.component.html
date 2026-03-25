@@ -1,4 +1,16 @@
-<div class="product-page" *ngIf="product">
+<div class="loading-container" *ngIf="isLoading && !hasError">
+  <div class="spinner"></div>
+  <p style="margin-top: 1rem; color: #888;">Đang tải sản phẩm...</p>
+</div>
+
+<div class="error-container" *ngIf="hasError">
+  <span nz-icon nzType="frown" style="font-size: 48px; color: #ff4d4f;"></span>
+  <h2>Opps! Có lỗi xảy ra</h2>
+  <p>Không thể tải thông tin sản phẩm. Vui lòng kiểm tra kết nối Server.</p>
+  <button nz-button nzType="primary" (click)="retryLoad()">Thử lại</button>
+</div>
+
+<div class="product-page" *ngIf="!isLoading && !hasError && product">
     <div class="container">
       <!-- Breadcrumb -->
       <nav class="breadcrumb">
@@ -8,7 +20,7 @@
       </nav>
   
       <div class="product-main-grid">
-        <!-- Gallery Section -->
+        <!-- Gallery Section (Left) -->
         <div class="gallery-section">
           <div class="thumbnails">
             <div class="thumb" [class.active]="selectedImage === product.image" (click)="selectedImage = product.image">
@@ -23,7 +35,7 @@
           </div>
         </div>
   
-        <!-- Info Section -->
+        <!-- Info & Variants Section (Right) -->
         <div class="info-section">
           <h1 class="product-name">{{ product.name }}</h1>
           
@@ -34,45 +46,64 @@
           </div>
   
           <div class="price-row">
-            <span class="current-price">{{ product.price | vndCurrency }}</span>
-            <span class="old-price" *ngIf="product.originalPrice && product.originalPrice > product.price">
+            <span class="current-price">{{ (currentVariant?.price || product.price) | vndCurrency }}</span>
+            <span class="old-price" *ngIf="product.originalPrice && product.originalPrice > (currentVariant?.price || product.price)">
               {{ product.originalPrice | vndCurrency }}
             </span>
             <span class="discount-badge" *ngIf="getDiscountPercent(product) > 0">
               -{{ getDiscountPercent(product) }}%
             </span>
           </div>
+
+          <div class="stock-status" [class.out]="(currentVariant?.stock ?? product.stock) <= 0">
+            <span nz-icon [nzType]="(currentVariant?.stock ?? product.stock) > 0 ? 'check-circle' : 'close-circle'"></span>
+            @if((currentVariant?.stock ?? product.stock) > 0) {
+              Còn lại: {{ currentVariant?.stock ?? product.stock }} sản phẩm
+            } @else {
+              <strong>HẾT HÀNG</strong>
+            }
+          </div>
   
-          <p class="product-desc">{{ product.description }}</p>
+          <!-- Short label or snippet (optional) -->
+          <div class="promo-note" *ngIf="product.promoNote">
+             <span nz-icon nzType="gift" nzTheme="outline"></span> {{ product.promoNote }}
+          </div>
   
           <hr class="divider">
   
-          <!-- Attributes Pattern -->
-          <div class="attributes">
-            <div class="attribute-group" *ngFor="let attr of product.attributes">
-              <h3 class="attr-label">Chọn {{ attr.name }}</h3>
+          <!-- ADVANCED VARIANT DESIGN PATTERN -->
+          <div class="variants-container">
+            <div class="variant-group" *ngFor="let attr of product.attributes">
+              <div class="variant-header">
+                <span class="variant-label">Chọn {{ attr.name }}:</span>
+                <span class="selected-value">{{ selectedAttributes[attr.name] }}</span>
+              </div>
               
-              <div class="options-row">
-                <!-- Color Pattern -->
-                <ng-container *ngIf="isColorAttr(attr.name); else defaultOptions">
-                  <div class="color-option" 
+              <div class="variant-options">
+                <!-- Color Pattern (Circular Swatches) -->
+                <ng-container *ngIf="isColorAttr(attr.name); else defaultBoxPattern">
+                  <div class="color-swatch-wrapper" 
                        *ngFor="let opt of attr.options" 
-                       [style.background-color]="opt"
                        [class.active]="selectedAttributes[attr.name] === opt"
-                       (click)="selectAttribute(attr.name, opt)"
-                       [title]="opt">
-                    <span nz-icon nzType="check" *ngIf="selectedAttributes[attr.name] === opt"></span>
+                       [class.disabled]="isAttrDisabled(attr.name, opt)"
+                       (click)="!isAttrDisabled(attr.name, opt) && selectAttribute(attr.name, opt)">
+                    <div class="color-circle" [style.background-color]="getColorCode(opt)" [title]="opt">
+                      <span nz-icon nzType="check" *ngIf="selectedAttributes[attr.name] === opt" 
+                            [style.color]="getColorCode(opt).toLowerCase() === 'white' ? 'black' : 'white'"></span>
+                    </div>
                   </div>
                 </ng-container>
   
-                <!-- Default Pattern (Size, Storage, etc.) -->
-                <ng-template #defaultOptions>
-                  <div class="size-option" 
+                <!-- Box Pattern (Size, Storage, Number, etc.) -->
+                <ng-template #defaultBoxPattern>
+                  <button class="box-option" 
                        *ngFor="let opt of attr.options" 
                        [class.active]="selectedAttributes[attr.name] === opt"
+                       [class.disabled]="isAttrDisabled(attr.name, opt)"
+                       [disabled]="isAttrDisabled(attr.name, opt)"
                        (click)="selectAttribute(attr.name, opt)">
                     {{ opt }}
-                  </div>
+                  </button>
                 </ng-template>
               </div>
             </div>
@@ -80,42 +111,118 @@
   
           <hr class="divider">
   
-          <!-- Actions -->
-          <div class="actions">
+          <!-- Actions & Quantity -->
+          <div class="actions-row">
             <div class="quantity-picker">
               <button (click)="updateQuantity(-1)"><span nz-icon nzType="minus"></span></button>
-              <input type="number" [(ngModel)]="quantity" disabled>
+              <input type="number" [(ngModel)]="quantity" readonly>
               <button (click)="updateQuantity(1)"><span nz-icon nzType="plus"></span></button>
             </div>
             
-            <button nz-button class="add-to-cart-btn" (click)="addToCart()">Add to Cart</button>
+            <button nz-button class="add-to-cart-btn" 
+                    [disabled]="(currentVariant?.stock ?? product.stock) <= 0"
+                    (click)="addToCart()">
+              {{ (currentVariant?.stock ?? product.stock) > 0 ? 'Add to Cart' : 'Out of Stock' }}
+            </button>
           </div>
         </div>
       </div>
   
-      <!-- Tabs Section -->
+      <!-- Bottom Section (Details & Reviews) -->
       <div class="tabs-container">
         <div class="tabs-header">
-          <div class="tab-item">Product Details</div>
-          <div class="tab-item active">Rating & Reviews</div>
-          <div class="tab-item">FAQs</div>
+          <div class="tab-item active">All Details & Reviews</div>
         </div>
         
-        <div class="reviews-section">
-          <div class="section-top">
-            <h2>All Reviews <span>({{ product.numReviews }})</span></h2>
-            <div class="filter-actions">
-              <button class="filter-btn"><span nz-icon nzType="filter"></span></button>
-              <select name="sort" class="sort-select">
-                <option value="latest">Latest</option>
-              </select>
-              <button class="write-btn">Write a Review</button>
+        <div class="bottom-content-grid">
+          <!-- Left: Structured Description -->
+          <div class="detail-box">
+            <h2>Hỗ trợ & Thông tin sản phẩm</h2>
+            <div class="detail-text">
+              <ng-container *ngFor="let entry of getStructuredDescription()">
+                <h4 *ngIf="entry.type === 'header'" class="desc-header">{{ entry.content }}</h4>
+                <div *ngIf="entry.type === 'bullet'" class="desc-bullet">{{ entry.content }}</div>
+                <p *ngIf="entry.type === 'text'" class="desc-paragraph">{{ entry.content }}</p>
+              </ng-container>
+            </div>
+            
+            <!-- Technical Specs Grid -->
+            <div class="specs-list" *ngIf="product.specs && product.specs.length > 0">
+              <div class="spec-item" *ngFor="let s of product.specs">
+                <span nz-icon [nzType]="s.icon || 'info-circle'"></span>
+                <span>{{ s.text }}</span>
+              </div>
             </div>
           </div>
-  
-          <!-- Placeholder Reviews logic -->
-          <div class="reviews-grid">
-            <!-- Review cards would go here -->
+
+          <!-- Right: Reviews with Filters -->
+          <div class="reviews-section">
+            <div class="section-top">
+              <h2>Đánh giá từ khách hàng <span>({{ reviews.length }})</span></h2>
+              <div class="filter-actions" *ngIf="isLoggedIn">
+                <button class="write-btn" *ngIf="canUserReview" (click)="showReviewForm = !showReviewForm">
+                  {{ isEditingReview ? 'Sửa đánh giá' : 'Viết đánh giá' }}
+                </button>
+                <span class="note-text" *ngIf="!canUserReview && !isEditingReview">Mua hàng để đánh giá sản phẩm</span>
+              </div>
+            </div>
+
+            <!-- Review Form -->
+            <div class="review-form-card" *ngIf="showReviewForm">
+              <h3>{{ isEditingReview ? 'Chỉnh sửa đánh giá của bạn' : 'Gửi đánh giá của bạn' }}</h3>
+              <div class="review-form-body">
+                <div class="form-group">
+                  <label class="block mb-1 font-semibold">Xếp hạng:</label>
+                  <nz-rate [(ngModel)]="reviewForm.rating"></nz-rate>
+                </div>
+                <div class="form-group mt-3">
+                  <label class="block mb-1 font-semibold">Bình luận:</label>
+                  <textarea nz-input [(ngModel)]="reviewForm.comment" rows="3" placeholder="Chia sẻ cảm nhận của bạn..."></textarea>
+                </div>
+                <div class="form-group mt-3">
+                  <label class="block mb-1 font-semibold">Thêm hình ảnh:</label>
+                  <div class="upload-zone">
+                    <input type="file" (change)="onFileSelected($event)" accept="image/*" class="file-input">
+                    <div class="preview-box" *ngIf="reviewForm.imagePreview">
+                      <img [src]="reviewForm.imagePreview" alt="Preview">
+                    </div>
+                  </div>
+                </div>
+                <div class="form-actions mt-4 flex gap-2">
+                  <button nz-button nzType="primary" class="submit-review-btn" [nzLoading]="isSubmittingReview" (click)="submitReview()">
+                    {{ isEditingReview ? 'Cập nhật' : 'Gửi đánh giá' }}
+                  </button>
+                  <button nz-button (click)="showReviewForm = false">Hủy</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="reviews-grid mt-6">
+              <div *ngIf="reviews.length === 0" class="empty-reviews text-center py-8 text-gray-400">
+                  Chưa có đánh giá nào cho sản phẩm này.
+              </div>
+              <div class="review-card" *ngFor="let r of reviews">
+                <div class="review-header flex justify-between">
+                  <nz-rate [ngModel]="r.rating" nzDisabled nzSize="small"></nz-rate>
+                  <span class="review-date text-xs text-gray-400">{{ r.createdAt | date:'dd/MM/yyyy' }}</span>
+                </div>
+                <div class="review-user mt-2">
+                  <span class="user-name font-bold flex items-center">
+                    {{ r.user?.firstname || r.user?.username || 'Khách hàng' }} {{ r.user?.lastname || '' }}
+                    <span class="verified-icon ml-1 text-green-500" nz-icon nzType="check-circle" nzTheme="fill"></span>
+                  </span>
+                </div>
+                <p class="review-text mt-2 text-gray-600 italic">"{{ r.comment }}"</p>
+                
+                <div class="review-image mt-3" *ngIf="r.image">
+                  <img [src]="'http://localhost:3000' + r.image" class="w-24 h-24 object-cover rounded-lg shadow-sm cursor-pointer hover:opacity-80 transition-opacity" [alt]="'Review by ' + r.user?.username">
+                </div>
+              </div>
+            </div>
+
+            <div class="load-more" *ngIf="reviews.length > 5">
+              <button>Xem thêm đánh giá</button>
+            </div>
           </div>
         </div>
       </div>

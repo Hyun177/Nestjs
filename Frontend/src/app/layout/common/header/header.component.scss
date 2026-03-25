@@ -126,6 +126,33 @@
             text-align: center;
         }
     }
+
+    .auth-links {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+        margin-left: 0.5rem;
+
+        a {
+            text-decoration: none;
+            font-size: 0.95rem;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .login-link {
+            color: #000;
+            &:hover { color: #666; }
+        }
+
+        .register-link {
+            background-color: #000;
+            color: #fff;
+            padding: 0.5rem 1.2rem;
+            border-radius: 99px;
+            &:hover { background-color: #333; }
+        }
+    }
 }
 
 .shop-dropdown {

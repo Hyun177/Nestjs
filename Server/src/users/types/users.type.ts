@@ -4,6 +4,7 @@ import {
   MinLength,
   MaxLength,
   IsStrongPassword,
+  IsOptional,
 } from 'class-validator';
 
 export type User = {
@@ -13,6 +14,11 @@ export type User = {
   password: string;
   refreshToken?: string;
   role: string;
+  phone?: string;
+  address?: string;
+  avatar?: string;
+  firstname?: string;
+  lastname?: string;
 };
 
 export class CreateUserDto {
@@ -23,6 +29,27 @@ export class CreateUserDto {
 
   @IsEmail()
   email: string;
+
   @IsStrongPassword()
   password: string;
+
+  @IsString()
+  @IsOptional()
+  phone?: string;
+
+  @IsString()
+  @IsOptional()
+  address?: string;
+
+  @IsString()
+  @IsOptional()
+  avatar?: string;
+
+  @IsString()
+  @IsOptional()
+  firstname?: string;
+
+  @IsString()
+  @IsOptional()
+  lastname?: string;
 }

@@ -59,6 +59,20 @@ export class ProductDto {
   @IsOptional()
   promoNote?: string;
 
+  @IsOptional()
+  attributes?: { name: string; options: string[] }[];
+
+  @IsOptional()
+  variants?: {
+    sku: string;
+    price: number;
+    stock: number;
+    attributes: { [key: string]: string };
+  }[];
+
+  @IsOptional()
+  images?: string[];
+
   @Type(() => Number)
   @IsNumber()
   @IsOptional()

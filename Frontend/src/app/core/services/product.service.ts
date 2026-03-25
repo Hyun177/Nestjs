@@ -1,6 +1,7 @@
 import { Injectable, inject, PLATFORM_ID } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { isPlatformBrowser } from '@angular/common';
 
 export interface Product {
@@ -20,23 +21,39 @@ export interface Product {
   labels?: string[];
   specs?: { icon: string; text: string }[];
   promoNote?: string;
+  isFeatured?: boolean;
+  isArchived?: boolean;
   category?: any;
   brand?: any;
   images?: string[];
   attributes?: { name: string; options: string[] }[];
+  variants?: {
+    sku: string;
+    price: number;
+    stock: number;
+    attributes: { [key: string]: string };
+  }[];
 }
 
 @Injectable({
   providedIn: 'root',
 })
 export class ProductService {
-  private apiUrl = 'http://localhost:3000/product';
+  private apiUrl = 'http://127.0.0.1:3000/api/product';
   private http = inject(HttpClient);
   private platformId = inject(PLATFORM_ID);
   private isBrowser = isPlatformBrowser(this.platformId);
 
-  getProducts(): Observable<Product[]> {
-    return this.http.get<Product[]>(this.apiUrl);
+  getProducts(params?: any): Observable<Product[]> {
+    return this.http.get<any>(this.apiUrl, { params }).pipe(
+      map(response => response.data ? response.data : response)
+    );
+  }
+
+  getProductsPaginated(params?: any): Observable<any> {
+    return this.http.get<any>(this.apiUrl, { params }).pipe(
+      map(response => response)
+    );
   }
 
   getTopSelling(): Observable<Product[]> {

@@ -4,15 +4,34 @@ import {
   MinLength,
   MaxLength,
   IsStrongPassword,
+  IsOptional,
 } from 'class-validator';
 export class UpdateUserDto {
   @IsString()
   @MinLength(2)
   @MaxLength(100)
-  name: string;
+  @IsOptional()
+  name?: string;
 
   @IsEmail()
-  email: string;
+  @IsOptional()
+  email?: string;
   @IsStrongPassword()
-  password: string;
+  @IsOptional()
+  password?: string;
+  @IsString()
+  @IsOptional()
+  phone?: string;
+  @IsString()
+  @IsOptional()
+  address?: string;
+  @IsString()
+  @IsOptional()
+  avatar?: string;
+  @IsString()
+  @IsOptional()
+  firstname?: string;
+  @IsString()
+  @IsOptional()
+  lastname?: string;
 }

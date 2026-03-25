@@ -2,6 +2,11 @@ import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/
 import { provideHttpClient, withFetch } from '@angular/common/http';
 import { provideRouter } from '@angular/router';
 import { provideNzIcons } from 'ng-zorro-antd/icon';
+import { NZ_I18N, vi_VN } from 'ng-zorro-antd/i18n';
+import { registerLocaleData } from '@angular/common';
+import vi from '@angular/common/locales/vi';
+
+registerLocaleData(vi);
 import {
   MenuOutline,
   UserOutline,
@@ -50,12 +55,33 @@ import {
   TagOutline,
   GiftOutline,
   StarOutline,
+  MinusOutline,
+  CameraOutline,
+  KeyOutline,
+  ShoppingOutline,
+  DollarCircleOutline,
+  ArrowUpOutline,
+  ArrowDownOutline,
+  CalendarOutline,
+  PieChartOutline,
+  LineChartOutline,
+  AppstoreOutline,
+  ProfileOutline,
+  SettingOutline,
+  PoweroffOutline,
+  BellOutline,
+  NotificationOutline,
+  EditOutline,
+  EyeFill,
+  ShoppingFill,
+  ContainerOutline,
 } from '@ant-design/icons-angular/icons';
 import { routes } from './app.routes';
 import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
 
 export const appConfig: ApplicationConfig = {
   providers: [
+    { provide: NZ_I18N, useValue: vi_VN },
     provideBrowserGlobalErrorListeners(),
     provideNzIcons([
       MenuOutline,
@@ -105,6 +131,26 @@ export const appConfig: ApplicationConfig = {
       TagOutline,
       GiftOutline,
       StarOutline,
+      MinusOutline,
+      CameraOutline,
+      KeyOutline,
+      ShoppingOutline,
+      DollarCircleOutline,
+      ArrowUpOutline,
+      ArrowDownOutline,
+      CalendarOutline,
+      PieChartOutline,
+      LineChartOutline,
+      AppstoreOutline,
+      ProfileOutline,
+      SettingOutline,
+      PoweroffOutline,
+      BellOutline,
+      NotificationOutline,
+      EditOutline,
+      EyeFill,
+      ShoppingFill,
+      ContainerOutline,
     ]),
     provideRouter(routes),
     provideHttpClient(withFetch()),
