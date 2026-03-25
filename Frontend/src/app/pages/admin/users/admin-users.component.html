@@ -39,6 +39,7 @@
       [nzLoading]="loading()"
       nzShowSizeChanger
       [nzShowTotal]="totalTemplate"
+      [nzNoResult]="emptyUsersTpl"
     >
       <!-- User Column -->
       <thead>
@@ -117,10 +118,12 @@
       </tbody>
     </nz-table>
 
-    <!-- Empty State -->
-    <div *ngIf="filteredUsers().length === 0" class="p-8 text-center">
-      <nz-empty nzNotFoundContent="Không tìm thấy người dùng nào"></nz-empty>
-    </div>
+    <!-- Template for empty state -->
+    <ng-template #emptyUsersTpl>
+      <div class="p-8 text-center">
+        <nz-empty nzNotFoundContent="Không tìm thấy người dùng nào"></nz-empty>
+      </div>
+    </ng-template>
   </div>
 
   <!-- User Form Modal -->

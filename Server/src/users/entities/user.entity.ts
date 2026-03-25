@@ -1,5 +1,6 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToMany } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToMany, OneToMany } from 'typeorm';
 import { Role } from './role.entity';
+import { Order } from '../../order/entities/order.entity';
 
 @Entity('users')
 export class User {
@@ -35,4 +36,7 @@ export class User {
 
   @ManyToMany(() => Role, (role) => role.users)
   roles: Role[];
+
+  @OneToMany(() => Order, (order) => order.user)
+  orders: Order[];
 }

@@ -160,17 +160,42 @@ export class ProductController {
   async updateProduct(
     @Param('id', ParseIntPipe) id: number,
     @UploadedFiles() files: Express.Multer.File[],
-    @Body() body: UpdateProductDto,
+    @Body() body: any, // Use any to handle stringified JSON fields
   ) {
     const mainFile = files?.find(f => f.fieldname === 'image');
     const galleryFiles = files?.filter(f => f.fieldname === 'images') || [];
     
+    // If a new main image was uploaded, use it. 
+    // Otherwise, body.image might already contain the existing path sent from frontend.
     if (mainFile) {
       body.image = `/uploads/${mainFile.filename}`;
     }
-    if (galleryFiles.length > 0) {
-      body.images = galleryFiles.map(f => `/uploads/${f.filename}`);
+
+    // Handle gallery images
+    let finalGallery: string[] = [];
+    
+    // 1. Get existing images paths sent from frontend
+    if (body.existingImages) {
+      try {
+        finalGallery = typeof body.existingImages === 'string' 
+          ? JSON.parse(body.existingImages) 
+          : body.existingImages;
+      } catch (e) {
+        finalGallery = [];
+      }
     }
+
+    // 2. Add new uploaded gallery files
+    if (galleryFiles.length > 0) {
+      const newFiles = galleryFiles.map(f => `/uploads/${f.filename}`);
+      finalGallery = [...finalGallery, ...newFiles];
+    }
+
+    // Assign back to body.images for the service to handle
+    if (finalGallery.length > 0 || body.existingImages) {
+      body.images = finalGallery;
+    }
+
     return this.ProductService.updateProduct(id, body);
   }
 

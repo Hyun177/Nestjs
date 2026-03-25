@@ -293,7 +293,10 @@ export class AdminProductsComponent implements OnInit {
       this.message.warning('Vui lòng điền đầy đủ các trường bắt buộc!');
       return;
     }
-    if (!this.isEditMode() && this.mainFileList.length === 0) {
+    
+    // Check if main image exists (either a new file or an existing URL)
+    const hasMainImage = this.mainFileList.length > 0;
+    if (!this.isEditMode() && !hasMainImage) {
       this.message.warning('Vui lòng chọn ảnh đại diện!');
       return;
     }
@@ -326,12 +329,34 @@ export class AdminProductsComponent implements OnInit {
     formData.append('attributes', JSON.stringify(attrData));
     formData.append('variants', JSON.stringify(val.variants || []));
 
-    if (this.mainFileList[0]?.originFileObj) {
-      formData.append('image', this.mainFileList[0].originFileObj as File);
+    // Handle single main image
+    if (this.mainFileList.length > 0) {
+      const file = this.mainFileList[0];
+      const rawFile = file.originFileObj || (file as any);
+      if (rawFile instanceof File || rawFile instanceof Blob) {
+        formData.append('image', rawFile);
+      } else if (file.url) {
+        // Keep existing image URL by sending its relative path
+        formData.append('image', file.url.replace('http://localhost:3000', ''));
+      }
     }
+
+    // Handle gallery
+    const existingImages: string[] = [];
     this.galleryFileList.forEach(f => {
-      if (f.originFileObj) formData.append('images', f.originFileObj as File);
+      const rawFile = f.originFileObj || (f as any);
+      if (rawFile instanceof File || rawFile instanceof Blob) {
+        formData.append('images', rawFile);
+      } else if (f.url) {
+        existingImages.push(f.url.replace('http://localhost:3000', ''));
+      }
     });
+    
+    // Send existing images as a separate field to handle in backend if needed,
+    // or we can append them to 'images' as strings if the backend parses them.
+    if (existingImages.length > 0) {
+      formData.append('existingImages', JSON.stringify(existingImages));
+    }
 
     const req = this.isEditMode()
       ? this.productService.updateProduct(val.id!, formData)
@@ -345,6 +370,7 @@ export class AdminProductsComponent implements OnInit {
         this.loadProducts();
       },
       error: (err) => {
+        console.error('Submit Error:', err);
         this.message.error(err.error?.message || 'Thao tác thất bại');
         this.isSaving.set(false);
       }
@@ -382,17 +408,31 @@ export class AdminProductsComponent implements OnInit {
   }
 
   beforeUploadMain = (file: NzUploadFile): boolean => {
-    this.getBase64(file as any as File).then(res => {
+    const isImg = file.type?.startsWith('image/');
+    if (!isImg) {
+      this.message.error('Bạn chỉ có thể tải lên tệp hình ảnh!');
+      return false;
+    }
+    const rawFile = file.originFileObj || (file as any);
+    this.getBase64(rawFile).then(res => {
       file.thumbUrl = res as string;
       this.mainFileList = [file];
+      this.cdr.detectChanges();
     });
     return false;
   };
 
   beforeUploadGallery = (file: NzUploadFile): boolean => {
-    this.getBase64(file as any as File).then(res => {
+    const isImg = file.type?.startsWith('image/');
+    if (!isImg) {
+      this.message.error('Bạn chỉ có thể tải lên tệp hình ảnh!');
+      return false;
+    }
+    const rawFile = file.originFileObj || (file as any);
+    this.getBase64(rawFile).then(res => {
       file.thumbUrl = res as string;
       this.galleryFileList = [...this.galleryFileList, file];
+      this.cdr.detectChanges();
     });
     return false;
   };
