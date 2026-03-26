@@ -558,14 +558,6 @@
 
 // ── ng-zorro overrides ────────────────
 :host ::ng-deep {
-  .ant-pagination-item-active {
-    border-color: #111 !important;
-
-    a {
-      color: #111 !important;
-    }
-  }
-
   .ant-select-selector {
     border: 1.5px solid #e5e7eb !important;
     border-radius: 10px !important;
