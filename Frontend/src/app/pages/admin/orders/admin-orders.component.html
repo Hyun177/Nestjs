@@ -1,15 +1,15 @@
 <div class="orders-page">
   <!-- Header -->
   <div class="page-header">
-    <div>
-      <h2 class="page-title">Quản lý đơn hàng</h2>
-      <p class="page-sub">Theo dõi và cập nhật trạng thái tất cả đơn hàng</p>
+    <div class="title-wrap">
+      <h2>Quản lý đơn hàng</h2>
+      <p>Theo dõi và cập nhật trạng thái tất cả đơn hàng</p>
     </div>
-    <div class="header-stats">
-      <div class="stat-pill">
-        <span class="stat-num">{{ filteredOrders.length }}</span>
-        <span>đơn hiển thị</span>
-      </div>
+    <div class="header-actions">
+      <button class="add-btn" (click)="openAddModal()">
+        <span nz-icon nzType="plus"></span>
+        Thêm đơn hàng
+      </button>
     </div>
   </div>
 
@@ -47,7 +47,7 @@
           <th nzWidth="170px">Trạng thái</th>
           <th nzWidth="120px">Thanh toán</th>
           <th nzWidth="130px">Ngày đặt</th>
-          <th nzWidth="90px" nzAlign="center">Hành động</th>
+          <th nzWidth="150px" nzAlign="center">Thao tác</th>
         </tr>
       </thead>
       <tbody>
@@ -93,14 +93,22 @@
             <div class="date-time">{{ o.createdAt | date:'HH:mm' }}</div>
           </td>
           <td nzAlign="center">
-            <button class="detail-btn" (click)="openDetail(o)" nz-tooltip nzTooltipTitle="Xem chi tiết đơn hàng">
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                <circle cx="12" cy="12" r="3" />
-              </svg>
-              Chi tiết
-            </button>
+            <div class="actions-cell">
+              <button class="icon-btn detail" (click)="openDetail(o)" nz-tooltip nzTooltipTitle="Chi tiết">
+                <span nz-icon nzType="eye"></span>
+              </button>
+              <button class="icon-btn edit" (click)="openEditModal(o)" nz-tooltip nzTooltipTitle="Sửa">
+                <span nz-icon nzType="edit"></span>
+              </button>
+              <button class="icon-btn delete" 
+                      nz-popconfirm 
+                      nzPopconfirmTitle="Xóa đơn hàng này?" 
+                      (nzOnConfirm)="deleteOrder(o.id)" 
+                      nz-tooltip 
+                      nzTooltipTitle="Xóa">
+                <span nz-icon nzType="delete"></span>
+              </button>
+            </div>
           </td>
         </tr>
       </tbody>
@@ -334,3 +342,63 @@
     <button nz-button nzSize="large" (click)="closeDetail()">Đóng</button>
   </ng-template>
 </nz-modal>
+
+<!-- ===== EDIT/ADD ORDER MODAL ===== -->
+<div class="custom-modal-overlay" [class.active]="editModalVisible()">
+  <div class="custom-modal" [class.active]="editModalVisible()">
+    <div class="modal-header">
+      <h3>{{ isEditMode() ? 'Chỉnh sửa đơn hàng' : 'Thêm đơn hàng' }}</h3>
+      <button class="close-btn" (click)="editModalVisible.set(false)">&times;</button>
+    </div>
+    
+    <div class="modal-body">
+      <form [formGroup]="orderForm" class="custom-form">
+        <div class="form-group">
+          <label>Khách hàng *</label>
+          <nz-select formControlName="userId" nzPlaceHolder="Chọn khách hàng" nzShowSearch style="width: 100%;">
+            <nz-option *ngFor="let u of usersList" [nzLabel]="u.name || (u.firstname + ' ' + u.lastname)" [nzValue]="u.id"></nz-option>
+          </nz-select>
+        </div>
+
+        <div class="form-group">
+          <label>Địa chỉ nhận hàng *</label>
+          <input nz-input formControlName="shippingAddress" placeholder="Nhập địa chỉ..." />
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Số điện thoại *</label>
+            <input nz-input formControlName="shippingPhone" placeholder="0xxx..." />
+          </div>
+          <div class="form-group">
+            <label>Tổng tiền *</label>
+            <input nz-input type="number" formControlName="totalAmount" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Trạng thái</label>
+            <nz-select formControlName="status" style="width: 100%;">
+              <nz-option *ngFor="let s of statusOptions.slice(1)" [nzLabel]="s.label" [nzValue]="s.value"></nz-option>
+            </nz-select>
+          </div>
+          <div class="form-group">
+            <label>Thanh toán</label>
+            <nz-select formControlName="paymentMethod" style="width: 100%;">
+              <nz-option nzLabel="COD" nzValue="COD"></nz-option>
+              <nz-option nzLabel="VNPAY" nzValue="VNPAY"></nz-option>
+            </nz-select>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <div class="modal-footer">
+      <button class="cancel-btn" (click)="editModalVisible.set(false)">Hủy bỏ</button>
+      <button class="save-btn" [disabled]="orderForm.invalid" (click)="handleEditOk()">
+        {{ isEditMode() ? 'Lưu đơn hàng' : 'Tạo mới' }}
+      </button>
+    </div>
+  </div>
+</div>

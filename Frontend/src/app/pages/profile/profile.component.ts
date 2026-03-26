@@ -302,5 +302,21 @@ export class ProfileComponent implements OnInit {
       }
     });
   }
+
+  cancelOrder(orderId: number) {
+    this.orderService.cancelOrder(orderId).subscribe({
+      next: () => {
+        this.message.success('Đã hủy đơn hàng thành công');
+        this.loadOrderHistory();
+        if (this.selectedOrder && this.selectedOrder.id === orderId) {
+          this.selectedOrder.status = 'CANCELLED';
+        }
+        this.cdr.markForCheck();
+      },
+      error: (err: any) => {
+        this.message.error(err.error?.message || 'Không thể hủy đơn hàng');
+      }
+    });
+  }
 }
 

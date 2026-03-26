@@ -6,6 +6,8 @@ import {
   Req,
   Param,
   Patch,
+  Put,
+  Delete,
   Get,
   ParseIntPipe,
 } from '@nestjs/common';
@@ -15,11 +17,14 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { OrderStatus } from './enums/order-status.enum';
 
 import { CheckoutDto } from './dto/checkout.dto';
+import { PermissionGuard } from '../auth/permission/permission.guard';
+import { Permissions } from '../auth/permission/permissions.decorator';
+import { Permission } from '../auth/permission/permissions.enum';
 
 @ApiTags('order')
 @ApiBearerAuth('accessToken')
 @Controller('order')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, PermissionGuard)
 export class OrderController {
   constructor(private readonly orderService: OrderService) {}
 
@@ -39,12 +44,31 @@ export class OrderController {
   }
 
   @Get('all/admin')
+  @Permissions(Permission.ORDER_READ)
   getAllOrders() {
     return this.orderService.getAllOrders();
   }
 
   @Patch(':id/status')
+  @Permissions(Permission.ORDER_UPDATE)
   updateStatus(@Param('id', ParseIntPipe) id: number, @Body('status') status: OrderStatus) {
     return this.orderService.updateStatus(id, status);
+  }
+
+  @Patch(':id/cancel')
+  cancelOrder(@Req() req: any, @Param('id', ParseIntPipe) id: number) {
+    return this.orderService.cancelOrder(id, req.user.userId);
+  }
+
+  @Put(':id')
+  @Permissions(Permission.ORDER_UPDATE)
+  updateOrderAdmin(@Param('id', ParseIntPipe) id: number, @Body() data: any) {
+    return this.orderService.updateOrderAdmin(id, data);
+  }
+
+  @Delete(':id')
+  @Permissions(Permission.ORDER_DELETE)
+  deleteOrderAdmin(@Param('id', ParseIntPipe) id: number) {
+    return this.orderService.deleteOrderAdmin(id);
   }
 }

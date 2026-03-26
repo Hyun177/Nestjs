@@ -39,4 +39,16 @@ export class OrderService {
   updateOrderStatus(id: number, status: string): Observable<any> {
     return this.http.patch(`${this.apiUrl}/${id}/status`, { status }, { headers: this.getHeaders() });
   }
+
+  deleteOrderAdmin(id: number): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/${id}`, { headers: this.getHeaders() });
+  }
+
+  updateOrderAdmin(id: number, data: any): Observable<any> {
+    return this.http.put(`${this.apiUrl}/${id}`, data, { headers: this.getHeaders() });
+  }
+
+  cancelOrder(id: number): Observable<any> {
+    return this.http.patch(`${this.apiUrl}/${id}/cancel`, {}, { headers: this.getHeaders() });
+  }
 }

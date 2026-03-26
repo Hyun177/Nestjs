@@ -161,4 +161,8 @@ export class PaymentService {
       };
     }
   }
+
+  async deleteByOrderId(orderId: number): Promise<void> {
+    await this.paymentRepo.delete({ orderId: orderId });
+  }
 }

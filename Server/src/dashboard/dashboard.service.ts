@@ -4,6 +4,7 @@ import { Repository, Between } from 'typeorm';
 import { User } from '../users/entities/user.entity';
 import { Order } from '../order/entities/order.entity';
 import { Product } from '../product/entities/product.entity';
+import { OrderStatus } from '../order/enums/order-status.enum';
 
 @Injectable()
 export class DashboardService {
@@ -22,7 +23,9 @@ export class DashboardService {
     const productCount = await this.productRepository.count();
 
     // Sum total of all orders
-    const orders = await this.orderRepository.find();
+    const orders = await this.orderRepository.find({
+      where: { status: OrderStatus.DELIVERED }
+    });
     const totalRevenue = orders.reduce((sum, order) => sum + Number(order.totalAmount || 0), 0);
 
     // Calculate growth (mocked for now, but could be real compared to last month)

@@ -207,4 +207,53 @@ export class OrderService {
     order.status = status;
     return this.orderRepository.save(order);
   }
+
+  async cancelOrder(orderId: number, userId: number): Promise<Order> {
+    const order = await this.orderRepository.findOne({ 
+      where: { id: orderId, userId },
+      relations: ['items', 'items.product']
+    });
+    if (!order) throw new BadRequestException('Không tìm thấy đơn hàng');
+
+    const allowedCancelStatuses = [OrderStatus.PENDING, OrderStatus.PAID];
+    if (!allowedCancelStatuses.includes(order.status)) {
+      throw new BadRequestException('Không thể hủy đơn hàng ở giai đoạn này');
+    }
+
+    // Restore stock
+    for (const item of order.items) {
+      if (item.product) {
+        if (item.variantSku && item.product.variants) {
+          const variant = item.product.variants.find((v: any) => v.sku === item.variantSku);
+          if (variant) {
+            variant.stock += item.quantity;
+          }
+        }
+        item.product.stock += item.quantity;
+        await this.dataSource.manager.save(item.product);
+      }
+    }
+
+    order.status = OrderStatus.CANCELLED;
+    return this.orderRepository.save(order);
+  }
+
+  async deleteOrderAdmin(id: number): Promise<void> {
+    const order = await this.orderRepository.findOne({ where: { id } });
+    if (!order) throw new BadRequestException('Không tìm thấy đơn hàng');
+    
+    // Delete payments first if CASCADE is not yet in DB schema
+    await this.paymentService.deleteByOrderId(id);
+    
+    await this.orderRepository.remove(order);
+  }
+
+  async updateOrderAdmin(id: number, data: any): Promise<Order> {
+    const order = await this.orderRepository.findOne({ where: { id } });
+    if (!order) throw new BadRequestException('Không tìm thấy đơn hàng');
+    
+    // Simple update for fields like address, phone, total
+    Object.assign(order, data);
+    return this.orderRepository.save(order);
+  }
 }

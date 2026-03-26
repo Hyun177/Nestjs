@@ -363,6 +363,20 @@
              </p>
           </div>
         </div>
+
+        <!-- Order Cancellation -->
+        <div *ngIf="['PENDING', 'PAID'].includes(selectedOrder.status)" class="mt-8">
+          <button nz-button nzDanger nzBlock 
+                  class="h-12 rounded-2xl font-black text-xs uppercase tracking-widest border-2 border-rose-100 hover:border-rose-500 transition-all"
+                  nz-popconfirm
+                  nzPopconfirmTitle="Bạn chắc chắn muốn hủy đơn hàng này?"
+                  (nzOnConfirm)="cancelOrder(selectedOrder.id)">
+            Hủy đơn hàng này
+          </button>
+          <p class="text-[10px] text-gray-400 text-center mt-3 font-bold uppercase tracking-tighter">
+            * chỉ có thể hủy khi đơn đang ở trạng thái chờ xử lý hoặc đã thanh toán
+          </p>
+        </div>
       </div>
     </ng-container>
   </nz-modal>
