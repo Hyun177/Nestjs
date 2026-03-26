@@ -1,0 +1,321 @@
+<div class="confirm-page">
+  <div class="confirm-container">
+
+    <!-- Header -->
+    <div class="confirm-header">
+      <a routerLink="/cart" class="back-btn">
+        <span nz-icon nzType="arrow-left"></span>
+        Quay lại giỏ hàng
+      </a>
+      <div class="header-steps">
+        <div class="step done"><span nz-icon nzType="shopping-cart"></span> Giỏ hàng</div>
+        <div class="step-arrow"><span nz-icon nzType="right"></span></div>
+        <div class="step active"><span nz-icon nzType="file-protect"></span> Xác nhận đơn</div>
+        <div class="step-arrow"><span nz-icon nzType="right"></span></div>
+        <div class="step"><span nz-icon nzType="check-circle"></span> Hoàn tất</div>
+      </div>
+    </div>
+
+    <div class="confirm-grid">
+
+      <!-- LEFT COLUMN -->
+      <div class="confirm-left">
+
+        <!-- Địa chỉ giao hàng -->
+        <div class="section-card">
+          <div class="section-title">
+            <span nz-icon nzType="environment" nzTheme="fill"></span>
+            Địa chỉ giao hàng
+            <button class="add-addr-btn" (click)="openAddAddress()">
+              <span nz-icon nzType="plus"></span> Thêm địa chỉ
+            </button>
+          </div>
+
+          <div class="address-list" *ngIf="addresses.length > 0; else noAddress">
+            <div class="address-card"
+                 *ngFor="let addr of addresses"
+                 [class.selected]="selectedAddressId === addr.id"
+                 (click)="selectAddress(addr.id!)">
+              <div class="addr-radio">
+                <div class="radio-dot" [class.active]="selectedAddressId === addr.id"></div>
+              </div>
+              <div class="addr-body">
+                <div class="addr-top">
+                  <span class="addr-name">{{ addr.fullName }}</span>
+                  <span class="addr-phone">{{ addr.phone }}</span>
+                  <span class="default-badge" *ngIf="addr.isDefault">Mặc định</span>
+                </div>
+                <div class="addr-detail">
+                  {{ addr.detail }}{{ addr.wardName ? ', ' + addr.wardName : '' }}, {{ addr.provinceName }}
+                </div>
+              </div>
+              <div class="addr-actions">
+                <button class="addr-action-btn" (click)="openEditAddress(addr); $event.stopPropagation()">
+                  <span nz-icon nzType="edit"></span>
+                </button>
+                <button class="addr-action-btn danger"
+                        nz-popconfirm nzPopconfirmTitle="Xóa địa chỉ này?"
+                        (nzOnConfirm)="deleteAddress(addr.id!)"
+                        (click)="$event.stopPropagation()">
+                  <span nz-icon nzType="delete"></span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <ng-template #noAddress>
+            <div class="empty-address">
+              <span nz-icon nzType="environment"></span>
+              <p>Chưa có địa chỉ nào. Hãy thêm địa chỉ giao hàng.</p>
+            </div>
+          </ng-template>
+        </div>
+
+        <!-- Sản phẩm -->
+        <div class="section-card">
+          <div class="section-title">
+            <span nz-icon nzType="shopping" nzTheme="fill"></span>
+            Sản phẩm đặt hàng ({{ selectedItems.length }})
+          </div>
+          <div class="product-list">
+            <div class="product-row" *ngFor="let item of selectedItems">
+              <div class="product-img">
+                <img [src]="'http://localhost:3000' + item.product.image" [alt]="item.product.name">
+                <span class="qty-badge">{{ item.quantity }}</span>
+              </div>
+              <div class="product-info">
+                <div class="product-name">{{ item.product.name }}</div>
+                <div class="product-variant" *ngIf="item.color || item.size">
+                  {{ item.color }}{{ item.color && item.size ? ' / ' : '' }}{{ item.size }}
+                </div>
+              </div>
+              <div class="product-price">{{ (item.product.price * item.quantity) | vndCurrency }}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Phương thức thanh toán -->
+        <div class="section-card">
+          <div class="section-title">
+            <span nz-icon nzType="credit-card" nzTheme="fill"></span>
+            Phương thức thanh toán
+          </div>
+          <div class="payment-list">
+            <label class="payment-option" *ngFor="let m of paymentMethods" [class.active]="selectedPaymentMethod === m.id">
+              <input type="radio" name="payment" [value]="m.id" [(ngModel)]="selectedPaymentMethod" class="hidden">
+              <div class="payment-icon"><span nz-icon [nzType]="m.icon"></span></div>
+              <div class="payment-text">
+                <div class="payment-name">{{ m.name }}</div>
+                <div class="payment-desc">{{ m.desc }}</div>
+              </div>
+              <div class="payment-check" *ngIf="selectedPaymentMethod === m.id">
+                <span nz-icon nzType="check-circle" nzTheme="fill"></span>
+              </div>
+            </label>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- RIGHT COLUMN - Order Summary -->
+      <div class="confirm-right">
+        <div class="summary-card">
+          <div class="summary-title">Tóm tắt đơn hàng</div>
+
+          <!-- Voucher -->
+          <div class="voucher-section">
+            <div class="voucher-label"><span nz-icon nzType="tag"></span> Mã giảm giá</div>
+
+            <!-- manual input -->
+            <div class="voucher-input-row" *ngIf="!appliedVoucher">
+              <input type="text" [(ngModel)]="voucherCode" placeholder="Nhập mã..." (keyup.enter)="applyVoucher()">
+              <button (click)="applyVoucher()">Áp dụng</button>
+            </div>
+
+            <!-- Picker link -->
+            <div class="voucher-picker-link" *ngIf="!appliedVoucher && myVouchers.length > 0" (click)="showVoucherModal = true">
+                <span nz-icon nzType="gift" nzTheme="outline"></span>
+                Chọn từ kho voucher ({{ myVouchers.length }})
+                <span nz-icon nzType="right"></span>
+            </div>
+
+            <!-- Applied state -->
+            <div class="voucher-applied" *ngIf="appliedVoucher">
+              <div class="applied-badge">
+                <span nz-icon nzType="check-circle" nzTheme="fill"></span>
+                <span>{{ voucherCode }}</span>
+                <button (click)="removeVoucher()"><span nz-icon nzType="close"></span></button>
+              </div>
+              <div class="applied-info" *ngIf="voucherDiscount > 0">
+                Đã giảm {{ voucherDiscount | vndCurrency }}
+              </div>
+            </div>
+          </div>
+
+          <div class="summary-divider"></div>
+
+          <!-- Tổng -->
+          <div class="summary-rows">
+            <div class="summary-row">
+              <span>Tạm tính</span>
+              <span>{{ subtotal | vndCurrency }}</span>
+            </div>
+            <div class="summary-row discount" *ngIf="voucherDiscount > 0">
+              <span>Giảm giá voucher</span>
+              <span>-{{ voucherDiscount | vndCurrency }}</span>
+            </div>
+            <div class="summary-row">
+              <span>Phí vận chuyển</span>
+              <span [class.free]="shippingFee === 0 && selectedItems.length > 0">
+                {{ hasFreeShip ? 'Miễn phí' : (selectedAddressId ? (shippingFee | vndCurrency) : 'Chọn địa chỉ') }}
+              </span>
+            </div>
+            <div class="ship-note" *ngIf="selectedAddress && !hasFreeShip">
+              <span nz-icon nzType="car"></span>
+              {{ selectedAddress.provinceCode === '12' ? 'Nội thành TP.HCM: 15.000đ' : 'Ngoài TP.HCM: 30.000đ' }}
+            </div>
+            <div class="ship-note free" *ngIf="hasFreeShip">
+              <span nz-icon nzType="check-circle" nzTheme="fill"></span>
+              Sản phẩm được miễn phí vận chuyển
+            </div>
+          </div>
+
+          <div class="summary-divider"></div>
+
+          <div class="total-row">
+            <span>Tổng thanh toán</span>
+            <span class="total-amount">{{ total | vndCurrency }}</span>
+          </div>
+
+          <button class="place-order-btn" (click)="placeOrder()" [disabled]="isPlacingOrder || !selectedAddressId">
+            <span nz-icon nzType="loading" *ngIf="isPlacingOrder" nzTheme="outline"></span>
+            <span nz-icon nzType="check" *ngIf="!isPlacingOrder" nzTheme="outline"></span>
+            {{ isPlacingOrder ? 'Đang xử lý...' : (selectedPaymentMethod === 'COD' ? 'Đặt hàng ngay' : 'Thanh toán ngay') }}
+          </button>
+
+          <div class="secure-note">
+            <span nz-icon nzType="safety"></span>
+            Giao dịch được bảo mật & mã hóa
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Modal thêm/sửa địa chỉ -->
+<nz-modal
+  [(nzVisible)]="showAddressModal"
+  [nzTitle]="editingAddress ? 'Sửa địa chỉ' : 'Thêm địa chỉ mới'"
+  [nzFooter]="null"
+  (nzOnCancel)="showAddressModal = false"
+  nzWidth="520px">
+  <ng-container *nzModalContent>
+    <div class="addr-form">
+      <div class="addr-form-row">
+        <div class="form-group">
+          <label>Họ và tên *</label>
+          <input type="text" [(ngModel)]="addressForm.fullName" placeholder="Nguyễn Văn A">
+        </div>
+        <div class="form-group">
+          <label>Số điện thoại *</label>
+          <input type="text" [(ngModel)]="addressForm.phone" placeholder="0901234567">
+        </div>
+      </div>
+
+      <div class="addr-form-row">
+        <div class="form-group">
+          <label>Tỉnh / Thành phố *</label>
+          <nz-select [(ngModel)]="addressForm.provinceCode"
+                     (ngModelChange)="onFormProvinceChange($event)"
+                     nzPlaceHolder="Chọn tỉnh/thành" nzShowSearch class="w-full">
+            <nz-option *ngFor="let p of provinces" [nzValue]="p.code" [nzLabel]="p.name"></nz-option>
+          </nz-select>
+        </div>
+        <div class="form-group">
+          <label>Phường / Xã</label>
+          <nz-select [(ngModel)]="addressForm.wardCode"
+                     (ngModelChange)="onFormWardChange($event)"
+                     nzPlaceHolder="Chọn phường/xã" nzShowSearch
+                     [nzLoading]="loadingWards"
+                     [nzDisabled]="!addressForm.provinceCode"
+                     class="w-full">
+            <nz-option *ngFor="let w of wards" [nzValue]="w.code" [nzLabel]="w.name"></nz-option>
+          </nz-select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Địa chỉ cụ thể *</label>
+        <input type="text" [(ngModel)]="addressForm.detail" placeholder="Số nhà, tên đường...">
+      </div>
+
+      <label class="default-check">
+        <input type="checkbox" [(ngModel)]="addressForm.isDefault">
+        Đặt làm địa chỉ mặc định
+      </label>
+
+      <div class="addr-form-actions">
+        <button class="btn-cancel" (click)="showAddressModal = false">Hủy</button>
+        <button class="btn-save" (click)="saveAddress()">
+          <span nz-icon nzType="save"></span>
+          {{ editingAddress ? 'Cập nhật' : 'Lưu địa chỉ' }}
+        </button>
+      </div>
+    </div>
+  </ng-container>
+</nz-modal>
+
+<!-- Modal chọn Voucher từ kho -->
+<nz-modal
+  [(nzVisible)]="showVoucherModal"
+  nzTitle="Kho Voucher của bạn"
+  [nzFooter]="null"
+  (nzOnCancel)="showVoucherModal = false"
+  nzWidth="580px">
+  <ng-container *nzModalContent>
+    <div class="voucher-selection-list">
+      <div class="vsl-header">
+        Chọn 1 voucher để áp dụng cho đơn hàng của bạn
+      </div>
+      
+      <div class="vsl-empty" *ngIf="myVouchers.length === 0">
+        <span nz-icon nzType="gift"></span>
+        <p>Kho voucher của bạn hiện đang trống</p>
+      </div>
+
+      <div class="vsl-items" *ngIf="myVouchers.length > 0">
+        <div class="voucher-picker-card" 
+             *ngFor="let uv of myVouchers" 
+             [class.disabled]="subtotal < uv.voucher.minOrderAmount"
+             (click)="subtotal >= uv.voucher.minOrderAmount && applyVoucher(uv.voucher.code)">
+          
+          <div class="vpc-left">
+            <div class="vpc-type">
+              {{ uv.voucher.type === 'PERCENT' ? 'Giảm' : 'Giảm thẳng' }}
+            </div>
+            <div class="vpc-val">
+              {{ uv.voucher.type === 'PERCENT' ? (uv.voucher.value | number:'1.0-0') + '%' : (uv.voucher.value | vndCurrency) }}
+            </div>
+          </div>
+
+          <div class="vpc-main">
+            <div class="vpc-code">{{ uv.voucher.code }}</div>
+            <div class="vpc-desc">
+              Giảm tối đa {{ uv.voucher.maxDiscountAmount | vndCurrency }}<br>
+              Đơn tối thiểu từ {{ uv.voucher.minOrderAmount | vndCurrency }}
+            </div>
+            <div class="vpc-error" *ngIf="subtotal < uv.voucher.minOrderAmount">
+              Chưa đủ điều kiện (Thiếu {{ (uv.voucher.minOrderAmount - subtotal) | vndCurrency }})
+            </div>
+          </div>
+
+          <div class="vpc-action">
+            <button class="vpc-apply-btn" [disabled]="subtotal < uv.voucher.minOrderAmount">Dùng</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+</nz-modal>

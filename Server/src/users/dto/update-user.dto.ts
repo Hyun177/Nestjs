@@ -13,6 +13,18 @@ export class UpdateUserDto {
   @IsOptional()
   name?: string;
 
+  @IsString()
+  @MinLength(2)
+  @MaxLength(100)
+  @IsOptional()
+  firstname?: string;
+
+  @IsString()
+  @MinLength(2)
+  @MaxLength(100)
+  @IsOptional()
+  lastname?: string;
+
   @IsEmail()
   @IsOptional()
   email?: string;
@@ -28,12 +40,6 @@ export class UpdateUserDto {
   @IsString()
   @IsOptional()
   avatar?: string;
-  @IsString()
-  @IsOptional()
-  firstname?: string;
-  @IsString()
-  @IsOptional()
-  lastname?: string;
 
   @IsString()
   @IsOptional()

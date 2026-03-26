@@ -48,7 +48,7 @@
             <div class="user-info">
               <nz-avatar [nzSrc]="data.avatar" [nzSize]="40" style="border-radius: 12px;"></nz-avatar>
               <div class="user-details">
-                <span class="user-name">{{ data.name }}</span>
+                <span class="user-name">{{ data.firstname }} {{ data.lastname }}</span>
                 <span class="user-date">{{ data.createdAt | date:'dd/MM/yyyy' }}</span>
               </div>
             </div>
@@ -103,9 +103,15 @@
       
       <div class="modal-body">
         <form [formGroup]="userForm">
-          <div class="form-group">
-            <label>Họ tên *</label>
-            <input formControlName="name" placeholder="Ví dụ: Nguyễn Văn A" />
+          <div class="form-row">
+            <div class="form-group">
+              <label>Họ *</label>
+              <input formControlName="firstname" placeholder="Ví dụ: Nguyễn" />
+            </div>
+            <div class="form-group">
+              <label>Tên *</label>
+              <input formControlName="lastname" placeholder="Ví dụ: Văn A" />
+            </div>
           </div>
 
           <div class="form-row">

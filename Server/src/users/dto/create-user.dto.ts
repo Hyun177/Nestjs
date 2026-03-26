@@ -10,7 +10,18 @@ export class CreateUserDto {
   @IsString()
   @MinLength(2)
   @MaxLength(100)
-  name: string;
+  @IsOptional()
+  name?: string;
+
+  @IsString()
+  @MinLength(2)
+  @MaxLength(100)
+  firstname: string;
+
+  @IsString()
+  @MinLength(2)
+  @MaxLength(100)
+  lastname: string;
 
   @IsEmail()
   email: string;
@@ -25,10 +36,4 @@ export class CreateUserDto {
   @IsString()
   @IsOptional()
   avatar?: string;
-  @IsString()
-  @IsOptional()
-  firstname?: string;
-  @IsString()
-  @IsOptional()
-  lastname?: string;
 }

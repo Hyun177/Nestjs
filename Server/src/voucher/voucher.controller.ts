@@ -8,6 +8,8 @@ import {
   Delete,
   UseGuards,
   Req,
+  ParseIntPipe,
+  BadRequestException,
 } from '@nestjs/common';
 import { VoucherService } from './voucher.service';
 import { CreateVoucherDto } from './dto/create-voucher.dto';
@@ -24,6 +26,18 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 @Controller('voucher')
 export class VoucherController {
   constructor(private readonly voucherService: VoucherService) {}
+
+  @Get('my')
+  @UseGuards(JwtAuthGuard)
+  getMyVouchers(@Req() req: any) {
+    return this.voucherService.getUserVouchers(req.user.id);
+  }
+
+  @Get('public')
+  @UseGuards(JwtAuthGuard)
+  getPublicVouchers(@Req() req: any) {
+    return this.voucherService.getPublicVouchers(req.user.id);
+  }
 
   @Post()
   @UseGuards(JwtAuthGuard, PermissionGuard)
@@ -42,27 +56,35 @@ export class VoucherController {
   @Get(':id')
   @UseGuards(JwtAuthGuard, PermissionGuard)
   @Permissions(Permission.VOUCHER_READ)
-  findOne(@Param('id') id: string) {
-    return this.voucherService.findOne(+id);
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.voucherService.findOne(id);
   }
 
   @Patch(':id')
   @UseGuards(JwtAuthGuard, PermissionGuard)
   @Permissions(Permission.VOUCHER_UPDATE)
-  update(@Param('id') id: string, @Body() updateVoucherDto: UpdateVoucherDto) {
-    return this.voucherService.update(+id, updateVoucherDto);
+  update(@Param('id', ParseIntPipe) id: number, @Body() updateVoucherDto: UpdateVoucherDto) {
+    return this.voucherService.update(id, updateVoucherDto);
   }
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard, PermissionGuard)
   @Permissions(Permission.VOUCHER_DELETE)
-  remove(@Param('id') id: string) {
-    return this.voucherService.remove(+id);
+  remove(@Param('id', ParseIntPipe) id: number) {
+    return this.voucherService.remove(id);
   }
 
   @Post('apply')
   @UseGuards(JwtAuthGuard)
-  apply(@Body('code') code: string, @Req() req: any) {
-    return this.voucherService.applyVoucher(req.user.id, code);
+  apply(@Body('code') code: string, @Body('itemIds') itemIds: number[], @Req() req: any) {
+    return this.voucherService.applyVoucher(req.user.id, code, itemIds);
+  }
+
+  @Post('collect')
+  @UseGuards(JwtAuthGuard)
+  collectVoucher(@Body('voucherId') voucherId: any, @Req() req: any) {
+    const id = parseInt(String(voucherId), 10);
+    if (isNaN(id)) throw new BadRequestException('voucherId must be a valid number');
+    return this.voucherService.collectVoucher(req.user.id, id);
   }
 }

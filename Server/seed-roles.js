@@ -83,32 +83,82 @@ const ALL_PERMISSIONS = [
 
   // Role/Permission
   'role:manage',
-  'permission:manage'
+  'permission:manage',
 ];
 
 const ROLE_PERMISSIONS = {
   admin: ALL_PERMISSIONS,
   manager: [
-    'product:create', 'product:read', 'product:update', 'product:delete',
-    'category:create', 'category:read', 'category:update', 'category:delete',
-    'brand:create', 'brand:read', 'brand:update', 'brand:delete',
-    'order:read', 'order:update', 'order:manage', 'order:ship',
+    'product:create',
+    'product:read',
+    'product:update',
+    'product:delete',
+    'category:create',
+    'category:read',
+    'category:update',
+    'category:delete',
+    'brand:create',
+    'brand:read',
+    'brand:update',
+    'brand:delete',
+    'order:read',
+    'order:update',
+    'order:manage',
+    'order:ship',
     'user:read',
-    'voucher:create', 'voucher:read', 'voucher:update', 'voucher:delete',
-    'payment:read', 'payment:manage'
+    'voucher:create',
+    'voucher:read',
+    'voucher:update',
+    'voucher:delete',
+    'payment:read',
+    'payment:manage',
   ],
   customer: [
     'product:read',
     'category:read',
     'brand:read',
-    'cart:create', 'cart:read', 'cart:update', 'cart:delete',
-    'order:create', 'order:read', 'order:cancel',
-    'payment:create', 'payment:read',
-    'review:create', 'review:read', 'review:update', 'review:delete',
-    'voucher:read', 'voucher:apply'
+    'cart:create',
+    'cart:read',
+    'cart:update',
+    'cart:delete',
+    'order:create',
+    'order:read',
+    'order:cancel',
+    'payment:create',
+    'payment:read',
+    'review:create',
+    'review:read',
+    'review:update',
+    'review:delete',
+    'voucher:read',
+    'voucher:apply',
+  ],
+  user: [
+    'product:read',
+    'category:read',
+    'brand:read',
+    'cart:create',
+    'cart:read',
+    'cart:update',
+    'cart:delete',
+    'order:create',
+    'order:read',
+    'order:cancel',
+    'payment:create',
+    'payment:read',
+    'review:create',
+    'review:read',
+    'review:update',
+    'review:delete',
+    'voucher:read',
+    'voucher:apply',
   ],
   guest: [
-    'product:read', 'category:read', 'brand:read', 'post:read', 'review:read'
+    'product:read',
+    'category:read',
+    'brand:read',
+    'post:read',
+    'review:read',
   ],
 };
 
@@ -147,7 +197,9 @@ async function seed() {
       }
 
       // Clear existing for idempotency
-      await conn.execute('DELETE FROM role_permission WHERE rolesId = ?', [role.id]);
+      await conn.execute('DELETE FROM role_permission WHERE rolesId = ?', [
+        role.id,
+      ]);
 
       for (const permName of perms) {
         const [[perm]] = await conn.execute(

@@ -1,0 +1,232 @@
+.admin-vouchers-container {
+  padding: 24px;
+  max-width: 1300px;
+  margin: 0 auto;
+}
+
+/* Header Section */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  
+  .title-wrap {
+    h2 { font-size: 1.85rem; font-weight: 800; color: #0f172a; margin: 0; letter-spacing: -1px; }
+    p { font-size: 0.875rem; color: #64748b; margin-top: 4px; }
+  }
+
+  .add-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 24px;
+    height: 48px;
+    background: #111;
+    color: #fff;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    &:hover { background: #333; transform: translateY(-1px); }
+  }
+}
+
+/* Action Bar */
+.action-bar {
+  margin-bottom: 24px;
+  background: #fff;
+  padding: 16px;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+  border: 1px solid #f1f5f9;
+
+  .search-input {
+    width: 100%;
+    padding: 12px 18px;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    font-size: 0.9rem;
+    outline: none;
+    transition: all 0.2s;
+    background: #f8fafc;
+    &:focus { border-color: #6366f1; background: #fff; box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
+  }
+}
+
+/* Table Design */
+.custom-table-wrap {
+  background: #fff;
+  border-radius: 20px;
+  border: 1px solid #f1f5f9;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.04);
+  overflow: hidden;
+
+  .custom-table {
+    width: 100%;
+    border-collapse: collapse;
+    
+    thead {
+      background: #f8fafc;
+      th {
+        padding: 16px 24px;
+        text-align: left;
+        font-size: 0.72rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        color: #64748b;
+        letter-spacing: 0.05em;
+        border-bottom: 1.5px solid #edf1f7;
+      }
+    }
+
+    tbody {
+      tr {
+        transition: background 0.15s;
+        &:hover { background: #fafbff; }
+        td {
+          padding: 18px 24px;
+          border-bottom: 1px solid #f1f5f9;
+          font-size: 0.9rem;
+          color: #1e293b;
+        }
+      }
+    }
+  }
+}
+
+/* Voucher Specific Styling */
+.voucher-info {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+
+  .voucher-icon {
+    width: 44px; height: 44px; border-radius: 12px;
+    background: #fdf2f8; color: #db2777;
+    font-weight: 800; font-size: 0.75rem;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    border: 1px solid #fce7f3;
+    &.percent { background: #eff6ff; color: #2563eb; border-color: #dbeafe; }
+  }
+
+  .voucher-details {
+    .voucher-code { font-weight: 800; color: #0f172a; text-transform: uppercase; font-size: 0.95rem; }
+    .voucher-type { font-size: 0.7rem; color: #94a3b8; font-weight: 500; margin-top: 2px; }
+  }
+}
+
+.value-cell {
+  display: flex;
+  flex-direction: column;
+  .main-value { font-weight: 700; color: #1e293b; }
+  .max-value { font-size: 0.75rem; color: #64748b; font-style: italic; margin-top: 2px; }
+}
+
+.usage-cell {
+  display: flex; 
+  flex-direction: column;
+  gap: 2px;
+  .per-user { font-size: 0.75rem; color: #1e293b; strong { color: #6366f1; } }
+  .total-usage { font-size: 0.75rem; color: #64748b; }
+}
+
+.expiry-cell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #475569;
+  .arrow { color: #cbd5e1; }
+  .date { background: #f1f5f9; padding: 2px 8px; border-radius: 6px; }
+}
+
+.actions-cell {
+  display: flex;
+  gap: 8px;
+  
+  .icon-btn {
+    width: 36px; height: 36px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    border: 1px solid #e2e8f0; background: #fff;
+    cursor: pointer; transition: all 0.2s; font-size: 1.1rem;
+    
+    &.edit { color: #6366f1; &:hover { background: #eef2ff; border-color: #c7d2fe; } }
+    &.delete { color: #ef4444; &:hover { background: #fef2f2; border-color: #fecaca; } }
+  }
+}
+
+/* Premium Form Modal Styling */
+.custom-modal-title { font-weight: 800; display: flex; align-items: center; }
+
+.premium-form {
+  padding: 10px;
+
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    &.col-3 { grid-template-columns: 1fr 1fr 1fr; }
+    &.date-grid { grid-template-columns: 1fr 1fr; }
+  }
+
+  .custom-input, .custom-select, .custom-number, .custom-date {
+    width: 100% !important;
+    ::ng-deep .ant-select-selector, input, ::ng-deep .ant-input-number-input-wrap, ::ng-deep .ant-picker {
+      border-radius: 12px !important;
+      padding: 10px 14px !important;
+      height: auto !important;
+      background: #f8fafc !important;
+      border-color: #e2e8f0 !important;
+      &:focus { border-color: #6366f1 !important; background: #fff !important; }
+    }
+  }
+
+  ::ng-deep .ant-input-number-input {
+    height: 48px !important;
+  }
+
+  nz-form-label {
+    padding-bottom: 6px !important;
+    ::ng-deep label {
+      font-size: 0.75rem !important;
+      font-weight: 800 !important;
+      text-transform: uppercase;
+      color: #64748b !important;
+    }
+  }
+
+  .switch-item {
+    margin-top: 20px;
+  }
+}
+
+/* Modal Footer Design */
+.save-modal-btn {
+  padding: 10px 24px;
+  background: #111; color: #fff;
+  border-radius: 12px; font-weight: 700;
+  border: none; cursor: pointer; transition: all 0.2s;
+  &:hover { background: #333; transform: scale(1.02); }
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+}
+
+.cancel-modal-btn {
+  padding: 10px 24px; margin-right: 12px;
+  background: #fff; border: 1.5px solid #e2e8f0;
+  color: #64748b; border-radius: 12px;
+  font-weight: 700; cursor: pointer; transition: all 0.2s;
+  &:hover { background: #f1f5f9; }
+}
+
+.loading-state {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 80px; color: #94a3b8;
+  .spinner { width: 40px; height: 40px; border: 4px solid #f1f5f9; border-top-color: #111; border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 16px; }
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }

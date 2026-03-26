@@ -467,3 +467,55 @@
         }
     }
 }
+
+// Shipping address section
+.shipping-address-section {
+    margin: 16px 0;
+    padding: 16px;
+    background: #f8f9fa;
+    border-radius: 14px;
+    border: 1px solid #eee;
+
+    .shipping-address-label {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 11px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: #555;
+        margin-bottom: 10px;
+    }
+
+    nz-select {
+        width: 100%;
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    .ship-fee-note {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        font-weight: 700;
+        color: #d97706;
+        background: #fffbeb;
+        border: 1px solid #fde68a;
+        border-radius: 8px;
+        padding: 8px 12px;
+        margin-top: 8px;
+
+        &.free {
+            color: #16a34a;
+            background: #f0fdf4;
+            border-color: #bbf7d0;
+        }
+    }
+}
+
+.free-ship {
+    color: #16a34a !important;
+    font-weight: 800;
+}

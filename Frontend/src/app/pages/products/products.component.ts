@@ -62,7 +62,9 @@ export class ProductsComponent implements OnInit {
     sort: 'newest',
     price: [0, 100000000],
     color: '',
-    size: ''
+    size: '',
+    onSale: false,
+    newArrival: false
   };
   totalProducts = 0;
 
@@ -89,6 +91,8 @@ export class ProductsComponent implements OnInit {
       this.query.sort = params['sort'] || 'newest';
       this.query.color = params['color'] || '';
       this.query.size = params['size'] || '';
+      this.query.onSale = params['onSale'] === 'true';
+      this.query.newArrival = params['newArrival'] === 'true';
       if (params['minPrice']) this.query.price[0] = Number(params['minPrice']);
       if (params['maxPrice']) this.query.price[1] = Number(params['maxPrice']);
 
@@ -138,10 +142,13 @@ export class ProductsComponent implements OnInit {
     const lower = colorName.toLowerCase().trim();
     return colorMap[lower] || colorName;
   }
-
   updatePageTitle() {
     if (this.query.search) {
       this.pageTitle = `Kết quả tìm kiếm: "${this.query.search}"`;
+    } else if (this.query.onSale) {
+      this.pageTitle = 'Sản phẩm đang khuyến mãi';
+    } else if (this.query.newArrival) {
+      this.pageTitle = 'Sản phẩm mới về';
     } else if (this.query.categoryId && this.categories.length) {
       const activeCat = this.categories.find(c => c.id === this.query.categoryId);
       this.pageTitle = activeCat ? activeCat.name : 'Danh mục';
@@ -187,6 +194,8 @@ export class ProductsComponent implements OnInit {
       sort: this.query.sort,
       color: this.query.color || undefined,
       size: this.query.size || undefined,
+      onSale: this.query.onSale || undefined,
+      newArrival: this.query.newArrival || undefined,
       minPrice: this.query.price[0] > 0 ? this.query.price[0] : undefined,
       maxPrice: this.query.price[1] < 100000000 ? this.query.price[1] : undefined,
     };
@@ -279,6 +288,8 @@ export class ProductsComponent implements OnInit {
         sort: this.query.sort !== 'newest' ? this.query.sort : null,
         color: this.query.color || null,
         size: this.query.size || null,
+        onSale: this.query.onSale ? 'true' : null,
+        newArrival: this.query.newArrival ? 'true' : null,
         minPrice,
         maxPrice
       },

@@ -10,6 +10,7 @@ import {
 } from '@nestjs/common';
 import { User } from '../users/entities/user.entity';
 import { RegisterDto } from './dto/register.dto';
+import { LoginInputDto } from './dto/login-input.dto';
 import { LoginDto } from './dto/login.dto';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { ApiBearerAuth } from '@nestjs/swagger';
@@ -36,7 +37,7 @@ export class AuthController {
   }
   @UseGuards(RoleGuard)
   @Post('login')
-  async login(@Body() body: RegisterDto): Promise<LoginDto> {
+  async login(@Body() body: LoginInputDto): Promise<LoginDto> {
     return await this.authService.login(body);
   }
   @UseGuards(RoleGuard)

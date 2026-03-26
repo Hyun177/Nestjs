@@ -8,6 +8,7 @@ import { NzSelectModule } from 'ng-zorro-antd/select';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { NzUploadModule, NzUploadFile } from 'ng-zorro-antd/upload';
 import { NzIconModule } from 'ng-zorro-antd/icon';
+import { NzSwitchModule } from 'ng-zorro-antd/switch';
 import { ProductService } from '../../../core/services/product.service';
 import { CategoryService } from '../../../core/services/category.service';
 import { BrandService } from '../../../core/services/brand.service';
@@ -27,6 +28,7 @@ import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
     NzSelectModule,
     NzUploadModule,
     NzIconModule,
+    NzSwitchModule,
     RouterLink
   ],
   templateUrl: './product-upload.component.html',
@@ -60,7 +62,7 @@ export class ProductUploadComponent implements OnInit {
       name: ['', [Validators.required]],
       price: [0, [Validators.required]],
       originalPrice: [null],
-      description: [''], // Will keep for consistency but fill from parts
+      description: [''],
       descIntro: ['', [Validators.required]],
       descFeatures: this.fb.array([this.fb.control('')]),
       descPolicy: [''],
@@ -69,6 +71,7 @@ export class ProductUploadComponent implements OnInit {
       stock: [0, [Validators.required]],
       labels: [[]],
       promoNote: [''],
+      isArchived: [false],
       specs: this.fb.array([]),
       attributes: this.fb.array([]),
       variants: this.fb.array([]),
@@ -226,6 +229,7 @@ export class ProductUploadComponent implements OnInit {
       formData.append('brandId', val.brandId);
       formData.append('stock', val.stock);
       formData.append('promoNote', val.promoNote);
+      formData.append('isArchived', String(val.isArchived ?? false));
       
       formData.append('labels', JSON.stringify(val.labels));
       formData.append('specs', JSON.stringify(val.specs));

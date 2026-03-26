@@ -8,7 +8,7 @@
                 <button class="btn-black">{{ heroData.primaryCta }}</button>
             </div>
             <div class="hero-image">
-                <img src="https://35express.org/wp-content/uploads/2025/02/nguon-goc-meme-doraemon.png.webp"
+                <img src="https://cdnv2.tgdd.vn/mwg-static/common/News/1576413/hinh-nen-may-tinh-6.jpg"
                     alt="Hero Fashion">
             </div>
         </div>
@@ -43,12 +43,12 @@
 
                         <div class="overlay-right">
                             <div class="label-badges">
-                                @for (label of product.labels; track label) {
+                                @for (label of product.labels; track $index) {
                                 <div class="label-badge">{{ label }}</div>
                                 }
                             </div>
                             <div class="spec-icons">
-                                @for (spec of (product.specs || []).slice(0, 2); track spec.text) {
+                                @for (spec of (product.specs || []).slice(0, 2); track $index) {
                                 <div class="spec-item">
                                     <span nz-icon [nzType]="spec.icon || 'info-circle'"></span>
                                     <div>{{ spec.text }}</div>
@@ -122,12 +122,12 @@
 
                         <div class="overlay-right">
                             <div class="label-badges">
-                                @for (label of product.labels; track label) {
+                                @for (label of product.labels; track $index) {
                                 <div class="label-badge">{{ label }}</div>
                                 }
                             </div>
                             <div class="spec-icons">
-                                @for (spec of (product.specs || []).slice(0, 0); track spec.text) {
+                                @for (spec of (product.specs || []).slice(0, 0); track $index) {
                                 <div class="spec-item">
                                     <span nz-icon [nzType]="spec.icon || 'info-circle'"></span>
                                 </div>

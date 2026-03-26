@@ -104,7 +104,7 @@
 
                     <div class="summary-row">
                         <span class="label">Phí vận chuyển</span>
-                        <span class="value">{{ deliveryFee | vndCurrency }}</span>
+                        <span class="value">Tính khi xác nhận đơn</span>
                     </div>
 
                     <hr class="summary-divider">
@@ -114,52 +114,8 @@
                         <span class="value font-bold">{{ total | vndCurrency }}</span>
                     </div>
 
-                    <div class="promo-section">
-                        @if (!appliedVoucher) {
-                        <div class="promo-input-wrapper">
-                            <div class="promo-input">
-                                <span nz-icon nzType="tag"></span>
-                                <input type="text" placeholder="Thêm mã giảm giá" [(ngModel)]="voucherCode"
-                                    (keyup.enter)="applyVoucher()">
-                            </div>
-                            <button class="apply-btn" (click)="applyVoucher()">Áp dụng</button>
-                        </div>
-                        } @else {
-                        <div class="applied-voucher-info">
-                            <div class="voucher-tag">
-                                <span nz-icon nzType="check-circle" nzTheme="fill"></span>
-                                <span>{{ voucherCode }}</span>
-                                <button class="remove-voucher" (click)="removeVoucher()">
-                                    <span nz-icon nzType="close"></span>
-                                </button>
-                            </div>
-                            <p class="voucher-success-msg">Đã áp dụng thành công mã giảm giá!</p>
-                        </div>
-                        }
-                    </div>
-
-                    <div class="payment-methods-section mt-10">
-                        <h3 class="text-xs font-black text-gray-400 uppercase tracking-widest mb-6">Phương thức thanh toán</h3>
-                        <div class="grid grid-cols-1 gap-3 mb-8">
-                            @for (method of paymentMethods; track method.id) {
-                            <label class="payment-method-card" [class.active]="selectedPaymentMethod === method.id">
-                                <input type="radio" name="payment" [value]="method.id" [(ngModel)]="selectedPaymentMethod" class="hidden">
-                                <span nz-icon [nzType]="method.icon" class="method-icon"></span>
-                                <div class="method-info">
-                                    <span class="method-name">{{ method.name }}</span>
-                                    <span class="method-desc" *ngIf="method.id === 'COD'">Thanh toán khi nhận hàng</span>
-                                    <span class="method-desc" *ngIf="method.id !== 'COD'">Thanh toán trực tuyến an toàn</span>
-                                </div>
-                                <div class="check-indicator">
-                                    <span nz-icon nzType="check-circle" nzTheme="fill"></span>
-                                </div>
-                            </label>
-                            }
-                        </div>
-                    </div>
-
                     <button class="checkout-btn" (click)="checkout()">
-                        {{ selectedPaymentMethod === 'COD' ? 'Đặt hàng ngay' : 'Thanh toán an toàn' }}
+                        Tiến hành đặt hàng
                         <span nz-icon nzType="arrow-right"></span>
                     </button>
                 </div>

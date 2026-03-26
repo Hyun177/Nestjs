@@ -123,7 +123,7 @@ export class AdminProductsComponent implements OnInit {
 
   loadProducts() {
     this.loading.set(true);
-    const params = { page: this.pageIndex(), limit: this.pageSize(), search: this.searchValue() };
+    const params = { page: this.pageIndex(), limit: this.pageSize(), search: this.searchValue(), showAll: 'true' };
     this.productService.getProductsPaginated(params).subscribe({
       next: (res) => {
         this.products.set(res.data || []);

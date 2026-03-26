@@ -1,6 +1,6 @@
-import { Injectable, BadRequestException, ForbiddenException } from '@nestjs/common';
+import { Injectable, BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { Review } from './entities/review.entity';
 import { Product } from '../product/entities/product.entity';
 import { Order } from '../order/entities/order.entity';
@@ -17,62 +17,81 @@ export class ReviewService {
     private orderRepo: Repository<Order>,
   ) {}
 
-  async createOrUpdateReview(userId: number, productId: number, rating: number, comment: string, image?: string, orderId?: number) {
+  async createOrUpdateReview(
+    userId: number,
+    productId: number,
+    rating: number,
+    comment: string,
+    image?: string,
+    orderId?: number,
+  ) {
     if (rating < 1 || rating > 5) throw new BadRequestException('Rating must be between 1 and 5');
-    
-    // Check if product exists
+
     const product = await this.productRepo.findOne({ where: { id: productId } });
     if (!product) throw new BadRequestException('Product not found');
 
-    // 1. Check if user has purchased this product successfully
+    // Chỉ cho phép đánh giá khi đơn hàng ở trạng thái DELIVERED
     const orderCheck = await this.orderRepo.findOne({
       where: {
         userId,
-        status: In([OrderStatus.PAID, OrderStatus.CONFIRMED, OrderStatus.SHIPPED, OrderStatus.DELIVERED]),
+        status: OrderStatus.DELIVERED,
         items: { productId },
-        ...(orderId ? { id: orderId } : {})
+        ...(orderId ? { id: orderId } : {}),
       },
-      relations: ['items']
+      relations: ['items'],
     });
 
     if (!orderCheck) {
-      throw new ForbiddenException('Bạn chỉ có thể đánh giá sản phẩm sau khi đã mua hàng thành công (đã thanh toán hoặc đang giao/đã giao).');
+      throw new ForbiddenException('Bạn chỉ có thể đánh giá sản phẩm sau khi đơn hàng đã được giao thành công.');
     }
 
     const reviewOrderId = orderId || orderCheck.id;
 
-    // 2. Check for existing review for this specific order (or just product if legacy)
-    let review = await this.reviewRepo.findOne({ 
-      where: { 
-        userId, 
-        productId,
-        ...(reviewOrderId ? { orderId: reviewOrderId } : {})
-      } 
-    });
+    // Mỗi user chỉ được đánh giá 1 lần cho mỗi sản phẩm
+    let review = await this.reviewRepo.findOne({ where: { userId, productId } });
 
     if (review) {
-      // Update existing review
       review.rating = rating;
       review.comment = comment;
       if (image) review.image = image;
     } else {
-      // Create new review
-      review = this.reviewRepo.create({
-        userId,
-        productId,
-        orderId: reviewOrderId,
-        rating,
-        comment,
-        image
-      });
+      review = this.reviewRepo.create({ userId, productId, orderId: reviewOrderId, rating, comment, image });
     }
 
-    const savedReview = await this.reviewRepo.save(review);
-    
-    // Update product rating and numReviews
+    const saved = await this.reviewRepo.save(review);
     await this.updateProductStats(productId);
+    return saved;
+  }
 
-    return savedReview;
+  async updateReview(reviewId: number, userId: number, rating: number, comment: string, image?: string) {
+    const review = await this.reviewRepo.findOne({ where: { id: reviewId } });
+    if (!review) throw new NotFoundException('Không tìm thấy đánh giá');
+    if (review.userId !== userId) throw new ForbiddenException('Bạn không có quyền sửa đánh giá này');
+
+    if (rating < 1 || rating > 5) throw new BadRequestException('Rating must be between 1 and 5');
+
+    review.rating = rating;
+    review.comment = comment;
+    if (image) review.image = image;
+
+    const saved = await this.reviewRepo.save(review);
+    await this.updateProductStats(review.productId);
+    return saved;
+  }
+
+  async deleteReview(reviewId: number, userId: number) {
+    const review = await this.reviewRepo.findOne({ where: { id: reviewId } });
+    if (!review) throw new NotFoundException('Không tìm thấy đánh giá');
+    if (review.userId !== userId) throw new ForbiddenException('Bạn không có quyền xóa đánh giá này');
+
+    const productId = review.productId;
+    await this.reviewRepo.remove(review);
+    await this.updateProductStats(productId);
+    return { message: 'Đã xóa đánh giá thành công' };
+  }
+
+  async getMyReview(userId: number, productId: number) {
+    return this.reviewRepo.findOne({ where: { userId, productId } });
   }
 
   private async updateProductStats(productId: number) {
@@ -95,19 +114,15 @@ export class ReviewService {
     return this.reviewRepo.find({
       where: { productId },
       relations: ['user'],
-      order: { createdAt: 'DESC' }
+      order: { createdAt: 'DESC' },
     });
   }
 
   async canUserReview(userId: number, productId: number): Promise<boolean> {
-      const order = await this.orderRepo.findOne({
-          where: {
-              userId,
-              status: In([OrderStatus.PAID, OrderStatus.CONFIRMED, OrderStatus.SHIPPED, OrderStatus.DELIVERED]),
-              items: { productId }
-          },
-          relations: ['items']
-      });
-      return !!order;
+    const order = await this.orderRepo.findOne({
+      where: { userId, status: OrderStatus.DELIVERED, items: { productId } },
+      relations: ['items'],
+    });
+    return !!order;
   }
 }

@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, PLATFORM_ID, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, PLATFORM_ID, ChangeDetectorRef, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { ActivatedRoute, RouterLink, Router } from '@angular/router';
 import { ProductService, Product } from '../../core/services/product.service';
@@ -8,19 +8,23 @@ import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { NzRateModule } from 'ng-zorro-antd/rate';
+import { NzPopconfirmModule } from 'ng-zorro-antd/popconfirm';
 import { FormsModule } from '@angular/forms';
 import { ReviewService } from '../../core/services/review.service';
 import { AuthService } from '../../core/services/auth.service';
+import { Subject, Subscription } from 'rxjs';
+import { takeUntil, distinctUntilChanged } from 'rxjs/operators';
 
 @Component({
   selector: 'app-product-detail',
   standalone: true,
-  imports: [CommonModule, NzIconModule, NzButtonModule, NzRateModule, VndCurrencyPipe, RouterLink, FormsModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [CommonModule, NzIconModule, NzButtonModule, NzRateModule, NzPopconfirmModule, VndCurrencyPipe, RouterLink, FormsModule],
   templateUrl: './product-detail.component.html',
   styleUrls: ['./product-detail.component.scss'],
   providers: [NzMessageService]
 })
-export class ProductDetailComponent implements OnInit {
+export class ProductDetailComponent implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private productService = inject(ProductService);
@@ -30,6 +34,9 @@ export class ProductDetailComponent implements OnInit {
   private message = inject(NzMessageService);
   private platformId = inject(PLATFORM_ID);
   private cdr = inject(ChangeDetectorRef);
+
+  private destroy$ = new Subject<void>();
+  private productSub?: Subscription;
 
   product: Product | null = null;
   selectedImage: string = '';
@@ -65,21 +72,30 @@ export class ProductDetailComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.authService.currentUser$.subscribe((user: any) => {
+    this.authService.currentUser$.pipe(takeUntil(this.destroy$)).subscribe((user: any) => {
       this.isLoggedIn = !!user;
       this.currentUser = user;
       if (this.product) this.checkCanReview();
+      this.cdr.markForCheck();
     });
 
-    this.route.paramMap.subscribe(params => {
+    this.route.paramMap.pipe(
+      takeUntil(this.destroy$),
+      distinctUntilChanged((a, b) => a.get('id') === b.get('id'))
+    ).subscribe(params => {
       const id = params.get('id');
       if (id) {
+        this.productSub?.unsubscribe();
         this.resetData();
         this.loadProduct(+id);
-        // Explicitly force detection to ensure spinner shows
-        this.cdr.detectChanges();
       }
     });
+  }
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
+    this.productSub?.unsubscribe();
   }
 
   resetData() {
@@ -109,30 +125,23 @@ export class ProductDetailComponent implements OnInit {
   loadProduct(id: number) {
     this.isLoading = true;
     this.hasError = false;
+    this.cdr.detectChanges(); // Use detectChanges instead of markForCheck for force update
 
-    // Safety timeout: 10 seconds
-    const safetyTimer = setTimeout(() => {
-      if (this.isLoading && !this.product) {
-        this.isLoading = false;
-        this.hasError = true;
-        this.message.warning('Yêu cầu đang phản hồi chậm... Vui lòng thử lại');
-      }
-    }, 10000);
+    this.productSub?.unsubscribe();
 
-    this.productService.getProductById(id).subscribe({
+    this.productSub = this.productService.getProductById(id).subscribe({
       next: (prod: Product) => {
-        clearTimeout(safetyTimer);
-        this.isLoading = false;
         if (!prod) {
+          this.isLoading = false;
           this.hasError = true;
-          this.cdr.detectChanges();
+          this.cdr.markForCheck();
           this.message.error('Sản phẩm không tồn tại');
           return;
         }
         this.product = prod;
         this.selectedImage = prod.image;
+        this.isLoading = false;
 
-        // Default attributes
         if (prod.attributes) {
           prod.attributes.forEach((attr: any) => {
             if (attr.options.length > 0) {
@@ -142,12 +151,11 @@ export class ProductDetailComponent implements OnInit {
           this.updateCurrentVariant();
         }
 
+        this.cdr.detectChanges();
         this.loadReviews();
         this.checkCanReview();
-        this.cdr.detectChanges(); // Force Angular to re-render after SSR hydration
       },
       error: (err: any) => {
-        clearTimeout(safetyTimer);
         console.error('Error fetching product:', err);
         this.isLoading = false;
         this.hasError = true;
@@ -161,7 +169,6 @@ export class ProductDetailComponent implements OnInit {
     if (!this.product) return;
     this.reviewService.getProductReviews(this.product.id).subscribe((res: any[]) => {
       this.reviews = res;
-      // Check if user has a review to enable "Edit" mode potentially
       const myReview = res.find((r: any) => r.userId === this.currentUser?.userId);
       if (myReview) {
         this.isEditingReview = true;
@@ -169,8 +176,11 @@ export class ProductDetailComponent implements OnInit {
         this.reviewForm.rating = myReview.rating;
         this.reviewForm.comment = myReview.comment;
         this.reviewForm.imagePreview = myReview.image ? 'http://localhost:3000' + myReview.image : '';
+      } else {
+        this.isEditingReview = false;
+        this.reviewId = null;
       }
-      this.cdr.detectChanges();
+      this.cdr.markForCheck();
     });
   }
 
@@ -178,7 +188,26 @@ export class ProductDetailComponent implements OnInit {
     if (!this.isLoggedIn || !this.product) return;
     this.reviewService.canReview(this.product.id).subscribe((can: boolean) => {
       this.canUserReview = can;
-      this.cdr.detectChanges();
+      this.cdr.markForCheck();
+    });
+  }
+
+  openEditReview() {
+    this.showReviewForm = true;
+  }
+
+  deleteReview() {
+    if (!this.reviewId) return;
+    this.reviewService.deleteReview(this.reviewId).subscribe({
+      next: () => {
+        this.message.success('Đã xóa đánh giá');
+        this.showReviewForm = false;
+        this.isEditingReview = false;
+        this.reviewId = null;
+        this.reviewForm = { rating: 5, comment: '', imageFile: null, imagePreview: '' };
+        this.loadProduct(this.product!.id);
+      },
+      error: (err) => this.message.error(err.error?.message || 'Không thể xóa đánh giá'),
     });
   }
 
@@ -187,14 +216,14 @@ export class ProductDetailComponent implements OnInit {
     if (file) {
       this.reviewForm.imageFile = file;
       const reader = new FileReader();
-      reader.onload = e => this.reviewForm.imagePreview = reader.result;
+      reader.onload = e => { this.reviewForm.imagePreview = reader.result; this.cdr.markForCheck(); };
       reader.readAsDataURL(file);
     }
   }
 
   submitReview() {
     if (!this.product) return;
-    if (!this.reviewForm.comment) {
+    if (!this.reviewForm.comment.trim()) {
       this.message.warning('Vui lòng nhập nội dung đánh giá');
       return;
     }
@@ -204,26 +233,47 @@ export class ProductDetailComponent implements OnInit {
     formData.append('productId', this.product.id.toString());
     formData.append('rating', this.reviewForm.rating.toString());
     formData.append('comment', this.reviewForm.comment);
-    if (this.reviewForm.imageFile) {
-      formData.append('image', this.reviewForm.imageFile);
-    }
+    if (this.reviewForm.imageFile) formData.append('image', this.reviewForm.imageFile);
 
-    this.reviewService.submitReview(formData).subscribe({
+    const request$ = this.isEditingReview && this.reviewId
+      ? this.reviewService.updateReview(this.reviewId, formData)
+      : this.reviewService.submitReview(formData);
+
+    request$.subscribe({
       next: () => {
-        this.message.success(this.isEditingReview ? 'Cập nhật đánh giá thành công!' : 'Gửi đánh giá thành công!');
+        this.message.success(this.isEditingReview ? 'Cập nhật đánh giá thành công' : 'Gửi đánh giá thành công');
         this.isSubmittingReview = false;
         this.showReviewForm = false;
-        this.loadProduct(this.product!.id); // Reload to get updated avg rating
+        this.loadProduct(this.product!.id);
       },
       error: (err) => {
         this.isSubmittingReview = false;
         this.message.error(err.error?.message || 'Có lỗi xảy ra');
-      }
+      },
     });
   }
 
   selectImage(url: string) {
     this.selectedImage = url;
+    this.cdr.markForCheck();
+  }
+
+  get allImages(): string[] {
+    if (!this.product) return [];
+    return [this.product.image, ...(this.product.images || [])];
+  }
+
+  prevImage() {
+    const imgs = this.allImages;
+    const idx = imgs.indexOf(this.selectedImage);
+    this.selectedImage = imgs[(idx - 1 + imgs.length) % imgs.length];
+    this.cdr.markForCheck();
+  }
+
+  nextImage() {
+    const imgs = this.allImages;
+    const idx = imgs.indexOf(this.selectedImage);
+    this.selectedImage = imgs[(idx + 1) % imgs.length];
     this.cdr.markForCheck();
   }
 
@@ -297,17 +347,40 @@ export class ProductDetailComponent implements OnInit {
     });
   }
 
-  buyNow(product: Product) {
-    if (product.attributes && product.attributes.length > 0) {
-      this.router.navigate(['/product', product.id]);
-      return;
-    }
-    this.cartService.addToCart(product.id, 1).subscribe({
-      next: () => {
+  buyNow() {
+    if (!this.product) return;
+
+    let size = '';
+    let color = '';
+    Object.keys(this.selectedAttributes).forEach(key => {
+      const lowerKey = key.toLowerCase();
+      if (lowerKey.includes('size') || lowerKey.includes('dung lượng') || lowerKey.includes('bộ nhớ') || lowerKey.includes('kích thước')) {
+        size = this.selectedAttributes[key];
+      } else if (lowerKey.includes('color') || lowerKey.includes('màu')) {
+        color = this.selectedAttributes[key];
+      }
+    });
+
+    this.cartService.addToCart(this.product.id, this.quantity, size, color).subscribe({
+      next: (cart: any) => {
         this.cartService.refreshCart();
-        this.router.navigate(['/cart']);
+        // Find the cart item that matches this product+variant
+        const items: any[] = cart.items || [];
+        const match = items.find((i: any) =>
+          i.productId === this.product!.id &&
+          (i.size || '') === size &&
+          (i.color || '') === color
+        );
+        const itemIds = match ? [match.id] : [];
+        this.router.navigate(['/order-confirm'], { state: { itemIds } });
       },
-      error: () => this.message.warning('Vui lòng đăng nhập')
+      error: (err) => {
+        if (err.status === 401) {
+          this.message.warning('Vui lòng đăng nhập để mua hàng');
+        } else {
+          this.message.error(err.error?.message || 'Không thể thêm vào giỏ hàng');
+        }
+      }
     });
   }
 

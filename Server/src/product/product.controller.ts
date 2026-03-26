@@ -108,10 +108,13 @@ export class ProductController {
     @Query('color') color?: string,
     @Query('minPrice') minPrice?: string,
     @Query('maxPrice') maxPrice?: string,
+    @Query('showAll') showAll?: string,
+    @Query('onSale') onSale?: string,
+    @Query('newArrival') newArrival?: string,
   ) {
     return this.ProductService.getProducts({
       page: page ? Number(page) : 1,
-      limit: limit ? Number(limit) : 10,
+      limit: limit ? Number(limit) : 12,
       search,
       categoryId: categoryId ? Number(categoryId) : undefined,
       brandId: brandId ? Number(brandId) : undefined,
@@ -119,6 +122,9 @@ export class ProductController {
       color: color || undefined,
       minPrice: minPrice ? Number(minPrice) : undefined,
       maxPrice: maxPrice ? Number(maxPrice) : undefined,
+      showAll: showAll === 'true',
+      onSale: onSale === 'true',
+      newArrival: newArrival === 'true',
     });
   }
 

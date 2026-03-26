@@ -5,14 +5,17 @@ import { isPlatformBrowser } from '@angular/common';
 import { CartService } from './cart.service';
 
 export interface RegisterRequest {
-  name: string;
+  firstname: string;
+  lastname: string;
   email: string;
   password?: string;
 }
 
 export interface User {
   id: number;
-  name: string;
+  name?: string;
+  firstname: string;
+  lastname: string;
   email: string;
   roles: string[];
 }
@@ -35,19 +38,45 @@ export class AuthService {
   constructor(
     private http: HttpClient,
     private cartService: CartService,
-    @Inject(PLATFORM_ID) platformId: Object
+    @Inject(PLATFORM_ID) platformId: Object,
   ) {
     this.isBrowser = isPlatformBrowser(platformId);
     if (this.isBrowser) {
       const savedUser = localStorage.getItem('user');
-      if (savedUser) {
-        try {
-          this.currentUserSubject.next(JSON.parse(savedUser));
-        } catch (e) {
-          console.error('Error parsing user from localStorage', e);
+      const token = localStorage.getItem('accessToken');
+      
+      if (savedUser && token) {
+        if (this.isTokenExpired(token)) {
+          this.logout();
+        } else {
+          try {
+            this.currentUserSubject.next(JSON.parse(savedUser));
+          } catch (e) {
+            this.logout();
+          }
         }
+      } else {
+        this.logout();
       }
     }
+  }
+
+  private isTokenExpired(token: string): boolean {
+    if (!token) return true;
+    try {
+      const parts = token.split('.');
+      if (parts.length !== 3) return true;
+      const payload = JSON.parse(atob(parts[1]));
+      if (!payload.exp) return false; // If no exp, assume valid
+      return (payload.exp * 1000) < Date.now();
+    } catch (e) {
+      return true;
+    }
+  }
+
+  public get isAuthenticated(): boolean {
+    const token = this.isBrowser ? localStorage.getItem('accessToken') : null;
+    return !!this.currentUserSubject.value && !!token && !this.isTokenExpired(token);
   }
 
   register(data: RegisterRequest): Observable<any> {
@@ -64,7 +93,7 @@ export class AuthService {
           localStorage.setItem('refreshToken', res.refresh_token);
           this.cartService.refreshCart();
         }
-      })
+      }),
     );
   }
 

@@ -23,15 +23,27 @@
         <!-- Gallery Section (Left) -->
         <div class="gallery-section">
           <div class="thumbnails">
-            <div class="thumb" [class.active]="selectedImage === product.image" (click)="selectedImage = product.image">
+            <div class="thumb" [class.active]="selectedImage === product.image" (click)="selectImage(product.image)">
               <img [src]="'http://localhost:3000' + product.image" [alt]="product.name">
             </div>
-            <div class="thumb" *ngFor="let img of product.images" [class.active]="selectedImage === img" (click)="selectedImage = img">
+            <div class="thumb" *ngFor="let img of product.images" [class.active]="selectedImage === img" (click)="selectImage(img)">
               <img [src]="'http://localhost:3000' + img" [alt]="product.name">
             </div>
           </div>
           <div class="main-image">
             <img [src]="'http://localhost:3000' + selectedImage" [alt]="product.name">
+            <!-- Prev/Next arrows -->
+            <button class="gallery-arrow prev" (click)="prevImage()" *ngIf="allImages.length > 1">
+              <span nz-icon nzType="left"></span>
+            </button>
+            <button class="gallery-arrow next" (click)="nextImage()" *ngIf="allImages.length > 1">
+              <span nz-icon nzType="right"></span>
+            </button>
+            <div class="gallery-dots" *ngIf="allImages.length > 1">
+              <span *ngFor="let img of allImages; let i = index"
+                    class="dot" [class.active]="selectedImage === img"
+                    (click)="selectImage(img)"></span>
+            </div>
           </div>
         </div>
   
@@ -124,6 +136,13 @@
                     (click)="addToCart()">
               {{ (currentVariant?.stock ?? product.stock) > 0 ? 'Add to Cart' : 'Out of Stock' }}
             </button>
+
+            <button nz-button class="buy-now-btn"
+                    [disabled]="(currentVariant?.stock ?? product.stock) <= 0"
+                    (click)="buyNow()">
+              <span nz-icon nzType="thunderbolt" nzTheme="fill"></span>
+              Mua ngay
+            </button>
           </div>
         </div>
       </div>
@@ -159,11 +178,17 @@
           <div class="reviews-section">
             <div class="section-top">
               <h2>Đánh giá từ khách hàng <span>({{ reviews.length }})</span></h2>
-              <div class="filter-actions" *ngIf="isLoggedIn">
-                <button class="write-btn" *ngIf="canUserReview" (click)="showReviewForm = !showReviewForm">
-                  {{ isEditingReview ? 'Sửa đánh giá' : 'Viết đánh giá' }}
+              <div class="review-actions" *ngIf="isLoggedIn">
+                <!-- Có quyền đánh giá (đơn đã giao) và chưa có review -->
+                <button class="write-btn" *ngIf="canUserReview && !isEditingReview" (click)="showReviewForm = !showReviewForm">
+                  <span nz-icon nzType="edit"></span>
+                  Viết đánh giá
                 </button>
-                <span class="note-text" *ngIf="!canUserReview && !isEditingReview">Mua hàng để đánh giá sản phẩm</span>
+                <!-- Chưa mua hoặc chưa giao -->
+                <span class="note-text" *ngIf="!canUserReview && !isEditingReview">
+                  <span nz-icon nzType="lock"></span>
+                  Chỉ đánh giá được sau khi đơn hàng đã giao
+                </span>
               </div>
             </div>
 
@@ -172,56 +197,93 @@
               <h3>{{ isEditingReview ? 'Chỉnh sửa đánh giá của bạn' : 'Gửi đánh giá của bạn' }}</h3>
               <div class="review-form-body">
                 <div class="form-group">
-                  <label class="block mb-1 font-semibold">Xếp hạng:</label>
+                  <label>Xếp hạng</label>
                   <nz-rate [(ngModel)]="reviewForm.rating"></nz-rate>
                 </div>
-                <div class="form-group mt-3">
-                  <label class="block mb-1 font-semibold">Bình luận:</label>
-                  <textarea nz-input [(ngModel)]="reviewForm.comment" rows="3" placeholder="Chia sẻ cảm nhận của bạn..."></textarea>
+                <div class="form-group">
+                  <label>Bình luận</label>
+                  <textarea nz-input [(ngModel)]="reviewForm.comment" rows="4" placeholder="Chia sẻ cảm nhận của bạn về sản phẩm..."></textarea>
                 </div>
-                <div class="form-group mt-3">
-                  <label class="block mb-1 font-semibold">Thêm hình ảnh:</label>
+                <div class="form-group">
+                  <label>Hình ảnh thực tế (tuỳ chọn)</label>
                   <div class="upload-zone">
-                    <input type="file" (change)="onFileSelected($event)" accept="image/*" class="file-input">
+                    <label class="upload-label">
+                      <span nz-icon nzType="camera"></span>
+                      <span>Chọn ảnh</span>
+                      <input type="file" (change)="onFileSelected($event)" accept="image/*" class="file-input">
+                    </label>
                     <div class="preview-box" *ngIf="reviewForm.imagePreview">
                       <img [src]="reviewForm.imagePreview" alt="Preview">
+                      <button class="remove-preview" (click)="reviewForm.imagePreview = ''; reviewForm.imageFile = null">
+                        <span nz-icon nzType="close"></span>
+                      </button>
                     </div>
                   </div>
                 </div>
-                <div class="form-actions mt-4 flex gap-2">
+                <div class="form-actions">
                   <button nz-button nzType="primary" class="submit-review-btn" [nzLoading]="isSubmittingReview" (click)="submitReview()">
-                    {{ isEditingReview ? 'Cập nhật' : 'Gửi đánh giá' }}
+                    <span nz-icon nzType="send"></span>
+                    {{ isEditingReview ? 'Cập nhật đánh giá' : 'Gửi đánh giá' }}
                   </button>
-                  <button nz-button (click)="showReviewForm = false">Hủy</button>
+                  <button class="cancel-review-btn" (click)="showReviewForm = false">
+                    <span nz-icon nzType="close"></span>
+                    Hủy
+                  </button>
                 </div>
               </div>
             </div>
 
-            <div class="reviews-grid mt-6">
-              <div *ngIf="reviews.length === 0" class="empty-reviews text-center py-8 text-gray-400">
-                  Chưa có đánh giá nào cho sản phẩm này.
+            <div class="reviews-list mt-6">
+              <div *ngIf="reviews.length === 0" class="empty-reviews">
+                <span nz-icon nzType="message"></span>
+                <p>Chưa có đánh giá nào. Hãy là người đầu tiên!</p>
               </div>
-              <div class="review-card" *ngFor="let r of reviews">
-                <div class="review-header flex justify-between">
-                  <nz-rate [ngModel]="r.rating" nzDisabled nzSize="small"></nz-rate>
-                  <span class="review-date text-xs text-gray-400">{{ r.createdAt | date:'dd/MM/yyyy' }}</span>
-                </div>
-                <div class="review-user mt-2">
-                  <span class="user-name font-bold flex items-center">
-                    {{ r.user?.firstname || r.user?.username || 'Khách hàng' }} {{ r.user?.lastname || '' }}
-                    <span class="verified-icon ml-1 text-green-500" nz-icon nzType="check-circle" nzTheme="fill"></span>
-                  </span>
-                </div>
-                <p class="review-text mt-2 text-gray-600 italic">"{{ r.comment }}"</p>
-                
-                <div class="review-image mt-3" *ngIf="r.image">
-                  <img [src]="'http://localhost:3000' + r.image" class="w-24 h-24 object-cover rounded-lg shadow-sm cursor-pointer hover:opacity-80 transition-opacity" [alt]="'Review by ' + r.user?.username">
-                </div>
-              </div>
-            </div>
 
-            <div class="load-more" *ngIf="reviews.length > 5">
-              <button>Xem thêm đánh giá</button>
+              <div class="review-card" *ngFor="let r of reviews" [class.my-review]="r.userId === currentUser?.userId">
+                <div class="review-card-header">
+                  <div class="reviewer-info">
+                    <div class="reviewer-avatar" *ngIf="!r.user?.avatar">
+                      {{ (r.user?.firstname || r.user?.username || 'K')[0].toUpperCase() }}
+                    </div>
+                    <img *ngIf="r.user?.avatar" class="reviewer-avatar-img"
+                         [src]="r.user.avatar.startsWith('/uploads') ? 'http://localhost:3000' + r.user.avatar : r.user.avatar"
+                         [alt]="r.user?.firstname">
+                    <div>
+                      <div class="reviewer-name">
+                        {{ r.user?.firstname || r.user?.username || 'Khách hàng' }} {{ r.user?.lastname || '' }}
+                        <span class="my-badge" *ngIf="r.userId === currentUser?.userId">Bạn</span>
+                      </div>
+                      <div class="review-date">{{ r.createdAt | date:'dd/MM/yyyy' }}</div>
+                    </div>
+                  </div>
+                  <div class="review-right">
+                    <nz-rate [ngModel]="r.rating" nzDisabled></nz-rate>
+                    <!-- Nút sửa/xóa cho review của chính mình -->
+                    <div class="my-review-actions" *ngIf="r.userId === currentUser?.userId">
+                      <button class="action-icon-btn edit" (click)="showReviewForm = true">
+                        <span nz-icon nzType="edit"></span>
+                      </button>
+                      <button class="action-icon-btn delete"
+                        nz-popconfirm nzPopconfirmTitle="Xóa đánh giá này?"
+                        nzPopconfirmPlacement="bottomRight"
+                        (nzOnConfirm)="deleteReview()">
+                        <span nz-icon nzType="delete"></span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <p class="review-comment">"{{ r.comment }}"</p>
+
+                <div class="review-image" *ngIf="r.image">
+                  <img [src]="'http://localhost:3000' + r.image" [alt]="'Review image'">
+                </div>
+
+                <div class="verified-tag">
+                  <span nz-icon nzType="check-circle" nzTheme="fill"></span>
+                  Đã mua hàng
+                </div>
+              </div>
             </div>
           </div>
         </div>

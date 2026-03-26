@@ -4,6 +4,8 @@ import {
   PrimaryGeneratedColumn,
   ManyToOne,
   JoinColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 import { Category } from '../../category/entities/category.entity/category.entity';
 import { Brand } from '../../brand/entities/brand.entity/brand.entity';
@@ -77,4 +79,10 @@ export class Product {
 
   @Column()
   userId: number;
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
 }

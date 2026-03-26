@@ -9,7 +9,9 @@
     <div class="tab-navigation">
       <button [class.active]="activeTab === 'info'" (click)="activeTab = 'info'">Thông tin</button>
       <button [class.active]="activeTab === 'password'" (click)="activeTab = 'password'">Bảo mật</button>
+      <button [class.active]="activeTab === 'addresses'" (click)="activeTab = 'addresses'; loadAddresses()">Địa chỉ</button>
       <button [class.active]="activeTab === 'orders'" (click)="activeTab = 'orders'">Đơn hàng</button>
+      <button [class.active]="activeTab === 'vouchers'" (click)="activeTab = 'vouchers'; loadPublicVouchers()">Kho Voucher</button>
       <button [class.active]="activeTab === 'favorites'" (click)="activeTab = 'favorites'">Yêu thích</button>
     </div>
   </div>
@@ -36,9 +38,7 @@
         <h4 class="user-name">{{ userProfile.firstname }} {{ userProfile.lastname }}</h4>
         <span class="user-role-badge">{{ userRoleName }}</span>
 
-        <button class="url-toggle-btn" nz-button nzType="text" (click)="showUrlInput = !showUrlInput">
-          {{ showUrlInput ? 'Đóng liên kết URL' : 'Dùng URL ảnh từ web' }}
-        </button>
+    
 
         <div *ngIf="showUrlInput" class="url-input-wrap">
           <input nz-input [(ngModel)]="userProfile.avatar" placeholder="https://..." />
@@ -94,14 +94,6 @@
           </div>
         </div>
 
-        <div class="form-group" [class.is-disabled]="!isEditing">
-          <label>Địa chỉ giao hàng</label>
-          <div class="input-wrap">
-            <textarea nz-input [(ngModel)]="userProfile.address" [disabled]="!isEditing" rows="4"
-              placeholder="Nhập địa chỉ..."></textarea>
-          </div>
-        </div>
-
         <button *ngIf="isEditing" class="save-btn" [disabled]="isUpdatingProfile" (click)="updateProfile()">
           <span>Lưu thông tin hồ sơ</span>
           <span nz-icon nzType="check-circle" style="font-size:18px"></span>
@@ -152,6 +144,107 @@
       </div>
     </div>
   </div>
+
+  <!-- ===== Addresses Tab ===== -->
+  <div *ngIf="activeTab === 'addresses'" class="profile-card">
+    <div class="orders-tab">
+      <div class="section-label">
+        <div class="dot"></div>
+        <h3>Địa chỉ giao hàng</h3>
+        <div class="divider"></div>
+        <button class="edit-btn" (click)="openAddressModal()">+ Thêm địa chỉ</button>
+      </div>
+
+      <div *ngIf="addresses.length === 0" class="text-center py-16">
+        <span nz-icon nzType="environment" class="text-6xl text-gray-200 block mb-4"></span>
+        <p class="text-[11px] font-black uppercase tracking-[0.2em] text-gray-400 mb-2">Chưa có địa chỉ nào</p>
+        <p class="text-xs text-gray-400 mb-6">Thêm địa chỉ để thanh toán nhanh hơn</p>
+      </div>
+
+      <div class="space-y-4 mt-4">
+        <div *ngFor="let addr of addresses" class="border border-gray-100 rounded-2xl p-5 relative hover:border-gray-300 transition-all">
+          <div class="flex justify-between items-start">
+            <div class="flex-grow">
+              <div class="flex items-center gap-2 mb-1">
+                <span class="font-black text-gray-900">{{ addr.fullName }}</span>
+                <span class="text-gray-300">|</span>
+                <span class="text-sm text-gray-500">{{ addr.phone }}</span>
+                <span *ngIf="addr.isDefault" class="text-[10px] font-black uppercase tracking-widest bg-black text-white px-2 py-0.5 rounded-full">Mặc định</span>
+              </div>
+              <p class="text-sm text-gray-600 leading-relaxed">
+                {{ addr.detail }}<span *ngIf="addr.wardName">, {{ addr.wardName }}</span>, {{ addr.provinceName }}
+              </p>
+            </div>
+            <div class="flex gap-2 ml-4 flex-shrink-0">
+              <button *ngIf="!addr.isDefault" nz-button nzSize="small" nzType="default"
+                      class="text-xs font-bold" (click)="setDefaultAddress(addr.id!)">
+                Đặt mặc định
+              </button>
+              <button nz-button nzSize="small" nzType="default" (click)="openAddressModal(addr)">
+                <span nz-icon nzType="edit"></span>
+              </button>
+              <button nz-button nzSize="small" nzDanger
+                      nz-popconfirm nzPopconfirmTitle="Xóa địa chỉ này?"
+                      (nzOnConfirm)="deleteAddress(addr.id!)">
+                <span nz-icon nzType="delete"></span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Address Form Modal -->
+  <nz-modal [(nzVisible)]="isAddressModalVisible"
+            [nzTitle]="isEditingAddress ? 'Chỉnh sửa địa chỉ' : 'Thêm địa chỉ mới'"
+            (nzOnCancel)="isAddressModalVisible = false"
+            (nzOnOk)="saveAddress()"
+            [nzOkLoading]="isSavingAddress"
+            nzOkText="Lưu địa chỉ"
+            nzCancelText="Hủy"
+            nzWidth="520px">
+    <ng-container *nzModalContent>
+      <div class="space-y-4 py-2">
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label>Họ tên <span class="text-red-500">*</span></label>
+            <input nz-input [(ngModel)]="addressForm.fullName" placeholder="Nguyễn Văn A" />
+          </div>
+          <div class="form-group">
+            <label>Số điện thoại <span class="text-red-500">*</span></label>
+            <input nz-input [(ngModel)]="addressForm.phone" placeholder="0901234567" />
+          </div>
+        </div>
+
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label>Tỉnh / Thành phố <span class="text-red-500">*</span></label>
+            <nz-select [(ngModel)]="addressForm.provinceCode" (ngModelChange)="onProvinceChange($event)"
+                       nzPlaceHolder="Chọn tỉnh/thành" style="width:100%">
+              <nz-option *ngFor="let p of provinces" [nzValue]="p.code" [nzLabel]="p.name"></nz-option>
+            </nz-select>
+          </div>
+          <div class="form-group">
+            <label>Phường / Xã</label>
+            <nz-select [(ngModel)]="addressForm.wardCode" (ngModelChange)="onWardChange($event)"
+                       nzPlaceHolder="Chọn phường/xã" [nzDisabled]="!addressForm.provinceCode" style="width:100%">
+              <nz-option *ngFor="let w of wards" [nzValue]="w.code" [nzLabel]="w.name"></nz-option>
+            </nz-select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Địa chỉ chi tiết <span class="text-red-500">*</span></label>
+          <input nz-input [(ngModel)]="addressForm.detail"
+                 placeholder="Số nhà, tên đường, khu phố..." />
+          <p class="text-xs text-gray-400 mt-1">Ví dụ: 123 Đường Lê Lợi, Phường Bến Nghé</p>
+        </div>
+
+        <label nz-checkbox [(ngModel)]="addressForm.isDefault">Đặt làm địa chỉ mặc định</label>
+      </div>
+    </ng-container>
+  </nz-modal>
 
   <!-- ===== Orders Tab ===== -->
   <div *ngIf="activeTab === 'orders'" class="profile-card">
@@ -342,11 +435,19 @@
           <div class="space-y-2 text-sm">
             <div class="flex justify-between text-gray-500">
               <span>Tạm tính</span>
-              <span>{{ (selectedOrder.totalAmount + selectedOrder.discountAmount) | vndCurrency }}</span>
+              <span>{{ getOrderRawTotal() | vndCurrency }}</span>
             </div>
             <div class="flex justify-between text-rose-500" *ngIf="selectedOrder.discountAmount > 0">
               <span>Giảm giá</span>
               <span>-{{ selectedOrder.discountAmount | vndCurrency }}</span>
+            </div>
+            <div class="flex justify-between text-gray-500" *ngIf="selectedOrder.shippingFee > 0">
+              <span>Phí vận chuyển</span>
+              <span>{{ selectedOrder.shippingFee | vndCurrency }}</span>
+            </div>
+            <div class="flex justify-between text-gray-500" *ngIf="!selectedOrder.shippingFee || selectedOrder.shippingFee == 0">
+              <span>Phí vận chuyển</span>
+              <span class="text-green-600 font-bold">Miễn phí</span>
             </div>
             <div class="pt-2 mt-2 border-t border-gray-200 flex justify-between">
               <span class="font-black text-base">Tổng thanh toán</span>
@@ -365,17 +466,19 @@
         </div>
 
         <!-- Order Cancellation -->
-        <div *ngIf="['PENDING', 'PAID'].includes(selectedOrder.status)" class="mt-8">
-          <button nz-button nzDanger nzBlock 
-                  class="h-12 rounded-2xl font-black text-xs uppercase tracking-widest border-2 border-rose-100 hover:border-rose-500 transition-all"
+        <div *ngIf="['PENDING', 'PAID', 'CONFIRMED', 'PROCESSING'].includes(selectedOrder.status)" class="cancel-order-section">
+          <div class="cancel-warning-box">
+            <span nz-icon nzType="info-circle" nzTheme="fill" class="cancel-warning-icon"></span>
+            <p>Sau khi hủy, đơn hàng không thể khôi phục. Tiền sẽ được hoàn lại trong 3–5 ngày làm việc nếu đã thanh toán.</p>
+          </div>
+          <button class="cancel-order-btn"
                   nz-popconfirm
                   nzPopconfirmTitle="Bạn chắc chắn muốn hủy đơn hàng này?"
+                  nzPopconfirmPlacement="top"
                   (nzOnConfirm)="cancelOrder(selectedOrder.id)">
+            <span nz-icon nzType="close-circle" nzTheme="fill"></span>
             Hủy đơn hàng này
           </button>
-          <p class="text-[10px] text-gray-400 text-center mt-3 font-bold uppercase tracking-tighter">
-            * chỉ có thể hủy khi đơn đang ở trạng thái chờ xử lý hoặc đã thanh toán
-          </p>
         </div>
       </div>
     </ng-container>
@@ -423,6 +526,89 @@
     </ng-container>
   </nz-modal>
 
+  <!-- ===== Voucher Warehouse Tab ===== -->
+  <div *ngIf="activeTab === 'vouchers'" class="profile-card">
+    <div class="orders-tab">
+      <div class="section-label">
+        <div class="dot"></div>
+        <h3>Kho Voucher</h3>
+        <div class="divider"></div>
+        <span class="voucher-count-badge">{{ publicVouchers.length }} voucher</span>
+      </div>
+
+      <!-- Loading -->
+      <div *ngIf="isLoadingVouchers" class="voucher-loading">
+        <span nz-icon nzType="loading" class="text-3xl text-gray-400"></span>
+        <p class="text-sm text-gray-400 mt-2">Đang tải voucher...</p>
+      </div>
+
+      <!-- Empty -->
+      <div *ngIf="!isLoadingVouchers && publicVouchers.length === 0" class="text-center py-16">
+        <div class="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+          <span nz-icon nzType="tag" class="text-4xl text-gray-200"></span>
+        </div>
+        <p class="text-[11px] font-black uppercase tracking-[0.2em] text-gray-400 mb-2">Chưa có voucher nào</p>
+        <p class="text-xs text-gray-400">Quay lại sau để nhận voucher mới nhé!</p>
+      </div>
+
+      <!-- Voucher Grid -->
+      <div *ngIf="!isLoadingVouchers && publicVouchers.length > 0" class="voucher-warehouse-grid">
+        <div *ngFor="let v of publicVouchers" class="voucher-card" [class.collected]="v.isCollected">
+          <!-- Left coupon section -->
+          <div class="voucher-left">
+            <div class="voucher-icon-wrap">
+              <span nz-icon nzType="gift" nzTheme="fill"></span>
+            </div>
+            <div class="voucher-value-block">
+              <span class="voucher-type-label">{{ v.type === 'PERCENT' ? 'Giảm' : 'Giảm thẳng' }}</span>
+              <span class="voucher-main-value">
+                {{ v.type === 'PERCENT' ? (v.value | number:'1.0-0') + '%' : (v.value | vndCurrency) }}
+              </span>
+              <span *ngIf="v.maxDiscountAmount && v.type === 'PERCENT'" class="voucher-max">
+                Tối đa {{ v.maxDiscountAmount | vndCurrency }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Dashed divider -->
+          <div class="voucher-dashed"></div>
+
+          <!-- Right info section -->
+          <div class="voucher-right">
+            <div class="voucher-code">{{ v.code }}</div>
+            <div class="voucher-condition">
+              <span nz-icon nzType="info-circle" nzTheme="outline"></span>
+              Đơn từ {{ v.minOrderAmount | vndCurrency }}
+            </div>
+            <div class="voucher-scope" *ngIf="v.applicableCategories?.length > 0 || v.applicableBrands?.length > 0">
+              <span nz-icon nzType="tag" nzTheme="outline"></span>
+              <span *ngIf="v.applicableCategories?.length > 0">
+                {{ v.applicableCategories[0].name }}<span *ngIf="v.applicableCategories.length > 1"> +{{ v.applicableCategories.length - 1 }}</span>
+              </span>
+              <span *ngIf="v.applicableBrands?.length > 0 && !v.applicableCategories?.length">
+                {{ v.applicableBrands[0].name }}<span *ngIf="v.applicableBrands.length > 1"> +{{ v.applicableBrands.length - 1 }}</span>
+              </span>
+            </div>
+            <div class="voucher-scope" *ngIf="!v.applicableCategories?.length && !v.applicableBrands?.length">
+              <span nz-icon nzType="shopping" nzTheme="outline"></span> Áp dụng toàn bộ sản phẩm
+            </div>
+            <div class="voucher-expiry">
+              <span nz-icon nzType="clock-circle" nzTheme="outline"></span>
+              Còn {{ getVoucherDaysLeft(v.endDate) }} ngày
+            </div>
+            <button class="voucher-collect-btn"
+                    [class.collected]="v.isCollected"
+                    [disabled]="v.isCollected || collectingVoucherId === v.id"
+                    (click)="collectVoucher(v)">
+              <span nz-icon [nzType]="v.isCollected ? 'check-circle' : (collectingVoucherId === v.id ? 'loading' : 'download')" nzTheme="fill"></span>
+              {{ v.isCollected ? 'Đã lưu' : 'Thu thập' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- ===== Favorites Tab ===== -->
   <div *ngIf="activeTab === 'favorites'" class="profile-card">
     <div class="favorites-tab">
@@ -432,29 +618,23 @@
         <div class="divider"></div>
       </div>
 
-      <div *ngIf="favoriteProducts.length > 0" class="favorites-grid grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        <div *ngFor="let fav of favoriteProducts" 
-             class="fav-card group relative bg-white border border-gray-100 rounded-3xl overflow-hidden hover:shadow-2xl hover:shadow-black/5 transition-all duration-500 cursor-pointer" 
-             (click)="goToProduct(fav.product?.id)">
+      <div *ngIf="favoriteProducts.length > 0" class="favorites-grid">
+        <div *ngFor="let fav of favoriteProducts" class="fav-card" (click)="goToProduct(fav.product?.id)">
           
-          <div class="aspect-square relative overflow-hidden bg-gray-50 flex items-center justify-center">
-            <img [src]="'http://localhost:3000' + fav.product?.image" 
-                 class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-[1.5s]">
-            
-            <div class="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-500"></div>
-
-            <button class="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center text-rose-500 shadow-sm border border-white hover:bg-rose-500 hover:text-white transition-all duration-300 z-10"
-                    (click)="removeFavorite(fav.product?.id, $event)">
-              <span nz-icon nzType="heart" nzTheme="fill" class="text-xl"></span>
+          <div class="fav-img-wrap">
+            <img [src]="'http://localhost:3000' + fav.product?.image" [alt]="fav.product?.name">
+            <div class="fav-overlay"></div>
+            <button class="fav-remove-btn" (click)="removeFavorite(fav.product?.id, $event)">
+              <span nz-icon nzType="heart" nzTheme="fill"></span>
             </button>
+            <div class="fav-brand-tag">{{ fav.product?.brand?.name || 'Thương hiệu' }}</div>
           </div>
 
-          <div class="p-5">
-            <p class="text-[10px] font-black uppercase text-gray-400 tracking-widest mb-1">{{ fav.product?.brand?.name || 'Thương hiệu' }}</p>
-            <h4 class="text-sm font-bold text-gray-900 line-clamp-2 h-10 mb-4 group-hover:text-primary transition-colors duration-300">{{ fav.product?.name }}</h4>
-            <div class="flex items-center justify-between mt-auto">
-              <span class="text-lg font-black text-gray-900 tracking-tighter">{{ fav.product?.price | vndCurrency }}</span>
-              <div class="w-8 h-8 rounded-full bg-black text-white flex items-center justify-center transform group-hover:scale-110 transition-all duration-300">
+          <div class="fav-info">
+            <h4 class="fav-name">{{ fav.product?.name }}</h4>
+            <div class="fav-footer">
+              <span class="fav-price">{{ fav.product?.price | vndCurrency }}</span>
+              <div class="fav-arrow">
                 <span nz-icon nzType="arrow-right"></span>
               </div>
             </div>

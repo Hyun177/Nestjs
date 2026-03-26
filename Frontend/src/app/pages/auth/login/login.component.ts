@@ -1,7 +1,13 @@
 import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { RouterLink, Router } from '@angular/router';
 import { NzIconModule } from 'ng-zorro-antd/icon';
-import { ReactiveFormsModule, FormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import {
+  ReactiveFormsModule,
+  FormsModule,
+  FormBuilder,
+  FormGroup,
+  Validators,
+} from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../../core/services/auth.service';
 import { NzMessageService } from 'ng-zorro-antd/message';
@@ -26,7 +32,7 @@ export class LoginComponent implements OnInit, OnDestroy {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(6)]],
-      remember: [false]
+      remember: [false],
     });
   }
 
@@ -36,7 +42,8 @@ export class LoginComponent implements OnInit, OnDestroy {
       this.authService.login(this.loginForm.value).subscribe({
         next: () => {
           this.message.success('Đăng nhập thành công!');
-          this.authService.currentUser$.subscribe(user => {
+          this.loading = false;
+          this.authService.currentUser$.subscribe((user) => {
             if (user?.roles.includes('admin')) {
               this.router.navigate(['/admin/products']);
             } else if (user?.roles.includes('manager')) {
@@ -49,10 +56,10 @@ export class LoginComponent implements OnInit, OnDestroy {
         error: (err) => {
           this.loading = false;
           this.message.error(err.error?.message || 'Đăng nhập thất bại!');
-        }
+        },
       });
     } else {
-      Object.values(this.loginForm.controls).forEach(control => {
+      Object.values(this.loginForm.controls).forEach((control) => {
         if (control.invalid) {
           control.markAsDirty();
           control.updateValueAndValidity({ onlySelf: true });

@@ -1,4 +1,4 @@
-import { IsEnum, IsOptional, IsString } from 'class-validator';
+import { IsEnum, IsOptional, IsString, IsNumber } from 'class-validator';
 import { PaymentMethod } from '../../payment/enums/payment-method.enum';
 
 export class CheckoutDto {
@@ -11,4 +11,12 @@ export class CheckoutDto {
 
   @IsEnum(PaymentMethod)
   paymentMethod: PaymentMethod;
+
+  @IsOptional()
+  @IsNumber()
+  addressId?: number;
+
+  @IsOptional()
+  @IsNumber()
+  shippingFee?: number;
 }

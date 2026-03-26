@@ -1,0 +1,62 @@
+<div class="success-page">
+  <div class="success-container">
+
+    <!-- Checkmark animation -->
+    <div class="check-wrap">
+      <div class="check-circle">
+        <span nz-icon nzType="check" class="check-icon"></span>
+      </div>
+    </div>
+
+    <h1 class="title">Đặt hàng thành công!</h1>
+    <p class="subtitle">Cảm ơn bạn đã mua hàng. Đơn hàng của bạn đang được xử lý.</p>
+
+    <div class="order-card" *ngIf="order">
+      <div class="order-row">
+        <span class="label">Mã đơn hàng</span>
+        <span class="value bold">#{{ order.orderId }}</span>
+      </div>
+      <div class="order-row" *ngIf="order.totalAmount">
+        <span class="label">Tổng thanh toán</span>
+        <span class="value bold">{{ order.totalAmount | vndCurrency }}</span>
+      </div>
+      <div class="order-row" *ngIf="order.paymentMethod">
+        <span class="label">Phương thức</span>
+        <span class="value">{{ order.paymentMethod === 'COD' ? 'Tiền mặt (COD)' : order.paymentMethod }}</span>
+      </div>
+      <div class="order-row" *ngIf="order.shippingAddress">
+        <span class="label">Giao đến</span>
+        <span class="value">{{ order.shippingAddress }}</span>
+      </div>
+    </div>
+
+    <div class="steps-note">
+      <div class="step-item">
+        <span nz-icon nzType="file-protect"></span>
+        <span>Đơn hàng đã được tiếp nhận</span>
+      </div>
+      <div class="step-arrow"><span nz-icon nzType="right"></span></div>
+      <div class="step-item">
+        <span nz-icon nzType="car"></span>
+        <span>Đang chuẩn bị giao hàng</span>
+      </div>
+      <div class="step-arrow"><span nz-icon nzType="right"></span></div>
+      <div class="step-item">
+        <span nz-icon nzType="home"></span>
+        <span>Giao đến tay bạn</span>
+      </div>
+    </div>
+
+    <div class="actions">
+      <a routerLink="/profile" [state]="{ openOrderId: order?.orderId }" class="btn-outline">
+        <span nz-icon nzType="profile"></span>
+        Xem đơn hàng
+      </a>
+      <a routerLink="/products" class="btn-black">
+        <span nz-icon nzType="shopping"></span>
+        Tiếp tục mua sắm
+      </a>
+    </div>
+
+  </div>
+</div>

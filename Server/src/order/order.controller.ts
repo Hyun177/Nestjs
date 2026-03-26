@@ -56,6 +56,7 @@ export class OrderController {
   }
 
   @Patch(':id/cancel')
+  @Permissions(Permission.ORDER_CANCEL)
   cancelOrder(@Req() req: any, @Param('id', ParseIntPipe) id: number) {
     return this.orderService.cancelOrder(id, req.user.userId);
   }

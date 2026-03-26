@@ -1,5 +1,5 @@
 import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
-import { provideHttpClient, withFetch } from '@angular/common/http';
+import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
 import { provideRouter } from '@angular/router';
 import { provideNzIcons } from 'ng-zorro-antd/icon';
 import { NZ_I18N, vi_VN } from 'ng-zorro-antd/i18n';
@@ -18,10 +18,12 @@ import {
   AppleOutline,
   PhoneOutline,
   EnvironmentOutline,
+  EnvironmentFill,
   SketchOutline,
   DownOutline,
   ArrowRightOutline,
   ThunderboltOutline,
+  ThunderboltFill,
   BarChartOutline,
   TeamOutline,
   SearchOutline,
@@ -59,6 +61,7 @@ import {
   CameraOutline,
   KeyOutline,
   ShoppingOutline,
+  ShoppingFill,
   DollarCircleOutline,
   ArrowUpOutline,
   ArrowDownOutline,
@@ -73,11 +76,26 @@ import {
   NotificationOutline,
   EditOutline,
   EyeFill,
-  ShoppingFill,
   ContainerOutline,
+  RightOutline,
+  FileProtectOutline,
+  WalletOutline,
+  BankOutline,
+  CarOutline,
+  SaveOutline,
+  LoadingOutline,
+  CheckOutline,
+  MessageOutline,
+  GiftFill,
+  TagFill,
+  InfoCircleFill,
+  ClockCircleOutline,
+  FrownOutline,
+  SmileOutline,
 } from '@ant-design/icons-angular/icons';
 import { routes } from './app.routes';
 import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
+import { authInterceptor } from './core/interceptors/auth.interceptor';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -98,6 +116,7 @@ export const appConfig: ApplicationConfig = {
       DownOutline,
       ArrowRightOutline,
       ThunderboltOutline,
+      ThunderboltFill,
       BarChartOutline,
       TeamOutline,
       SearchOutline,
@@ -151,9 +170,25 @@ export const appConfig: ApplicationConfig = {
       EyeFill,
       ShoppingFill,
       ContainerOutline,
+      RightOutline,
+      FileProtectOutline,
+      WalletOutline,
+      BankOutline,
+      CarOutline,
+      SaveOutline,
+      LoadingOutline,
+      CheckOutline,
+      EnvironmentFill,
+      MessageOutline,
+      GiftFill,
+      TagFill,
+      InfoCircleFill,
+      ClockCircleOutline,
+      FrownOutline,
+      SmileOutline,
     ]),
     provideRouter(routes),
-    provideHttpClient(withFetch()),
+    provideHttpClient(withFetch(), withInterceptors([authInterceptor])),
     provideClientHydration(withEventReplay()),
   ],
 };

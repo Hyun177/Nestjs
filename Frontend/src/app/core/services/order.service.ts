@@ -13,11 +13,14 @@ export class OrderService {
   private isBrowser = isPlatformBrowser(this.platformId);
 
   private getHeaders(): HttpHeaders {
-    let token = '';
+    let headers = new HttpHeaders();
     if (this.isBrowser) {
-      token = localStorage.getItem('accessToken') || '';
+      const token = localStorage.getItem('accessToken');
+      if (token) {
+        headers = headers.set('Authorization', `Bearer ${token}`);
+      }
     }
-    return new HttpHeaders().set('Authorization', `Bearer ${token}`);
+    return headers;
   }
 
   getHistory(): Observable<any> {
@@ -28,7 +31,13 @@ export class OrderService {
     return this.http.get(`${this.apiUrl}/${id}`, { headers: this.getHeaders() });
   }
 
-  checkout(data: { voucherCode?: string; paymentMethod: string; itemIds?: number[] }): Observable<any> {
+  checkout(data: {
+    voucherCode?: string;
+    paymentMethod: string;
+    itemIds?: number[];
+    addressId?: number;
+    shippingFee?: number;
+  }): Observable<any> {
     return this.http.post(`${this.apiUrl}/checkout`, data, { headers: this.getHeaders() });
   }
 
@@ -37,7 +46,11 @@ export class OrderService {
   }
 
   updateOrderStatus(id: number, status: string): Observable<any> {
-    return this.http.patch(`${this.apiUrl}/${id}/status`, { status }, { headers: this.getHeaders() });
+    return this.http.patch(
+      `${this.apiUrl}/${id}/status`,
+      { status },
+      { headers: this.getHeaders() },
+    );
   }
 
   deleteOrderAdmin(id: number): Observable<any> {

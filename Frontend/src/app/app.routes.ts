@@ -24,6 +24,16 @@ export const routes: Routes = [
           import('./pages/auth/cart/cart.component').then((m) => m.CartComponent),
       },
       {
+        path: 'order-confirm',
+        loadComponent: () =>
+          import('./pages/order-confirm/order-confirm.component').then((m) => m.OrderConfirmComponent),
+      },
+      {
+        path: 'order-success',
+        loadComponent: () =>
+          import('./pages/order-success/order-success.component').then((m) => m.OrderSuccessComponent),
+      },
+      {
         path: 'products',
         loadComponent: () =>
           import('./pages/products/products.component').then((m) => m.ProductsComponent),
@@ -98,6 +108,11 @@ export const routes: Routes = [
         path: 'brands',
         loadComponent: () =>
           import('./pages/admin/brands/admin-brands.component').then((m) => m.AdminBrandsComponent),
+      },
+      {
+        path: 'vouchers',
+        loadComponent: () =>
+          import('./pages/admin/vouchers/admin-voucher.component').then((m) => m.AdminVoucherComponent),
       },
       {
         path: 'favorites',

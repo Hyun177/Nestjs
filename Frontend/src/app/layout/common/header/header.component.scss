@@ -17,12 +17,23 @@
         text-decoration: underline;
     }
 
+    .banner-link {
+        color: #fff;
+        font-weight: 800;
+        text-decoration: underline;
+        margin-left: 6px;
+        cursor: pointer;
+    }
+
     .close-banner {
         position: absolute;
         right: 1.5rem;
         top: 50%;
         transform: translateY(-50%);
         cursor: pointer;
+        opacity: 0.7;
+        transition: opacity 0.2s;
+        &:hover { opacity: 1; }
     }
 }
 

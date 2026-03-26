@@ -17,7 +17,7 @@ import { NzMessageService } from 'ng-zorro-antd/message';
   imports: [CommonModule, FormsModule, NzIconModule, NzButtonModule, VndCurrencyPipe, RouterLink],
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.scss'],
-  providers: [NzMessageService]
+  providers: [NzMessageService],
 })
 export class HomeComponent implements OnInit {
   private productService = inject(ProductService);
@@ -97,7 +97,7 @@ export class HomeComponent implements OnInit {
         this.products = res;
         this.cdr.markForCheck();
       },
-      error: () => console.error('Failed to load products')
+      error: () => console.error('Failed to load products'),
     });
 
     this.productService.getTopSelling().subscribe({
@@ -105,25 +105,34 @@ export class HomeComponent implements OnInit {
         this.topSelling = res;
         this.cdr.markForCheck();
       },
-      error: () => console.error('Failed to load top selling')
+      error: () => console.error('Failed to load top selling'),
     });
 
     this.brandService.getBrands().subscribe({
       next: (res: any[]) => {
-        this.brands = res.length > 0 ? res : [
-          { name: 'VERSACE' }, { name: 'ZARA' }, { name: 'GUCCI' },
-          { name: 'PRADA' }, { name: 'Calvin Klein' }
-        ];
+        this.brands =
+          res.length > 0
+            ? res
+            : [
+                { name: 'VERSACE' },
+                { name: 'ZARA' },
+                { name: 'GUCCI' },
+                { name: 'PRADA' },
+                { name: 'Calvin Klein' },
+              ];
         this.cdr.markForCheck();
       },
       error: () => {
         this.brands = [
-          { name: 'VERSACE' }, { name: 'ZARA' }, { name: 'GUCCI' },
-          { name: 'PRADA' }, { name: 'Calvin Klein' }
+          { name: 'VERSACE' },
+          { name: 'ZARA' },
+          { name: 'GUCCI' },
+          { name: 'PRADA' },
+          { name: 'Calvin Klein' },
         ];
         console.error('Failed to load brands');
         this.cdr.markForCheck();
-      }
+      },
     });
   }
 
@@ -133,9 +142,16 @@ export class HomeComponent implements OnInit {
 
     this.favoriteService.getFavorites().subscribe({
       next: (favs) => {
-        this.favoriteProductIds = new Set(favs.map(f => f.product.id));
+        this.favoriteProductIds = new Set(favs.map((f) => f.product.id));
         this.cdr.markForCheck();
-      }
+      },
+      error: (err) => {
+        if (err.status === 401) {
+          this.favoriteProductIds = new Set<number>();
+          return;
+        }
+        console.error('Failed to fetch favorites', err);
+      },
     });
   }
 
@@ -160,7 +176,7 @@ export class HomeComponent implements OnInit {
       },
       error: () => {
         this.message.error('Vui lòng đăng nhập để yêu thích sản phẩm');
-      }
+      },
     });
   }
 
@@ -182,7 +198,7 @@ export class HomeComponent implements OnInit {
       },
       error: () => {
         this.message.error('Vui lòng đăng nhập để mua hàng');
-      }
+      },
     });
   }
 
@@ -198,12 +214,12 @@ export class HomeComponent implements OnInit {
       },
       error: () => {
         this.message.error('Vui lòng đăng nhập để tiếp tục');
-      }
+      },
     });
   }
 
   getDiscountPercent(product: Product): number {
     if (!product.originalPrice || product.originalPrice <= product.price) return 0;
-    return Math.round(100 - (product.price * 100 / product.originalPrice));
+    return Math.round(100 - (product.price * 100) / product.originalPrice);
   }
 }

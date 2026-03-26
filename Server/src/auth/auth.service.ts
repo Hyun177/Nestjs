@@ -6,11 +6,13 @@ import {
 import { User } from '../users/entities/user.entity';
 import * as bcrypt from 'bcrypt';
 import { RegisterDto } from './dto/register.dto';
+import { LoginInputDto } from './dto/login-input.dto';
 import { InjectRepository } from '@nestjs/typeorm/dist/common/typeorm.decorators';
 import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
 import { LoginDto } from './dto/login.dto';
 import { Role } from '../users/entities/role.entity';
+import { VoucherService } from '../voucher/voucher.service';
 @Injectable()
 export class AuthService {
   constructor(
@@ -19,6 +21,7 @@ export class AuthService {
     @InjectRepository(Role)
     private roleRepo: Repository<Role>,
     private jwtService: JwtService,
+    private voucherService: VoucherService,
   ) {}
   async register(data: RegisterDto): Promise<User> {
     const user = await this.userRepo.findOne({ where: { email: data.email } });
@@ -36,14 +39,20 @@ export class AuthService {
 
     const hashedPassword = await bcrypt.hash(data.password, 10);
     const newUser = this.userRepo.create({
-      name: data.name,
+      firstname: data.firstname,
+      lastname: data.lastname,
       email: data.email,
       password: hashedPassword,
       roles: [defaultRole], // Gán role mặc định ở đây
     });
-    return await this.userRepo.save(newUser);
+    const savedUser = await this.userRepo.save(newUser);
+
+    // Tặng voucher chào mừng
+    await this.voucherService.assignWelcomeVoucher(savedUser.id).catch(() => {});
+
+    return savedUser;
   }
-  async login(data: RegisterDto): Promise<LoginDto> {
+  async login(data: LoginInputDto): Promise<LoginDto> {
     const user = await this.userRepo.findOne({
       where: { email: data.email },
       relations: ['roles'],
@@ -67,15 +76,15 @@ export class AuthService {
       roles: user.roles?.map((r) => r.name) || ['user'],
     };
     if (payload.roles.length === 0) payload.roles = ['user'];
-    
+
     const access_token = this.jwtService.sign(
       { ...payload, type: 'access' },
-      { expiresIn: '30d' }
+      { expiresIn: '30d' },
     );
 
     const refresh_token = this.jwtService.sign(
       { ...payload, type: 'refresh' },
-      { expiresIn: '90d' }
+      { expiresIn: '90d' },
     );
     const hashedRt = await bcrypt.hash(refresh_token, 10);
     user.refreshToken = hashedRt;
@@ -86,6 +95,8 @@ export class AuthService {
       user: {
         id: user.id,
         name: user.name,
+        firstname: user.firstname,
+        lastname: user.lastname,
         email: user.email,
         roles: user.roles?.map((r) => r.name) || ['user'],
       },

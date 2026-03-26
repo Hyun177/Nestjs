@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Voucher } from './entities/voucher.entity';
 import { VoucherService } from './voucher.service';
@@ -7,12 +7,13 @@ import { Category } from '../category/entities/category.entity/category.entity';
 import { Brand } from '../brand/entities/brand.entity/brand.entity';
 import { CartModule } from '../cart/cart.module';
 import { AuthModule } from '../auth/auth.module';
+import { UserVoucher } from './entities/user-voucher.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Voucher, Category, Brand]),
+    TypeOrmModule.forFeature([Voucher, UserVoucher, Category, Brand]),
     CartModule,
-    AuthModule,
+    forwardRef(() => AuthModule),
   ],
   controllers: [VoucherController],
   providers: [VoucherService],

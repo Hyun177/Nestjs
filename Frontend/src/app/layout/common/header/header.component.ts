@@ -27,6 +27,7 @@ export class HeaderComponent implements OnInit {
   categories: any[] = [];
   brands: any[] = [];
   searchQuery = '';
+  showBanner = true;
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
 

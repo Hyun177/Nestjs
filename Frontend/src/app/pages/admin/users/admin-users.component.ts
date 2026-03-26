@@ -25,7 +25,9 @@ import { RoleService } from '../../../core/services/role.service';
 
 interface User {
   id: number;
-  name: string;
+  name?: string;
+  firstname: string;
+  lastname: string;
   email: string;
   phone: string;
   avatar: string;
@@ -86,7 +88,8 @@ export class AdminUsersComponent implements OnInit {
 
   userForm = this.fb.group({
     id: [0],
-    name: ['', [Validators.required]],
+    firstname: ['', [Validators.required]],
+    lastname: ['', [Validators.required]],
     email: ['', [Validators.required, Validators.email]],
     phone: [''],
     address: [''],
@@ -110,12 +113,12 @@ export class AdminUsersComponent implements OnInit {
       next: (roles) => {
         this.rolesList.set(roles || []);
       },
-      error: (err) => console.error('Failed to load roles', err)
+      error: (err) => console.error('Failed to load roles', err),
     });
   }
 
   get roleOptions() {
-    return this.rolesList().map(r => ({ label: r.name, value: r.name }));
+    return this.rolesList().map((r) => ({ label: r.name, value: r.name }));
   }
 
   loadUsers() {
@@ -125,15 +128,21 @@ export class AdminUsersComponent implements OnInit {
         const parsedUsers = (data || []).map((u: any) => ({
           id: u.id,
           name: u.name || (u.firstname ? `${u.firstname} ${u.lastname}`.trim() : u.email),
+          firstname: u.firstname || '',
+          lastname: u.lastname || '',
           email: u.email,
           phone: u.phone || 'Chưa cập nhật',
-          avatar: u.avatar ? 'http://localhost:3000' + u.avatar : 'https://api.realworld.io/images/demo-avatar.jpg',
+          avatar: u.avatar
+            ? 'http://localhost:3000' + u.avatar
+            : 'https://api.realworld.io/images/demo-avatar.jpg',
           role: u.roles && u.roles.length > 0 ? u.roles[0]?.name : 'customer',
           status: u.status || 'active',
           createdAt: u.createdAt || new Date().toISOString(),
           address: u.address || '',
           orders: u.orders ? u.orders.length : 0,
-          totalSpent: u.orders ? u.orders.reduce((sum: number, o: any) => sum + Number(o.totalAmount || 0), 0) : 0,
+          totalSpent: u.orders
+            ? u.orders.reduce((sum: number, o: any) => sum + Number(o.totalAmount || 0), 0)
+            : 0,
         }));
         this.users.set(parsedUsers);
         this.filterUsers();
@@ -141,7 +150,7 @@ export class AdminUsersComponent implements OnInit {
       },
       error: () => {
         this.loading.set(false);
-      }
+      },
     });
   }
 
@@ -149,7 +158,7 @@ export class AdminUsersComponent implements OnInit {
     const search = this.searchValue().toLowerCase();
     const filtered = this.users().filter(
       (user) =>
-        user.name.toLowerCase().includes(search) ||
+        (user.firstname + ' ' + user.lastname).toLowerCase().includes(search) ||
         user.email.toLowerCase().includes(search) ||
         user.phone.includes(search),
     );
@@ -166,7 +175,8 @@ export class AdminUsersComponent implements OnInit {
     this.isEditMode.set(true);
     this.userForm.patchValue({
       id: user.id,
-      name: user.name,
+      firstname: user.firstname,
+      lastname: user.lastname,
       email: user.email,
       phone: user.phone,
       address: user.address || '',
@@ -182,7 +192,8 @@ export class AdminUsersComponent implements OnInit {
       this.loading.set(true);
 
       const payload: any = {
-        name: formValue.name,
+        firstname: formValue.firstname,
+        lastname: formValue.lastname,
         email: formValue.email,
         phone: formValue.phone,
         address: formValue.address,
@@ -196,7 +207,7 @@ export class AdminUsersComponent implements OnInit {
             this.loadUsers();
             this.isModalVisible.set(false);
           },
-          error: () => this.loading.set(false)
+          error: () => this.loading.set(false),
         });
       } else {
         payload.password = 'Password123!';
@@ -205,7 +216,7 @@ export class AdminUsersComponent implements OnInit {
             this.loadUsers();
             this.isModalVisible.set(false);
           },
-          error: () => this.loading.set(false)
+          error: () => this.loading.set(false),
         });
       }
     }
@@ -219,7 +230,7 @@ export class AdminUsersComponent implements OnInit {
     this.loading.set(true);
     this.userService.deleteUserAdmin(id).subscribe({
       next: () => this.loadUsers(),
-      error: () => this.loading.set(false)
+      error: () => this.loading.set(false),
     });
   }
 
@@ -228,7 +239,7 @@ export class AdminUsersComponent implements OnInit {
     this.loading.set(true);
     this.userService.updateUserAdmin(user.id, { status: newStatus }).subscribe({
       next: () => this.loadUsers(),
-      error: () => this.loading.set(false)
+      error: () => this.loading.set(false),
     });
   }
 

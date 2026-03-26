@@ -3,25 +3,25 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { isPlatformBrowser } from '@angular/common';
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable({ providedIn: 'root' })
 export class ReviewService {
-  private apiUrl = 'http://127.0.0.1:3000/api/review';
+  private apiUrl = 'http://localhost:3000/api/review';
   private http = inject(HttpClient);
   private platformId = inject(PLATFORM_ID);
   private isBrowser = isPlatformBrowser(this.platformId);
 
   private getHeaders(): HttpHeaders {
     let token = '';
-    if (this.isBrowser) {
-      token = localStorage.getItem('accessToken') || '';
-    }
+    if (this.isBrowser) token = localStorage.getItem('accessToken') || '';
     return new HttpHeaders().set('Authorization', `Bearer ${token}`);
   }
 
   getProductReviews(productId: number): Observable<any[]> {
     return this.http.get<any[]>(`${this.apiUrl}/product/${productId}`);
+  }
+
+  getMyReview(productId: number): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/my/${productId}`, { headers: this.getHeaders() });
   }
 
   canReview(productId: number): Observable<boolean> {
@@ -30,5 +30,13 @@ export class ReviewService {
 
   submitReview(formData: FormData): Observable<any> {
     return this.http.post<any>(this.apiUrl, formData, { headers: this.getHeaders() });
+  }
+
+  updateReview(id: number, formData: FormData): Observable<any> {
+    return this.http.patch<any>(`${this.apiUrl}/${id}`, formData, { headers: this.getHeaders() });
+  }
+
+  deleteReview(id: number): Observable<any> {
+    return this.http.delete<any>(`${this.apiUrl}/${id}`, { headers: this.getHeaders() });
   }
 }

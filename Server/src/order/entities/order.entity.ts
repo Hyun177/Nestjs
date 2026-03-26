@@ -61,6 +61,9 @@ export class Order {
   @Column({ nullable: true })
   shippingPhone: string;
 
+  @Column({ type: 'decimal', precision: 12, scale: 2, default: 0 })
+  shippingFee: number;
+
   @CreateDateColumn()
   createdAt: Date;
 

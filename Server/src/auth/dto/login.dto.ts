@@ -3,7 +3,9 @@ export class LoginDto {
   refresh_token: string;
   user?: {
     id: number;
-    name: string;
+    name?: string;
+    firstname: string;
+    lastname: string;
     email: string;
     roles: string[];
   };

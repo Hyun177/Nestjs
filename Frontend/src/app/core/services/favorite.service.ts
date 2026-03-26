@@ -47,8 +47,12 @@ export class FavoriteService {
   }
 
   private getHeaders(): HttpHeaders {
-    const token = this.isBrowser ? localStorage.getItem('accessToken') : '';
-    return new HttpHeaders().set('Authorization', `Bearer ${token}`);
+    const token = this.isBrowser ? localStorage.getItem('accessToken') : null;
+    let headers = new HttpHeaders();
+    if (token) {
+      headers = headers.set('Authorization', `Bearer ${token}`);
+    }
+    return headers;
   }
 
   toggleFavorite(productId: number): Observable<any> {

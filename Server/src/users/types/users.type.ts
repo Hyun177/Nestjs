@@ -9,7 +9,7 @@ import {
 
 export type User = {
   id: number;
-  name: string;
+  name?: string;
   email: string;
   password: string;
   refreshToken?: string;
@@ -17,15 +17,26 @@ export type User = {
   phone?: string;
   address?: string;
   avatar?: string;
-  firstname?: string;
-  lastname?: string;
+  firstname: string;
+  lastname: string;
 };
 
 export class CreateUserDto {
   @IsString()
   @MinLength(2)
   @MaxLength(100)
-  name: string;
+  @IsOptional()
+  name?: string;
+
+  @IsString()
+  @MinLength(2)
+  @MaxLength(100)
+  firstname: string;
+
+  @IsString()
+  @MinLength(2)
+  @MaxLength(100)
+  lastname: string;
 
   @IsEmail()
   email: string;
@@ -44,12 +55,4 @@ export class CreateUserDto {
   @IsString()
   @IsOptional()
   avatar?: string;
-
-  @IsString()
-  @IsOptional()
-  firstname?: string;
-
-  @IsString()
-  @IsOptional()
-  lastname?: string;
 }

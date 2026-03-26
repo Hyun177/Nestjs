@@ -20,6 +20,7 @@ import { OrderModule } from './order/order.module';
 import { ReviewModule } from './review/review.module';
 import { PaymentModule } from './payment/payment.module';
 import { DashboardModule } from './dashboard/dashboard.module';
+import { LocationModule } from './location/location.module';
 
 @Module({
   imports: [
@@ -59,6 +60,7 @@ import { DashboardModule } from './dashboard/dashboard.module';
     ReviewModule,
     PaymentModule,
     DashboardModule,
+    LocationModule,
   ],
   controllers: [MessageController],
   providers: [],

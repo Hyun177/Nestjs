@@ -229,6 +229,16 @@
             </div>
 
             <div class="form-actions">
+                <div class="archive-toggle">
+                    <div class="toggle-info">
+                        <span nz-icon nzType="eye-invisible"></span>
+                        <div>
+                            <div class="toggle-label">Ẩn sản phẩm</div>
+                            <div class="toggle-sub">Sản phẩm sẽ không hiển thị với khách hàng</div>
+                        </div>
+                    </div>
+                    <nz-switch formControlName="isArchived"></nz-switch>
+                </div>
                 <button nz-button nzType="primary" [nzLoading]="loading" nzSize="large" class="submit-btn">
                     XÁC NHẬN THÊM SẢN PHẨM
                 </button>

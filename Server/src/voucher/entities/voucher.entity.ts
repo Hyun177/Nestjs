@@ -40,7 +40,10 @@ export class Voucher {
   minOrderAmount: number;
 
   @Column({ default: 0 })
-  usageLimit: number;
+  usageLimit: number; // Total limit for all users
+
+  @Column({ default: 1 })
+  userUsageLimit: number; // Limit per user (e.g., each account only uses it once)
 
   @Column({ default: 0 })
   usedCount: number;

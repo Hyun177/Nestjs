@@ -111,6 +111,11 @@ export class ProductService {
       .leftJoinAndSelect('product.category', 'category')
       .leftJoinAndSelect('product.brand', 'brand');
 
+    // Chỉ hiển thị sản phẩm chưa bị ẩn cho user (admin có thể truyền showAll=true)
+    if (!params?.showAll) {
+      query.andWhere('product.isArchived = :isArchived', { isArchived: false });
+    }
+
     if (params?.search) {
       query.andWhere('product.name LIKE :search', { search: `%${params.search}%` });
     }
@@ -133,7 +138,20 @@ export class ProductService {
       });
     }
 
-    if (params?.sort === 'price_asc') {
+    if (params?.onSale === 'true' || params?.onSale === true) {
+      query.andWhere('product.originalPrice IS NOT NULL AND product.originalPrice > product.price');
+    }
+
+    if (params?.newArrival === 'true' || params?.newArrival === true) {
+      // Products added in the last 30 days
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      query.andWhere('product.createdAt >= :thirtyDaysAgo', { thirtyDaysAgo });
+    }
+
+    if (params?.sort === 'newest') {
+      query.orderBy('product.createdAt', 'DESC');
+    } else if (params?.sort === 'price_asc') {
       query.orderBy('product.price', 'ASC');
     } else if (params?.sort === 'price_desc') {
       query.orderBy('product.price', 'DESC');
@@ -187,6 +205,24 @@ export class ProductService {
         }
       }
     }
+
+    // Merge existingImages (kept from before) with newly uploaded images
+    if (data.existingImages !== undefined) {
+      let existing: string[] = [];
+      if (typeof data.existingImages === 'string') {
+        try { existing = JSON.parse(data.existingImages); } catch { existing = []; }
+      } else if (Array.isArray(data.existingImages)) {
+        existing = data.existingImages;
+      }
+      const newImages: string[] = Array.isArray(data.images) ? data.images : [];
+      data.images = [...existing, ...newImages];
+      delete data.existingImages;
+    }
+
+    // Remove unknown fields that are not Product columns
+    delete data.descIntro;
+    delete data.descFeatures;
+    delete data.descPolicy;
 
     // Clean up empty data
     if (Object.keys(data).length === 0) {

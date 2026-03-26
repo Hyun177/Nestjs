@@ -8,10 +8,11 @@ import { CartModule } from '../cart/cart.module';
 import { VoucherModule } from '../voucher/voucher.module';
 import { AuthModule } from '../auth/auth.module';
 import { PaymentModule } from '../payment/payment.module';
+import { UserAddress } from '../users/entities/user-address.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Order, OrderItem]),
+    TypeOrmModule.forFeature([Order, OrderItem, UserAddress]),
     CartModule,
     VoucherModule,
     AuthModule,

@@ -1,7 +1,13 @@
 import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { RouterLink, Router } from '@angular/router';
 import { NzIconModule } from 'ng-zorro-antd/icon';
-import { ReactiveFormsModule, FormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import {
+  ReactiveFormsModule,
+  FormsModule,
+  FormBuilder,
+  FormGroup,
+  Validators,
+} from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../../core/services/auth.service';
 import { NzMessageService } from 'ng-zorro-antd/message';
@@ -28,25 +34,28 @@ export class RegisterComponent implements OnInit, OnDestroy {
   loading = false;
 
   constructor() {
-    this.registerForm = this.fb.group({
-      name: ['', [Validators.required]],
-      email: ['', [Validators.required, Validators.email]],
-      password: ['', [Validators.required, Validators.minLength(6)]],
-      confirmPassword: ['', [Validators.required]],
-      agree: [false, [Validators.requiredTrue]]
-    }, { validators: this.passwordMatchValidator });
+    this.registerForm = this.fb.group(
+      {
+        firstname: ['', [Validators.required]],
+        lastname: ['', [Validators.required]],
+        email: ['', [Validators.required, Validators.email]],
+        password: ['', [Validators.required, Validators.minLength(6)]],
+        confirmPassword: ['', [Validators.required]],
+        agree: [false, [Validators.requiredTrue]],
+      },
+      { validators: this.passwordMatchValidator },
+    );
   }
 
   passwordMatchValidator(g: FormGroup) {
-    return g.get('password')?.value === g.get('confirmPassword')?.value
-      ? null : { 'mismatch': true };
+    return g.get('password')?.value === g.get('confirmPassword')?.value ? null : { mismatch: true };
   }
 
   onSubmit() {
     if (this.registerForm.valid) {
       this.loading = true;
-      const { name, email, password } = this.registerForm.value;
-      this.authService.register({ name, email, password }).subscribe({
+      const { firstname, lastname, email, password } = this.registerForm.value;
+      this.authService.register({ firstname, lastname, email, password }).subscribe({
         next: (res) => {
           this.message.success('Đăng ký thành công!');
           this.router.navigate(['/login']);
@@ -54,10 +63,10 @@ export class RegisterComponent implements OnInit, OnDestroy {
         error: (err) => {
           this.loading = false;
           this.message.error(err.error?.message || 'Đăng ký thất bại!');
-        }
+        },
       });
     } else {
-      Object.values(this.registerForm.controls).forEach(control => {
+      Object.values(this.registerForm.controls).forEach((control) => {
         if (control.invalid) {
           control.markAsDirty();
           control.updateValueAndValidity({ onlySelf: true });

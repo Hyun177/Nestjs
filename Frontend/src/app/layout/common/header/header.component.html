@@ -1,7 +1,8 @@
 <header class="app-header">
-    <div class="top-banner">
-        Sign up and get 20% off to your first order. <a href="#">Sign Up Now</a>
-        <span class="close-banner" nz-icon nzType="close"></span>
+    <div class="top-banner" *ngIf="!(currentUser$ | async) && showBanner">
+        Đăng ký và nhận ngay voucher giảm 20% cho đơn hàng đầu tiên.
+        <a routerLink="/register" class="banner-link">Đăng ký ngay</a>
+        <span class="close-banner" nz-icon nzType="close" (click)="showBanner = false"></span>
     </div>
     <div class="container header-container">
         <div class="logo-section">
@@ -35,8 +36,8 @@
                     </div>
                 </nz-dropdown-menu>
             </div>
-            <a href="#">On Sale</a>
-            <a href="#">New Arrivals</a>
+            <a [routerLink]="['/products']" [queryParams]="{onSale: true}">On Sale</a>
+            <a [routerLink]="['/products']" [queryParams]="{newArrival: true}">New Arrivals</a>
         </nav>
 
         <div class="search-bar">
