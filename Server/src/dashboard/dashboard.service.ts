@@ -14,7 +14,7 @@ export class DashboardService {
     private readonly orderRepository: Repository<Order>,
     @InjectRepository(Product)
     private readonly productRepository: Repository<Product>,
-  ) {}
+  ) { }
 
   async getStats() {
     const userCount = await this.userRepository.count();
@@ -49,10 +49,10 @@ export class DashboardService {
   }
 
   async getTopProducts(limit: number = 5) {
-    // Basic top products based on price for now, should be based on soldCount if exists
     return this.productRepository.find({
       order: { soldCount: 'DESC' },
-      take: limit
+      take: limit,
+      relations: ['category']
     });
   }
 }

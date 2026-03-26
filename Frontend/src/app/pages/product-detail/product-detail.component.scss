@@ -311,7 +311,8 @@
                     border-color: #000;
                 }
 
-                &:disabled, &.disabled {
+                &:disabled,
+                &.disabled {
                     opacity: 0.4;
                     cursor: not-allowed;
                     text-decoration: line-through;

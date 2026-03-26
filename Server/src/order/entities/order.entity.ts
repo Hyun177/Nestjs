@@ -55,6 +55,12 @@ export class Order {
   })
   paymentMethod: PaymentMethod;
 
+  @Column({ nullable: true })
+  shippingAddress: string;
+
+  @Column({ nullable: true })
+  shippingPhone: string;
+
   @CreateDateColumn()
   createdAt: Date;
 

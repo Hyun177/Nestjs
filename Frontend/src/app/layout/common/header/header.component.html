@@ -18,7 +18,8 @@
                             <h4>Categories</h4>
                             <ul>
                                 <li *ngFor="let cat of categories">
-                                    <a [routerLink]="['/products']" [queryParams]="{categoryId: cat.id}">{{ cat.name }}</a>
+                                    <a [routerLink]="['/products']" [queryParams]="{categoryId: cat.id}">{{ cat.name
+                                        }}</a>
                                 </li>
                             </ul>
                         </div>
@@ -26,7 +27,8 @@
                             <h4>Brands</h4>
                             <ul>
                                 <li *ngFor="let brand of brands">
-                                    <a [routerLink]="['/products']" [queryParams]="{brandId: brand.id}">{{ brand.name }}</a>
+                                    <a [routerLink]="['/products']" [queryParams]="{brandId: brand.id}">{{ brand.name
+                                        }}</a>
                                 </li>
                             </ul>
                         </div>

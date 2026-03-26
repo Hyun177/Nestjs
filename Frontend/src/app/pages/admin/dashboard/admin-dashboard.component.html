@@ -6,7 +6,13 @@
       <p class="dash-sub">Báo cáo dữ liệu kinh doanh thời gian thực</p>
     </div>
     <div class="date-badge">
-      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+        <line x1="16" y1="2" x2="16" y2="6" />
+        <line x1="8" y1="2" x2="8" y2="6" />
+        <line x1="3" y1="10" x2="21" y2="10" />
+      </svg>
       {{ today | date:'dd MMMM, yyyy' }}
     </div>
   </div>
@@ -22,7 +28,8 @@
     <div class="stats-grid">
       <div *ngFor="let card of statCards" class="stat-card">
         <div class="stat-card-inner">
-          <div class="stat-icon" [style.background]="card.bgColor" [style.color]="card.color" [innerHTML]="card.svgIcon"></div>
+          <div class="stat-icon" [style.background]="card.bgColor" [style.color]="card.color"
+            [innerHTML]="card.svgIcon"></div>
           <div class="stat-body">
             <p class="stat-title">{{ card.title }}</p>
             <div class="stat-value">
@@ -30,7 +37,10 @@
               <span *ngIf="card.unit === 'VND'">{{ getStatValue(card.key) | vndCurrency }}</span>
             </div>
             <div class="stat-trend up" *ngIf="getTrendValue(card.key) > 0">
-              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="18 15 12 9 6 15" />
+              </svg>
               +{{ getTrendValue(card.key) }}% so với tháng trước
             </div>
             <div class="stat-unit" *ngIf="card.unit !== 'VND' && getTrendValue(card.key) === 0">
@@ -100,28 +110,74 @@
         </div>
       </div>
 
-      <!-- Top Products -->
+      <!-- Recent Users -->
       <div class="panel narrow">
+        <div class="panel-header">
+          <h4 class="panel-title">Khách hàng mới</h4>
+          <a routerLink="/admin/users" class="panel-link">Xem tất cả →</a>
+        </div>
+        <div class="user-list">
+          <div *ngFor="let u of recentUsers().slice(0,3)" class="user-item">
+            <img [src]="u.avatar" class="user-avatar" [alt]="u.name" />
+            <div class="user-info">
+              <div class="user-name">{{ u.name }}</div>
+              <div class="user-email text-xs text-gray-400">{{ u.email }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Inventory & Insights -->
+    <div class="bottom-row mt-6">
+      <!-- Detailed Top Products -->
+      <div class="panel wide">
         <div class="panel-header">
           <h4 class="panel-title">Sản phẩm nổi bật</h4>
           <a routerLink="/admin/products" class="panel-link">Xem tất cả →</a>
         </div>
-        <div class="product-list">
-          <div *ngFor="let p of topProducts(); let i = index" class="product-item">
-            <div class="product-rank" [class]="i < 3 ? 'rank-top' : ''">{{ i + 1 }}</div>
-            <div class="product-thumb">
-              <img *ngIf="p.image" [src]="'http://localhost:3000' + p.image" [alt]="p.name" />
-              <div *ngIf="!p.image" class="thumb-empty">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-              </div>
+        <div class="product-list-detailed p-4">
+          <div *ngFor="let p of topProducts(); let i = index"
+            class="prod-row-item border-b border-gray-50 last:border-0 py-3 flex items-center gap-4">
+            <div class="prod-rank w-6 font-bold text-gray-400">{{ i + 1 }}</div>
+            <img *ngIf="p.image" [src]="'http://localhost:3000' + p.image" class="w-12 h-12 rounded object-cover"
+              alt="" />
+            <div class="prod-main flex-1 min-w-0">
+              <div class="prod-n font-bold truncate">{{ p.name }}</div>
+              <div class="prod-c text-xs text-blue-500">{{ p.category?.name || 'Sản phẩm' }}</div>
             </div>
-            <div class="product-info">
-              <div class="product-name">{{ p.name }}</div>
-              <div class="product-sold">Đã bán: {{ p.soldCount || 0 }}</div>
+            <div class="prod-v flex flex-col items-end w-24">
+              <span class="text-gray-400 text-[10px] uppercase font-bold">Đã bán</span>
+              <span class="font-bold">{{ p.soldCount || 0 }}</span>
             </div>
-            <div class="product-price">{{ p.price | vndCurrency }}</div>
+            <div class="prod-v flex flex-col items-end w-24">
+              <span class="text-gray-400 text-[10px] uppercase font-bold">Tồn kho</span>
+              <span class="font-bold" [class.text-red-500]="(p.stock || 0) < 10">{{ p.stock || 0 }}</span>
+            </div>
+            <div class="prod-p font-black text-indigo-600 w-32 text-right">{{ p.price | vndCurrency }}</div>
           </div>
-          <div *ngIf="topProducts().length === 0" class="empty-list">Chưa có sản phẩm</div>
+        </div>
+      </div>
+
+      <!-- Low Stock Alert -->
+      <div class="panel narrow">
+        <div class="panel-header">
+          <h4 class="panel-title text-red-500 flex items-center gap-2">
+            <span nz-icon nzType="warning" nzTheme="outline"></span>
+            Tồn kho thấp
+          </h4>
+        </div>
+        <div class="low-stock-list p-4">
+          <div *ngFor="let lp of lowStockProducts()"
+            class="ls-item mb-3 p-3 bg-red-50 border border-red-100 rounded-lg flex justify-between items-center transition-all hover:bg-red-100">
+            <span class="font-bold text-red-800 text-sm truncate pr-2">{{ lp.name }}</span>
+            <span class="px-2 py-1 bg-red-600 text-white rounded text-[10px] font-black leading-none">CÒN {{ lp.stock ||
+              0 }}</span>
+          </div>
+          <div *ngIf="lowStockProducts().length === 0" class="empty-list py-10 text-center text-gray-400">
+            <span nz-icon nzType="check-circle" class="text-2xl mb-2"></span>
+            <p>Mọi thứ đều ổn</p>
+          </div>
         </div>
       </div>
     </div>

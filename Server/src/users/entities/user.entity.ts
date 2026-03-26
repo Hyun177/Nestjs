@@ -34,6 +34,9 @@ export class User {
   @Column({ nullable: true })
   refreshToken: string;
 
+  @Column({ default: 'active' })
+  status: string; // active, blocked, inactive
+
   @ManyToMany(() => Role, (role) => role.users)
   roles: Role[];
 

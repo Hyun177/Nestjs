@@ -1,103 +1,97 @@
 <div class="admin-categories-container">
   <!-- Page Header -->
-  <div class="mb-6">
-    <h2 class="text-2xl font-bold text-gray-800 mb-1">Quản lý danh mục</h2>
-    <p class="text-gray-500 text-sm">Quản lý các danh mục sản phẩm trong hệ thống</p>
-  </div>
-
-  <!-- Search and Actions -->
-  <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-    <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-      <input
-        type="text"
-        placeholder="Tìm kiếm danh mục..."
-        class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-        (keyup)="onSearch($event.target.value)"
-        [value]="searchValue()"
-      />
-      <button nz-button nzType="primary" (click)="openAddModal()">
-        <span nz-icon nzType="plus" class="mr-2"></span>
-        Thêm danh mục
-      </button>
+  <div class="page-header">
+    <div class="title-wrap">
+      <h2>Quản lý danh mục</h2>
+      <p>Quản lý các danh mục sản phẩm trong hệ thống</p>
+    </div>
+    <div class="header-actions">
+      <!-- Future header actions could go here -->
     </div>
   </div>
 
-  <!-- Loading State -->
-  <div *ngIf="loading()" class="flex items-center justify-center h-64">
-    <nz-spin nzSimple nzSize="large"></nz-spin>
+  <!-- Action Bar -->
+  <div class="action-bar">
+    <input type="text" placeholder="Tìm kiếm danh mục..." class="search-input" (keyup)="onSearch($event.target.value)"
+      [value]="searchValue()" />
+    <button class="add-btn" (click)="openAddModal()">
+      <span nz-icon nzType="plus"></span>
+      Thêm danh mục
+    </button>
   </div>
 
-  <!-- Categories Table -->
-  <div *ngIf="!loading()" class="bg-white rounded-lg shadow-md overflow-hidden">
-    <nz-table
-      #basicTable
-      [nzData]="filteredCategories"
-      [nzPageSize]="pageSize()"
-      [nzPageIndex]="pageIndex()"
-      nzShowSizeChanger
-    >
+  <!-- Loading State -->
+  <div *ngIf="loading()" class="loading-state">
+    <div class="spinner"></div>
+    <p>Đang tải danh mục...</p>
+  </div>
+
+  <!-- Custom Categories Table -->
+  <div *ngIf="!loading()" class="custom-table-wrap">
+    <table class="custom-table">
       <thead>
         <tr>
-          <th nzWidth="30%">Tên danh mục</th>
-          <th nzWidth="50%">Mô tả</th>
-          <th nzAlign="center" nzWidth="20%">Thao tác</th>
+          <th style="width: 40%">Tên danh mục</th>
+          <th style="width: 40%">Mô tả</th>
+          <th style="width: 20%; text-align: right;">Thao tác</th>
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let data of basicTable.data">
-          <td class="font-semibold text-gray-800">{{ data.name }}</td>
-          <td class="text-gray-500">{{ data.description || 'Chưa có mô tả' }}</td>
-          <td nzAlign="center">
-            <nz-space nzCompact>
-              <button
-                nz-button
-                nzType="text"
-                (click)="openEditModal(data)"
-                class="text-blue-500"
-              >
-                <span nz-icon nzType="edit"></span>
-              </button>
-              <button
-                nz-button
-                nzType="text"
-                nz-popconfirm
-                nzPopconfirmTitle="Xóa danh mục này?"
-                (nzOnConfirm)="deleteCategory(data.id)"
-                class="text-red-500"
-              >
-                <span nz-icon nzType="delete"></span>
-              </button>
-            </nz-space>
+        <tr *ngFor="let data of filteredCategories">
+          <td>
+
+            <span class="cat-name">{{ data.name }}</span>
+          </td>
+          <td>
+            <span class="cat-desc">{{ data.description || 'Chưa có mô tả' }}</span>
+          </td>
+          <td class="actions-cell">
+            <button class="icon-btn edit" (click)="openEditModal(data)" title="Sửa">
+              <span nz-icon nzType="edit"></span>
+            </button>
+            <button class="icon-btn delete" nz-popconfirm nzPopconfirmTitle="Xóa danh mục này?"
+              (nzOnConfirm)="deleteCategory(data.id)" title="Xóa">
+              <span nz-icon nzType="delete"></span>
+            </button>
+          </td>
+        </tr>
+        <tr *ngIf="filteredCategories.length === 0">
+          <td colspan="3" style="text-align: center; padding: 40px; color: #94a3b8;">
+            Không tìm thấy danh mục nào
           </td>
         </tr>
       </tbody>
-    </nz-table>
+    </table>
   </div>
 
-  <!-- Category Modal -->
-  <nz-modal
-    [(nzVisible)]="isModalVisible"
-    [nzTitle]="isEditMode() ? 'Chỉnh sửa danh mục' : 'Thêm danh mục mới'"
-    (nzOnCancel)="handleCancel()"
-    (nzOnOk)="handleOk()"
-  >
-    <ng-container *nzModalContent>
-      <form [formGroup]="categoryForm" nz-form nzLayout="vertical">
-        <nz-form-item>
-          <nz-form-label nzRequired>Tên danh mục</nz-form-label>
-          <nz-form-control nzErrorTip="Vui lòng nhập tên danh mục">
-            <input nz-input formControlName="name" placeholder="Ví dụ: Điện thoại, Laptop..." />
-          </nz-form-control>
-        </nz-form-item>
+  <!-- Custom Category Modal -->
+  <div class="custom-modal-overlay" [class.active]="isModalVisible()">
+    <div class="custom-modal" [class.active]="isModalVisible()">
+      <div class="modal-header">
+        <h3>{{ isEditMode() ? 'Chỉnh sửa danh mục' : 'Thêm danh mục mới' }}</h3>
+        <button class="close-btn" (click)="handleCancel()">&times;</button>
+      </div>
 
-        <nz-form-item>
-          <nz-form-label>Mô tả</nz-form-label>
-          <nz-form-control>
-            <textarea nz-input formControlName="description" rows="4" placeholder="Nhập mô tả danh mục..."></textarea>
-          </nz-form-control>
-        </nz-form-item>
-      </form>
-    </ng-container>
-  </nz-modal>
+      <div class="modal-body">
+        <form [formGroup]="categoryForm">
+          <div class="form-group">
+            <label>Tên danh mục *</label>
+            <input formControlName="name" placeholder="Ví dụ: Điện thoại, Laptop..." />
+          </div>
+
+          <div class="form-group">
+            <label>Mô tả</label>
+            <textarea formControlName="description" rows="4" placeholder="Nhập mô tả danh mục..."></textarea>
+          </div>
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button class="cancel-btn" (click)="handleCancel()">Hủy bỏ</button>
+        <button class="save-btn" [disabled]="categoryForm.invalid" (click)="handleOk()">
+          {{ isEditMode() ? 'Lưu thay đổi' : 'Tạo danh mục' }}
+        </button>
+      </div>
+    </div>
+  </div>
 </div>
-

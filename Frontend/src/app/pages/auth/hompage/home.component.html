@@ -14,6 +14,95 @@
         </div>
     </section>
 
+    <!-- Brand Marquee -->
+    <div class="brand-marquee" *ngIf="brands.length > 0">
+        <div class="marquee-content" [style.animationDuration]="brands.length * 6 + 's'">
+            <div class="marquee-group" *ngFor="let g of [1,2,3,4,5,6,7,8,9,10]">
+                @for (brand of brands; track brand.id) {
+                <span class="marquee-item">{{ brand.name }}</span>
+                }
+            </div>
+        </div>
+    </div>
+    <!-- Top Selling -->
+    <section class="products-section section-padding">
+        <div class="container">
+            <h2 class="section-heading">XU HƯỚNG MUA SẮM</h2>
+
+            @if (topSelling.length > 0) {
+            <div class="product-grid">
+                @for (product of topSelling; track product.id) {
+                <div class="product-card">
+                    <div class="card-overlay-top">
+                        <div class="overlay-left">
+                            <div class="badge-discount" *ngIf="getDiscountPercent(product) > 0">
+                                Giảm {{ getDiscountPercent(product) }}%
+                            </div>
+                            <span class="brand-logo">{{ product.brand?.name }}</span>
+                        </div>
+
+                        <div class="overlay-right">
+                            <div class="label-badges">
+                                @for (label of product.labels; track label) {
+                                <div class="label-badge">{{ label }}</div>
+                                }
+                            </div>
+                            <div class="spec-icons">
+                                @for (spec of (product.specs || []).slice(0, 2); track spec.text) {
+                                <div class="spec-item">
+                                    <span nz-icon [nzType]="spec.icon || 'info-circle'"></span>
+                                    <div>{{ spec.text }}</div>
+                                </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="product-img-wrapper" [routerLink]="['/product', product.id]">
+                        <img [src]="'http://localhost:3000' + product.image" [alt]="product.name">
+                    </div>
+
+                    <div class="product-info">
+                        <h3 class="product-name" [routerLink]="['/product', product.id]">{{ product.name }}</h3>
+                        <div class="price-container">
+                            <span class="old-price"
+                                *ngIf="product.originalPrice && product.originalPrice > product.price">
+                                {{ product.originalPrice | vndCurrency }}
+                            </span>
+                            <span class="current-price">{{ product.price | vndCurrency }}</span>
+                        </div>
+                        <div class="installment-info" *ngIf="product.promoNote">
+                            {{ product.promoNote }}
+                        </div>
+                    </div>
+
+                    <div class="card-footer">
+                        <div class="rating-stars">
+                            <span nz-icon nzType="star" nzTheme="fill"
+                                style="color: #fadb14; margin-right: 4px;"></span>
+                            <span class="rating-text" style="font-weight: 600;">{{ +product.rating }}/5</span>
+                        </div>
+
+                        <div class="action-btns">
+                            <button nz-button nzType="default" (click)="addToCart(product)" nzShape="circle">
+                                <span nz-icon nzType="shopping-cart"></span>
+                            </button>
+                            <button nz-button nzType="primary" (click)="buyNow(product)" nzShape="circle">
+                                <span nz-icon nzType="credit-card"></span>
+                            </button>
+                        </div>
+
+                        <div class="wishlist" [class.active]="isFavorite(product.id)" (click)="toggleFavorite(product)">
+                            <span nz-icon nzType="heart" [nzTheme]="isFavorite(product.id) ? 'fill' : 'outline'"></span>
+                            <span>{{ isFavorite(product.id) ? 'Đã thích' : 'Yêu thích' }}</span>
+                        </div>
+                    </div>
+                </div>
+                }
+            </div>
+            }
+        </div>
+    </section>
     <!-- New Arrivals -->
     <section class="products-section section-padding">
         <div class="container">
@@ -38,7 +127,7 @@
                                 }
                             </div>
                             <div class="spec-icons">
-                                @for (spec of (product.specs || []).slice(0, 3); track spec.text) {
+                                @for (spec of (product.specs || []).slice(0, 0); track spec.text) {
                                 <div class="spec-item">
                                     <span nz-icon [nzType]="spec.icon || 'info-circle'"></span>
                                 </div>
@@ -99,83 +188,5 @@
         </div>
     </section>
 
-    <!-- Top Selling -->
-    <section class="products-section section-padding">
-        <div class="container">
-            <h2 class="section-heading">XU HƯỚNG MUA SẮM</h2>
 
-            @if (topSelling.length > 0) {
-            <div class="product-grid">
-                @for (product of topSelling; track product.id) {
-                <div class="product-card">
-                    <div class="card-overlay-top">
-                        <div class="overlay-left">
-                            <div class="badge-discount" *ngIf="getDiscountPercent(product) > 0">
-                                Giảm {{ getDiscountPercent(product) }}%
-                            </div>
-                            <span class="brand-logo">{{ product.brand?.name }}</span>
-                        </div>
-
-                        <div class="overlay-right">
-                            <div class="label-badges">
-                                @for (label of product.labels; track label) {
-                                <div class="label-badge">{{ label }}</div>
-                                }
-                            </div>
-                            <div class="spec-icons">
-                                @for (spec of (product.specs || []).slice(0, 3); track spec.text) {
-                                <div class="spec-item">
-                                    <span nz-icon [nzType]="spec.icon || 'info-circle'"></span>
-                                    <div>{{ spec.text }}</div>
-                                </div>
-                                }
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="product-img-wrapper" [routerLink]="['/product', product.id]">
-                        <img [src]="'http://localhost:3000' + product.image" [alt]="product.name">
-                    </div>
-
-                    <div class="product-info">
-                        <h3 class="product-name" [routerLink]="['/product', product.id]">{{ product.name }}</h3>
-                        <div class="price-container">
-                            <span class="old-price"
-                                *ngIf="product.originalPrice && product.originalPrice > product.price">
-                                {{ product.originalPrice | vndCurrency }}
-                            </span>
-                            <span class="current-price">{{ product.price | vndCurrency }}</span>
-                        </div>
-                        <div class="installment-info" *ngIf="product.promoNote">
-                            {{ product.promoNote }}
-                        </div>
-                    </div>
-
-                    <div class="card-footer">
-                        <div class="rating-stars">
-                            <span nz-icon nzType="star" nzTheme="fill"
-                                style="color: #fadb14; margin-right: 4px;"></span>
-                            <span class="rating-text" style="font-weight: 600;">{{ +product.rating }}/5</span>
-                        </div>
-
-                        <div class="action-btns">
-                            <button nz-button nzType="default" (click)="addToCart(product)" nzShape="circle">
-                                <span nz-icon nzType="shopping-cart"></span>
-                            </button>
-                            <button nz-button nzType="primary" (click)="buyNow(product)" nzShape="circle">
-                                <span nz-icon nzType="credit-card"></span>
-                            </button>
-                        </div>
-
-                        <div class="wishlist" [class.active]="isFavorite(product.id)" (click)="toggleFavorite(product)">
-                            <span nz-icon nzType="heart" [nzTheme]="isFavorite(product.id) ? 'fill' : 'outline'"></span>
-                            <span>{{ isFavorite(product.id) ? 'Đã thích' : 'Yêu thích' }}</span>
-                        </div>
-                    </div>
-                </div>
-                }
-            </div>
-            }
-        </div>
-    </section>
 </div>

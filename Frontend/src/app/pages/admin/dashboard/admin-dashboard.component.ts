@@ -6,6 +6,7 @@ import { NzTableModule } from 'ng-zorro-antd/table';
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzTagModule } from 'ng-zorro-antd/tag';
 import { NzSpinModule } from 'ng-zorro-antd/spin';
+import { NzIconModule } from 'ng-zorro-antd/icon';
 
 import { DashboardService } from '../../../core/services/dashboard.service';
 import { VndCurrencyPipe } from '../../../shared/pipes/vnd-currency.pipe';
@@ -20,6 +21,7 @@ import { VndCurrencyPipe } from '../../../shared/pipes/vnd-currency.pipe';
     NzButtonModule,
     NzTagModule,
     NzSpinModule,
+    NzIconModule,
     VndCurrencyPipe,
   ],
   templateUrl: './admin-dashboard.component.html',
@@ -46,6 +48,8 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
 
   recentOrders = signal<any[]>([]);
   topProducts = signal<any[]>([]);
+  recentUsers = signal<any[]>([]);
+  lowStockProducts = signal<any[]>([]);
 
   // Chart data — loaded then used in AfterViewInit/re-render
   private salesData: { labels: string[]; values: number[] } = { labels: [], values: [] };
@@ -91,18 +95,23 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
   ];
 
   readonly orderStatusCfg: Record<string, { color: string; label: string }> = {
-    PENDING:   { color: '#f59e0b', label: 'Chờ xử lý' },
-    PAID:      { color: '#3b82f6', label: 'Đã thanh toán' },
-    SHIPPED:   { color: '#8b5cf6', label: 'Đang giao' },
+    PENDING: { color: '#f59e0b', label: 'Chờ xử lý' },
+    PAID: { color: '#3b82f6', label: 'Đã thanh toán' },
+    CONFIRMED: { color: '#6366f1', label: 'Đã xác nhận' },
+    PROCESSING: { color: '#8b5cf6', label: 'Đang chuẩn bị' },
+    SHIPPED: { color: '#ec4899', label: 'Đang giao' },
     DELIVERED: { color: '#10b981', label: 'Đã giao' },
     CANCELLED: { color: '#ef4444', label: 'Đã hủy' },
+    RETURNED: { color: '#64748b', label: 'Hoàn trả' },
   };
 
   ngOnInit() { this.loadAll(); }
 
   ngAfterViewInit() {
     this.chartsReady = true;
-    if (this.dataLoaded) this.renderCharts();
+    if (this.dataLoaded && !this.loading()) {
+      setTimeout(() => this.renderCharts(), 100);
+    }
   }
 
   ngOnDestroy() { this.destroyCharts(); }
@@ -116,6 +125,9 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
         this.stats.set(s);
         this.loading.set(false);
         this.cdr.detectChanges();
+        if (this.dataLoaded && this.chartsReady) {
+          setTimeout(() => this.renderCharts(), 100);
+        }
       },
       error: () => this.loading.set(false),
     });
@@ -135,12 +147,27 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
       },
     });
 
-    // Top products
+    // Top products & Low stock
     this.dashboardService.getTopProducts().subscribe({
       next: (prods) => {
         this.topProducts.set(prods);
+        this.lowStockProducts.set(prods.filter((p: any) => (p.stock || 0) < 10));
         this.cdr.detectChanges();
       },
+    });
+
+    // Recent Users (mapped as top spenders if data allows)
+    this.dashboardService.getRecentUsers().subscribe({
+      next: (users: any[]) => {
+          this.recentUsers.set((users || []).map(u => ({
+              name: `${u.firstname || ''} ${u.lastname || ''}`.trim() || u.email,
+              email: u.email,
+              avatar: u.avatar ? 'http://localhost:3000' + u.avatar : 'https://api.realworld.io/images/demo-avatar.jpg',
+              totalSpent: u.orders ? u.orders.reduce((sum: number, o: any) => sum + Number(o.totalAmount || 0), 0) : 0,
+              date: new Date(u.createdAt).toLocaleDateString('vi-VN')
+          })).sort((a,b) => b.totalSpent - a.totalSpent).slice(0, 6));
+          this.cdr.detectChanges();
+      }
     });
 
     // Order chart data (status distribution)
@@ -178,7 +205,9 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
         };
 
         this.dataLoaded = true;
-        if (this.chartsReady) this.renderCharts();
+        if (this.chartsReady && !this.loading()) {
+          setTimeout(() => this.renderCharts(), 100);
+        }
         this.cdr.detectChanges();
       },
     });
@@ -272,7 +301,7 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
   }
 
   private destroyCharts() {
-    this.charts.forEach(c => { try { c.destroy(); } catch {} });
+    this.charts.forEach(c => { try { c.destroy(); } catch { } });
     this.charts = [];
   }
 

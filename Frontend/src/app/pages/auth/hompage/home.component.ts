@@ -109,11 +109,21 @@ export class HomeComponent implements OnInit {
     });
 
     this.brandService.getBrands().subscribe({
-      next: (res) => {
-        this.brands = res;
+      next: (res: any[]) => {
+        this.brands = res.length > 0 ? res : [
+          { name: 'VERSACE' }, { name: 'ZARA' }, { name: 'GUCCI' },
+          { name: 'PRADA' }, { name: 'Calvin Klein' }
+        ];
         this.cdr.markForCheck();
       },
-      error: () => console.error('Failed to load brands')
+      error: () => {
+        this.brands = [
+          { name: 'VERSACE' }, { name: 'ZARA' }, { name: 'GUCCI' },
+          { name: 'PRADA' }, { name: 'Calvin Klein' }
+        ];
+        console.error('Failed to load brands');
+        this.cdr.markForCheck();
+      }
     });
   }
 

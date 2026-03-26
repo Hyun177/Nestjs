@@ -120,7 +120,8 @@
 
 <!-- ===== PRODUCT MODAL ===== -->
 <nz-modal
-  [(nzVisible)]="isModalVisible"
+  [nzVisible]="isModalVisible()"
+  (nzVisibleChange)="isModalVisible.set($event)"
   [nzTitle]="isEditMode() ? 'Chỉnh sửa sản phẩm' : 'Thêm sản phẩm mới'"
   (nzOnCancel)="handleCancel()"
   nzWidth="1100px"

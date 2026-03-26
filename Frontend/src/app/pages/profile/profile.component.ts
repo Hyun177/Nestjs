@@ -60,6 +60,17 @@ export class ProfileComponent implements OnInit {
   activeTab = 'info';
 
   userRoleName = '';
+  
+  readonly statusConfig: Record<string, { color: string; label: string; step: number }> = {
+    PENDING: { color: '#f59e0b', label: 'Chờ xử lý', step: 0 },
+    PAID: { color: '#3b82f6', label: 'Đã thanh toán', step: 1 },
+    CONFIRMED: { color: '#6366f1', label: 'Đã xác nhận', step: 1 },
+    PROCESSING: { color: '#8b5cf6', label: 'Đang chuẩn bị', step: 2 },
+    SHIPPED: { color: '#ec4899', label: 'Đang giao', step: 3 },
+    DELIVERED: { color: '#10b981', label: 'Đã giao', step: 4 },
+    CANCELLED: { color: '#ef4444', label: 'Đã hủy', step: -1 },
+    RETURNED: { color: '#64748b', label: 'Hoàn trả', step: -1 },
+  };
 
   // Review System
   isReviewModalVisible = false;

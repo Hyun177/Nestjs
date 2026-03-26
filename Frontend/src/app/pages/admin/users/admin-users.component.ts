@@ -21,6 +21,7 @@ import { NzBreadCrumbModule } from 'ng-zorro-antd/breadcrumb';
 import { NzDividerModule } from 'ng-zorro-antd/divider';
 import { NzEmptyModule } from 'ng-zorro-antd/empty';
 import { UserService } from '../../../core/services/user.service';
+import { RoleService } from '../../../core/services/role.service';
 
 interface User {
   id: number;
@@ -33,6 +34,7 @@ interface User {
   createdAt: string;
   orders: number;
   totalSpent: number;
+  address?: string;
 }
 
 @Component({
@@ -68,8 +70,8 @@ interface User {
 export class AdminUsersComponent implements OnInit {
   @ViewChild('totalTemplate') totalTemplate!: TemplateRef<any>;
   private fb = inject(FormBuilder);
-
   private userService = inject(UserService);
+  private roleService = inject(RoleService);
 
   loading = signal(false);
   isModalVisible = signal(false);
@@ -80,41 +82,40 @@ export class AdminUsersComponent implements OnInit {
 
   users = signal<User[]>([]);
   filteredUsers = signal<User[]>([]);
+  rolesList = signal<any[]>([]);
 
   userForm = this.fb.group({
     id: [0],
     name: ['', [Validators.required]],
     email: ['', [Validators.required, Validators.email]],
     phone: [''],
+    address: [''],
     role: ['customer', [Validators.required]],
     status: ['active', [Validators.required]],
   });
 
-  columns = [
-    { title: 'Người dùng', width: '20%' },
-    { title: 'Email', width: '18%' },
-    { title: 'Điện thoại', width: '12%' },
-    { title: 'Vai trò', width: '10%' },
-    { title: 'Trạng thái', width: '10%' },
-    { title: 'Đơn hàng', width: '8%' },
-    { title: 'Tổng chi tiêu', width: '12%' },
-    { title: 'Thao tác', width: '10%' },
-  ];
-
-  roleOptions = [
-    { label: 'Customer', value: 'customer' },
-    { label: 'Admin', value: 'admin' },
-    { label: 'Moderator', value: 'moderator' },
-  ];
-
   statusOptions = [
-    { label: 'Active', value: 'active' },
-    { label: 'Inactive', value: 'inactive' },
-    { label: 'Blocked', value: 'blocked' },
+    { label: 'Hoạt động', value: 'active' },
+    { label: 'Không hoạt động', value: 'inactive' },
+    { label: 'Bị chặn', value: 'blocked' },
   ];
 
   ngOnInit() {
     this.loadUsers();
+    this.loadRoles();
+  }
+
+  loadRoles() {
+    this.roleService.getRoles().subscribe({
+      next: (roles) => {
+        this.rolesList.set(roles || []);
+      },
+      error: (err) => console.error('Failed to load roles', err)
+    });
+  }
+
+  get roleOptions() {
+    return this.rolesList().map(r => ({ label: r.name, value: r.name }));
   }
 
   loadUsers() {
@@ -123,13 +124,14 @@ export class AdminUsersComponent implements OnInit {
       next: (data: any[]) => {
         const parsedUsers = (data || []).map((u: any) => ({
           id: u.id,
-          name: u.firstname ? `${u.firstname} ${u.lastname}`.trim() : u.email,
+          name: u.name || (u.firstname ? `${u.firstname} ${u.lastname}`.trim() : u.email),
           email: u.email,
           phone: u.phone || 'Chưa cập nhật',
           avatar: u.avatar ? 'http://localhost:3000' + u.avatar : 'https://api.realworld.io/images/demo-avatar.jpg',
-          role: u.roles && u.roles.length > 0 ? (u.roles[0]?.name || 'customer').toLowerCase() : 'customer',
-          status: 'active', // Assuming backend doesn't have status yet
+          role: u.roles && u.roles.length > 0 ? u.roles[0]?.name : 'customer',
+          status: u.status || 'active',
           createdAt: u.createdAt || new Date().toISOString(),
+          address: u.address || '',
           orders: u.orders ? u.orders.length : 0,
           totalSpent: u.orders ? u.orders.reduce((sum: number, o: any) => sum + Number(o.totalAmount || 0), 0) : 0,
         }));
@@ -167,6 +169,7 @@ export class AdminUsersComponent implements OnInit {
       name: user.name,
       email: user.email,
       phone: user.phone,
+      address: user.address || '',
       role: user.role,
       status: user.status,
     });
@@ -178,14 +181,16 @@ export class AdminUsersComponent implements OnInit {
       const formValue = this.userForm.getRawValue() as Partial<User>;
       this.loading.set(true);
 
+      const payload: any = {
+        name: formValue.name,
+        email: formValue.email,
+        phone: formValue.phone,
+        address: formValue.address,
+        role: formValue.role,
+        status: formValue.status,
+      };
+
       if (this.isEditMode()) {
-        const payload = {
-          firstname: formValue.name?.split(' ')[0] || '',
-          lastname: formValue.name?.split(' ').slice(1).join(' ') || '',
-          email: formValue.email,
-          phone: formValue.phone,
-          // role and status mapped if needed
-        };
         this.userService.updateUserAdmin(formValue.id!, payload).subscribe({
           next: () => {
             this.loadUsers();
@@ -194,14 +199,7 @@ export class AdminUsersComponent implements OnInit {
           error: () => this.loading.set(false)
         });
       } else {
-        const payload = {
-          firstname: formValue.name?.split(' ')[0] || '',
-          lastname: formValue.name?.split(' ').slice(1).join(' ') || '',
-          email: formValue.email,
-          phone: formValue.phone,
-          password: 'Password123!', // Default password for newly created admins/users
-          // roles logic can be passed here
-        };
+        payload.password = 'Password123!';
         this.userService.createUserAdmin(payload).subscribe({
           next: () => {
             this.loadUsers();
@@ -218,13 +216,20 @@ export class AdminUsersComponent implements OnInit {
   }
 
   deleteUser(id: number) {
-    if (confirm('Bạn có chắc muốn xóa người dùng này?')) {
-      this.loading.set(true);
-      this.userService.deleteUserAdmin(id).subscribe({
-        next: () => this.loadUsers(),
-        error: () => this.loading.set(false)
-      });
-    }
+    this.loading.set(true);
+    this.userService.deleteUserAdmin(id).subscribe({
+      next: () => this.loadUsers(),
+      error: () => this.loading.set(false)
+    });
+  }
+
+  toggleBlock(user: User) {
+    const newStatus = user.status === 'blocked' ? 'active' : 'blocked';
+    this.loading.set(true);
+    this.userService.updateUserAdmin(user.id, { status: newStatus }).subscribe({
+      next: () => this.loadUsers(),
+      error: () => this.loading.set(false)
+    });
   }
 
   formatCurrency(value: number): string {
@@ -241,20 +246,16 @@ export class AdminUsersComponent implements OnInit {
   }
 
   getRoleColor(role: string) {
-    const roleColors: { [key: string]: string } = {
-      admin: 'red',
-      customer: 'blue',
-      moderator: 'orange',
-    };
-    return roleColors[role] || 'default';
+    const r = (role || '').toLowerCase();
+    if (r === 'admin') return 'red';
+    if (r === 'moderator' || r === 'manager') return 'orange';
+    return 'blue';
   }
 
   getStatusColor(status: string) {
-    const statusColors: { [key: string]: string } = {
-      active: 'success',
-      inactive: 'default',
-      blocked: 'error',
-    };
-    return statusColors[status] || 'default';
+    const s = (status || '').toLowerCase();
+    if (s === 'active') return 'success';
+    if (s === 'blocked') return 'error';
+    return 'default';
   }
 }

@@ -30,6 +30,12 @@ export class OrderService {
   ) {}
 
   async checkout(userId: number, checkoutDto: CheckoutDto) {
+    // 0. Validate User Address & Phone
+    const user = await this.orderRepository.manager.findOne(User, { where: { id: userId } });
+    if (!user || !user.address || !user.phone) {
+      throw new BadRequestException('Vui lòng cập nhật địa chỉ và số điện thoại trong trang cá nhân trước khi đặt hàng');
+    }
+
     // 1. Get cart items
     let cartItems = await this.cartService.getCartItems(userId);
     
@@ -67,6 +73,8 @@ export class OrderService {
         discountAmount: discountAmount,
         voucherId: appliedVoucherId,
         paymentMethod: checkoutDto.paymentMethod,
+        shippingAddress: user.address,
+        shippingPhone: user.phone,
         status: OrderStatus.PENDING,
       });
 
@@ -115,8 +123,7 @@ export class OrderService {
 
       // Create Payment after order is persisted
       const paymentResult = await this.paymentService.createPayment(savedOrder);
-
-      const user = await this.orderRepository.manager.findOne(User, { where: { id: userId } });
+      
       if (user && user.email) {
          this.sendOrderEmail(user.email, savedOrder.id).catch(console.error);
       }

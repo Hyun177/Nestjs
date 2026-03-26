@@ -48,9 +48,15 @@ export class AuthService {
       where: { email: data.email },
       relations: ['roles'],
     });
+
     if (!user) {
       throw new UnauthorizedException('User not found');
     }
+
+    if (user.status === 'blocked') {
+      throw new UnauthorizedException('Tài khoản đã bị chặn');
+    }
+
     const isPasswordValid = await bcrypt.compare(data.password, user.password);
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid password');

@@ -14,6 +14,8 @@ import { CartService } from '../../core/services/cart.service';
 import { CategoryService } from '../../core/services/category.service';
 import { BrandService } from '../../core/services/brand.service';
 import { NzSliderModule } from 'ng-zorro-antd/slider';
+import { FavoriteService } from '../../core/services/favorite.service';
+
 
 @Component({
   selector: 'app-products',
@@ -43,6 +45,8 @@ export class ProductsComponent implements OnInit {
   private message = inject(NzMessageService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+  private favoriteService = inject(FavoriteService);
+
 
   products: Product[] = [];
   categories: any[] = [];
@@ -299,7 +303,16 @@ export class ProductsComponent implements OnInit {
   }
 
   toggleFavorite(product: Product) {
-     // Optional: Implement wishlist logic if needed
-     this.message.info('Chức năng yêu thích đang được phát triển');
+     this.favoriteService.toggleFavorite(product.id).subscribe({
+       next: (res) => {
+         this.message.success(res.message);
+         this.cdr.markForCheck();
+       },
+       error: () => this.message.warning('Vui lòng đăng nhập để sử dụng chức năng yêu thích')
+     });
+  }
+
+  isFavorite(productId: number): boolean {
+    return this.favoriteService.isFavoriteLocal(productId);
   }
 }

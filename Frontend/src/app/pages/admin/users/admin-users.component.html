@@ -1,193 +1,152 @@
 <div class="admin-users-container">
   <!-- Page Header -->
-  <div class="mb-6">
-    <h2 class="text-2xl font-bold text-gray-800 mb-1">Quản lý người dùng</h2>
-    <p class="text-gray-500 text-sm">Quản lý tất cả người dùng trong hệ thống</p>
-  </div>
-
-  <!-- Search and Actions -->
-  <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-    <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-      <input
-        type="text"
-        placeholder="Tìm kiếm theo tên, email hoặc số điện thoại..."
-        class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-        (keyup)="onSearch($event.target.value)"
-        [value]="searchValue()"
-      />
-      <button nz-button nzType="primary" (click)="openAddModal()">
-        <span nz-icon nzType="plus" nzTheme="outline" class="mr-2"></span>
-        Thêm người dùng
-      </button>
+  <div class="page-header">
+    <div class="title-wrap">
+      <h2>Quản lý người dùng</h2>
+      <p>Quản lý tất cả người dùng trong hệ thống</p>
     </div>
   </div>
 
-  <!-- Loading State -->
-  <div *ngIf="loading()" class="flex items-center justify-center h-96">
-    <nz-spin nzSimple nzSize="large"></nz-spin>
+  <!-- Action Bar -->
+  <div class="action-bar">
+    <input
+      type="text"
+      placeholder="Tìm kiếm theo tên, email hoặc số điện thoại..."
+      class="search-input"
+      (keyup)="onSearch($event.target.value)"
+      [value]="searchValue()"
+    />
+    <button class="add-btn" (click)="openAddModal()">
+      <span nz-icon nzType="plus"></span>
+      Thêm người dùng
+    </button>
   </div>
 
-  <!-- Users Table -->
-  <div *ngIf="!loading()" class="bg-white rounded-lg shadow-md overflow-hidden">
-    <nz-table
-      #basicTable
-      [nzData]="filteredUsers()"
-      [nzScroll]="{ x: '1200px' }"
-      [nzPageSize]="pageSize()"
-      [nzPageIndex]="pageIndex()"
-      [nzTotal]="filteredUsers().length"
-      [nzLoading]="loading()"
-      nzShowSizeChanger
-      [nzShowTotal]="totalTemplate"
-      [nzNoResult]="emptyUsersTpl"
-    >
-      <!-- User Column -->
+  <!-- Loading State -->
+  <div *ngIf="loading()" class="loading-state">
+    <div class="spinner"></div>
+    <p>Đang tải danh sách người dùng...</p>
+  </div>
+
+  <!-- Custom Users Table -->
+  <div *ngIf="!loading()" class="custom-table-wrap">
+    <table class="custom-table">
       <thead>
         <tr>
-          <th>Người dùng</th>
+          <th style="width: 200px">Người dùng</th>
           <th>Email</th>
           <th>Điện thoại</th>
           <th>Vai trò</th>
           <th>Trạng thái</th>
-          <th nzAlign="center">Đơn hàng</th>
-          <th nzAlign="right">Tổng chi tiêu</th>
-          <th nzAlign="center">Thao tác</th>
+          <th style="text-align: right;">Chi tiêu</th>
+          <th style="text-align: right;">Thao tác</th>
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let data of basicTable.data">
+        <tr *ngFor="let data of filteredUsers()">
           <td>
-            <div class="flex items-center gap-3">
-              <nz-avatar [nzSrc]="data.avatar" [nzSize]="40"></nz-avatar>
-              <div>
-                <p class="font-semibold text-gray-800">{{ data.name }}</p>
-                <p class="text-xs text-gray-500">{{ data.createdAt }}</p>
+            <div class="user-info">
+              <nz-avatar [nzSrc]="data.avatar" [nzSize]="40" style="border-radius: 12px;"></nz-avatar>
+              <div class="user-details">
+                <span class="user-name">{{ data.name }}</span>
+                <span class="user-date">{{ data.createdAt | date:'dd/MM/yyyy' }}</span>
               </div>
             </div>
           </td>
           <td>{{ data.email }}</td>
           <td>{{ data.phone }}</td>
           <td>
-            <nz-tag [nzColor]="getRoleColor(data.role)">
-              {{ data.role | uppercase }}
-            </nz-tag>
+            <span class="role-tag" [style.background-color]="getRoleColor(data.role) === 'red' ? '#fef2f2' : (getRoleColor(data.role) === 'blue' ? '#eff6ff' : '#fff7ed')" 
+                  [style.color]="getRoleColor(data.role) === 'red' ? '#ef4444' : (getRoleColor(data.role) === 'blue' ? '#3b82f6' : '#f59e0b')">
+              {{ data.role }}
+            </span>
           </td>
           <td>
-            <nz-tag [nzColor]="getStatusColor(data.status)">
-              {{
-                data.status === 'active'
-                  ? 'Hoạt động'
-                  : data.status === 'inactive'
-                    ? 'Không hoạt động'
-                    : 'Bị chặn'
-              }}
-            </nz-tag>
+            <span class="status-dot" [style.background-color]="getStatusColor(data.status) === 'success' ? '#10b981' : (getStatusColor(data.status) === 'error' ? '#ef4444' : '#94a3b8')"></span>
+            {{ data.status === 'active' ? 'Hoạt động' : (data.status === 'inactive' ? 'Không hoạt động' : 'Bị chặn') }}
           </td>
-          <td nzAlign="center">
-            <span class="font-semibold text-blue-500">{{ data.orders }}</span>
+          <td style="text-align: right; font-weight: 700;">{{ formatCurrency(data.totalSpent) }}</td>
+          <td class="actions-cell">
+            <button class="icon-btn edit" [class.blocked]="data.status === 'blocked'" 
+                    (click)="toggleBlock(data)" 
+                    [title]="data.status === 'blocked' ? 'Bỏ chặn' : 'Chặn'">
+              <span nz-icon [nzType]="data.status === 'blocked' ? 'unlock' : 'lock'"></span>
+            </button>
+            <button class="icon-btn edit" (click)="openEditModal(data)" title="Sửa">
+              <span nz-icon nzType="edit"></span>
+            </button>
+            <button class="icon-btn delete" 
+                    nz-popconfirm 
+                    nzPopconfirmTitle="Xóa người dùng này?" 
+                    (nzOnConfirm)="deleteUser(data.id)" 
+                    title="Xóa">
+              <span nz-icon nzType="delete"></span>
+            </button>
           </td>
-          <td nzAlign="right" class="font-semibold">
-            {{ formatCurrency(data.totalSpent) }}
-          </td>
-          <td nzAlign="center">
-            <nz-space nzCompact>
-              <button
-                nz-button
-                nzType="text"
-                nzSize="small"
-                (click)="openEditModal(data)"
-                class="text-blue-500"
-              >
-                <span nz-icon nzType="edit" nzTheme="outline"></span>
-              </button>
-              <button
-                nz-button
-                nzType="text"
-                nzSize="small"
-                nz-popconfirm
-                nzPopconfirmTitle="Bạn chắc chắn muốn xóa?"
-                nzPopconfirmDescription="Hành động này không thể hoàn tác"
-                (nzOnConfirm)="deleteUser(data.id)"
-                class="text-red-500"
-              >
-                <span nz-icon nzType="delete" nzTheme="outline"></span>
-              </button>
-            </nz-space>
+        </tr>
+        <tr *ngIf="filteredUsers().length === 0">
+          <td colspan="7" style="text-align: center; padding: 40px; color: #94a3b8;">
+            Không tìm thấy người dùng nào
           </td>
         </tr>
       </tbody>
-    </nz-table>
-
-    <!-- Template for empty state -->
-    <ng-template #emptyUsersTpl>
-      <div class="p-8 text-center">
-        <nz-empty nzNotFoundContent="Không tìm thấy người dùng nào"></nz-empty>
-      </div>
-    </ng-template>
+    </table>
   </div>
 
-  <!-- User Form Modal -->
-  <nz-modal
-    [(nzVisible)]="isModalVisible"
-    (nzOnOk)="handleOk()"
-    (nzOnCancel)="handleCancel()"
-    [nzTitle]="isEditMode() ? 'Chỉnh sửa người dùng' : 'Thêm người dùng mới'"
-    nzWidth="600px"
-  >
-    <form [formGroup]="userForm">
-      <nz-form-item>
-        <nz-form-label nzRequired nzFor="name">Tên người dùng</nz-form-label>
-        <input
-          nz-input
-          placeholder="Nhập tên người dùng"
-          id="name"
-          formControlName="name"
-        />
-      </nz-form-item>
+  <!-- Custom User Modal -->
+  <div class="custom-modal-overlay" [class.active]="isModalVisible()">
+    <div class="custom-modal" [class.active]="isModalVisible()">
+      <div class="modal-header">
+        <h3>{{ isEditMode() ? 'Chỉnh sửa người dùng' : 'Thêm người dùng mới' }}</h3>
+        <button class="close-btn" (click)="handleCancel()">&times;</button>
+      </div>
+      
+      <div class="modal-body">
+        <form [formGroup]="userForm">
+          <div class="form-group">
+            <label>Họ tên *</label>
+            <input formControlName="name" placeholder="Ví dụ: Nguyễn Văn A" />
+          </div>
 
-      <nz-form-item>
-        <nz-form-label nzRequired nzFor="email">Email</nz-form-label>
-        <input
-          nz-input
-          placeholder="Nhập email"
-          id="email"
-          type="email"
-          formControlName="email"
-        />
-      </nz-form-item>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Email *</label>
+              <input formControlName="email" type="email" placeholder="example@mail.com" />
+            </div>
+            <div class="form-group">
+              <label>Điện thoại</label>
+              <input formControlName="phone" placeholder="0123 456 789" />
+            </div>
+          </div>
 
-      <nz-form-item>
-        <nz-form-label nzRequired nzFor="phone">Điện thoại</nz-form-label>
-        <input
-          nz-input
-          placeholder="Nhập số điện thoại"
-          id="phone"
-          formControlName="phone"
-        />
-      </nz-form-item>
+          <div class="form-group">
+            <label>Địa chỉ</label>
+            <input formControlName="address" placeholder="Nhập địa chỉ nhận hàng..." />
+          </div>
 
-      <nz-form-item>
-        <nz-form-label nzRequired nzFor="role">Vai trò</nz-form-label>
-        <nz-select
-          id="role"
-          formControlName="role"
-          [nzOptions]="roleOptions"
-        ></nz-select>
-      </nz-form-item>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Vai trò *</label>
+              <select formControlName="role">
+                <option *ngFor="let opt of roleOptions" [value]="opt.value">{{ opt.label }}</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Trạng thái *</label>
+              <select formControlName="status">
+                <option *ngFor="let opt of statusOptions" [value]="opt.value">{{ opt.label }}</option>
+              </select>
+            </div>
+          </div>
+        </form>
+      </div>
 
-      <nz-form-item>
-        <nz-form-label nzRequired nzFor="status">Trạng thái</nz-form-label>
-        <nz-select
-          id="status"
-          formControlName="status"
-          [nzOptions]="statusOptions"
-        ></nz-select>
-      </nz-form-item>
-    </form>
-  </nz-modal>
-
-  <!-- Template for pagination total -->
-  <ng-template #totalTemplate let-total let-range="range">
-    {{ range[0] }} - {{ range[1] }} of {{ total }}
-  </ng-template>
+      <div class="modal-footer">
+        <button class="cancel-btn" (click)="handleCancel()">Hủy bỏ</button>
+        <button class="save-btn" [disabled]="userForm.invalid" (click)="handleOk()">
+          {{ isEditMode() ? 'Lưu thay đổi' : 'Tạo mới' }}
+        </button>
+      </div>
+    </div>
+  </div>
 </div>

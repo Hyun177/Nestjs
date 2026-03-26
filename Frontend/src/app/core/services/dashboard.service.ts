@@ -33,7 +33,14 @@ export class DashboardService {
   }
 
   getAllOrdersAdmin(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.orderUrl}/admin/all`, { headers: this.getHeaders() }).pipe(
+    return this.http.get<any[]>('http://localhost:3000/api/order/all/admin', { headers: this.getHeaders() }).pipe(
+      catchError(() => of([]))
+    );
+  }
+
+  getRecentUsers(): Observable<any[]> {
+    // Calling the base users API as a proxy for 'recent users' till a dedicated dashboard endpoint exists
+    return this.http.get<any[]>('http://localhost:3000/api/users', { headers: this.getHeaders() }).pipe(
       catchError(() => of([]))
     );
   }
