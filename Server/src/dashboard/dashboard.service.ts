@@ -15,7 +15,7 @@ export class DashboardService {
     private readonly orderRepository: Repository<Order>,
     @InjectRepository(Product)
     private readonly productRepository: Repository<Product>,
-  ) { }
+  ) {}
 
   async getStats() {
     const userCount = await this.userRepository.count();
@@ -24,9 +24,12 @@ export class DashboardService {
 
     // Sum total of all orders
     const orders = await this.orderRepository.find({
-      where: { status: OrderStatus.DELIVERED }
+      where: { status: OrderStatus.DELIVERED },
     });
-    const totalRevenue = orders.reduce((sum, order) => sum + Number(order.totalAmount || 0), 0);
+    const totalRevenue = orders.reduce(
+      (sum, order) => sum + Number(order.totalAmount || 0),
+      0,
+    );
 
     // Calculate growth (mocked for now, but could be real compared to last month)
     return {
@@ -38,8 +41,8 @@ export class DashboardService {
         users: 12, // +12%
         orders: 8,
         products: 5,
-        revenue: 15
-      }
+        revenue: 15,
+      },
     };
   }
 
@@ -47,7 +50,7 @@ export class DashboardService {
     return this.orderRepository.find({
       order: { createdAt: 'DESC' },
       take: limit,
-      relations: ['user']
+      relations: ['user'],
     });
   }
 
@@ -55,7 +58,7 @@ export class DashboardService {
     return this.productRepository.find({
       order: { soldCount: 'DESC' },
       take: limit,
-      relations: ['category']
+      relations: ['category'],
     });
   }
 }

@@ -43,7 +43,7 @@ export class FavoriteService {
 
   async isFavorite(userId: number, productId: number) {
     const count = await this.favoriteRepository.count({
-        where: { user: { id: userId }, product: { id: productId } },
+      where: { user: { id: userId }, product: { id: productId } },
     });
     return count > 0;
   }

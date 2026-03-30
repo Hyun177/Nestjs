@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UserAddress } from './entities/user-address.entity';
@@ -50,8 +54,14 @@ export class AddressService {
 
     // Nếu xóa địa chỉ default, set địa chỉ đầu tiên còn lại làm default
     if (address.isDefault) {
-      const first = await this.addressRepo.findOne({ where: { userId }, order: { createdAt: 'ASC' } });
-      if (first) { first.isDefault = true; await this.addressRepo.save(first); }
+      const first = await this.addressRepo.findOne({
+        where: { userId },
+        order: { createdAt: 'ASC' },
+      });
+      if (first) {
+        first.isDefault = true;
+        await this.addressRepo.save(first);
+      }
     }
     return { message: 'Đã xóa địa chỉ' };
   }

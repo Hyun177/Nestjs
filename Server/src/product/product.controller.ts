@@ -14,8 +14,15 @@ import {
   Query,
 } from '@nestjs/common';
 import { ProductService } from './product.service';
+import { Product } from './entities/product.entity';
 import { CreateProductDto, UpdateProductDto } from './dto/product.dto';
-import { ApiBearerAuth, ApiTags, ApiOperation, ApiConsumes, ApiBody } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiTags,
+  ApiOperation,
+  ApiConsumes,
+  ApiBody,
+} from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Permissions } from '../auth/permission/permissions.decorator';
 import { PermissionGuard } from '../auth/permission/permission.guard';
@@ -83,11 +90,11 @@ export class ProductController {
     @Req() req: RequestWithUser,
   ) {
     // Separate main image from gallery
-    const mainFile = files.find(f => f.fieldname === 'image');
-    const galleryFiles = files.filter(f => f.fieldname === 'images');
+    const mainFile = files.find((f) => f.fieldname === 'image');
+    const galleryFiles = files.filter((f) => f.fieldname === 'images');
 
     const imageUrl = mainFile ? `/uploads/${mainFile.filename}` : undefined;
-    const galleryUrls = galleryFiles.map(f => `/uploads/${f.filename}`);
+    const galleryUrls = galleryFiles.map((f) => `/uploads/${f.filename}`);
 
     if (imageUrl) body.image = imageUrl;
     if (galleryUrls.length > 0) body.images = galleryUrls;
@@ -111,14 +118,19 @@ export class ProductController {
     @Query('showAll') showAll?: string,
     @Query('onSale') onSale?: string,
     @Query('newArrival') newArrival?: string,
-  ) {
+  ): Promise<{ data: Product[]; total: number; page: number; limit: number }> {
+    const normalizedSort =
+      sort === 'newest' || sort === 'price_asc' || sort === 'price_desc'
+        ? sort
+        : undefined;
+
     return this.ProductService.getProducts({
       page: page ? Number(page) : 1,
       limit: limit ? Number(limit) : 12,
       search,
       categoryId: categoryId ? Number(categoryId) : undefined,
       brandId: brandId ? Number(brandId) : undefined,
-      sort,
+      sort: normalizedSort,
       color: color || undefined,
       minPrice: minPrice ? Number(minPrice) : undefined,
       maxPrice: maxPrice ? Number(maxPrice) : undefined,
@@ -166,12 +178,12 @@ export class ProductController {
   async updateProduct(
     @Param('id', ParseIntPipe) id: number,
     @UploadedFiles() files: Express.Multer.File[],
-    @Body() body: any, // Use any to handle stringified JSON fields
+    @Body() body: Partial<UpdateProductDto>,
   ) {
-    const mainFile = files?.find(f => f.fieldname === 'image');
-    const galleryFiles = files?.filter(f => f.fieldname === 'images') || [];
-    
-    // If a new main image was uploaded, use it. 
+    const mainFile = files?.find((f) => f.fieldname === 'image');
+    const galleryFiles = files?.filter((f) => f.fieldname === 'images') || [];
+
+    // If a new main image was uploaded, use it.
     // Otherwise, body.image might already contain the existing path sent from frontend.
     if (mainFile) {
       body.image = `/uploads/${mainFile.filename}`;
@@ -179,21 +191,24 @@ export class ProductController {
 
     // Handle gallery images
     let finalGallery: string[] = [];
-    
+
     // 1. Get existing images paths sent from frontend
-    if (body.existingImages) {
-      try {
-        finalGallery = typeof body.existingImages === 'string' 
-          ? JSON.parse(body.existingImages) 
-          : body.existingImages;
-      } catch (e) {
-        finalGallery = [];
+    if (body.existingImages !== undefined) {
+      if (typeof body.existingImages === 'string') {
+        try {
+          const parsed = JSON.parse(body.existingImages);
+          finalGallery = Array.isArray(parsed) ? parsed : [];
+        } catch {
+          finalGallery = [];
+        }
+      } else if (Array.isArray(body.existingImages)) {
+        finalGallery = body.existingImages;
       }
     }
 
     // 2. Add new uploaded gallery files
     if (galleryFiles.length > 0) {
-      const newFiles = galleryFiles.map(f => `/uploads/${f.filename}`);
+      const newFiles = galleryFiles.map((f) => `/uploads/${f.filename}`);
       finalGallery = [...finalGallery, ...newFiles];
     }
 

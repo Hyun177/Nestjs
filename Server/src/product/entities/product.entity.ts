@@ -61,11 +61,11 @@ export class Product {
   attributes?: { name: string; options: string[] }[];
 
   @Column({ type: 'json', nullable: true })
-  variants?: { 
-    sku: string; 
-    price: number; 
-    stock: number; 
-    attributes: { [key: string]: string } 
+  variants?: {
+    sku: string;
+    price: number;
+    stock: number;
+    attributes: { [key: string]: string };
   }[];
 
   @Column({ nullable: true })

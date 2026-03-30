@@ -1,4 +1,16 @@
-import { Controller, Get, Post, Put, Delete, Patch, Body, Param, ParseIntPipe, UseGuards, Req } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Patch,
+  Body,
+  Param,
+  ParseIntPipe,
+  UseGuards,
+  Req,
+} from '@nestjs/common';
 import { AddressService } from './address.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
@@ -21,7 +33,11 @@ export class AddressController {
   }
 
   @Put(':id')
-  update(@Req() req: any, @Param('id', ParseIntPipe) id: number, @Body() dto: any) {
+  update(
+    @Req() req: any,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: any,
+  ) {
     return this.addressService.updateAddress(id, req.user.userId, dto);
   }
 

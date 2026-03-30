@@ -10,6 +10,6 @@ import { OrderItem } from '../order/entities/order-item.entity';
 @Module({
   imports: [TypeOrmModule.forFeature([Review, Product, Order, OrderItem])],
   providers: [ReviewService],
-  controllers: [ReviewController]
+  controllers: [ReviewController],
 })
 export class ReviewModule {}

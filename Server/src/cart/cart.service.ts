@@ -10,7 +10,13 @@ import { CartItem } from './entities/cart-item.entity';
 import { Product } from '../product/entities/product.entity';
 import { CreateCartItemDto } from './dto/create-cart-item.dto';
 import { UpdateCartItemDto } from './dto/update-cart-item.dto';
+import { IsNull } from 'typeorm';
 
+type Variant = {
+  sku: string;
+  stock: number;
+  attributes: Record<string, string>;
+};
 @Injectable()
 export class CartService {
   constructor(
@@ -26,7 +32,12 @@ export class CartService {
   async getOrCreateCart(userId: number): Promise<Cart> {
     let cart = await this.cartRepository.findOne({
       where: { userId },
-      relations: ['items', 'items.product', 'items.product.brand', 'items.product.category'],
+      relations: [
+        'items',
+        'items.product',
+        'items.product.brand',
+        'items.product.category',
+      ],
     });
 
     if (!cart) {
@@ -41,7 +52,12 @@ export class CartService {
   async getCart(userId: number): Promise<Cart> {
     const cart = await this.cartRepository.findOne({
       where: { userId },
-      relations: ['items', 'items.product', 'items.product.brand', 'items.product.category'],
+      relations: [
+        'items',
+        'items.product',
+        'items.product.brand',
+        'items.product.category',
+      ],
     });
 
     if (!cart) {
@@ -57,39 +73,43 @@ export class CartService {
     createCartItemDto: CreateCartItemDto,
   ): Promise<Cart> {
     const { productId, quantity, size, color } = createCartItemDto;
-
     // Verify product exists
     const product = await this.productRepository.findOneBy({ id: productId });
     if (!product) {
       throw new NotFoundException('Product not found');
     }
-
-    // Determine variant and check stock
     let variantSku: string | undefined = undefined;
     let availableStock = product.stock;
 
     if (product.variants && product.variants.length > 0 && (size || color)) {
       // Value-based matching: check if sent values appear anywhere in variant attributes
-      const variant = product.variants.find((v: any) => {
-        const attrValues = Object.values(v.attributes).map((val: any) =>
-          String(val).toLowerCase().trim()
+      const variants = product.variants as Variant[];
+
+      const variant = variants.find((v) => {
+        const attrValues = Object.values(v.attributes).map((val) =>
+          val.toLowerCase().trim(),
         );
+
         const sMatch = !size || attrValues.includes(size.toLowerCase().trim());
-        const cMatch = !color || attrValues.includes(color.toLowerCase().trim());
+        const cMatch =
+          !color || attrValues.includes(color.toLowerCase().trim());
+
         return sMatch && cMatch;
       });
 
       if (!variant) {
         throw new BadRequestException(
-          `Biến thể "${[color, size].filter(Boolean).join(' / ')}" không tồn tại hoặc đã hết hàng`
+          `Biến thể "${[color, size].filter(Boolean).join(' / ')}" không tồn tại hoặc đã hết hàng`,
         );
       }
-      variantSku = (variant as any).sku;
-      availableStock = (variant as any).stock;
+      variantSku = variant.sku;
+      availableStock = variant.stock;
     }
 
     if (availableStock < quantity) {
-      throw new BadRequestException('Not enough stock available for this variation');
+      throw new BadRequestException(
+        'Not enough stock available for this variation',
+      );
     }
 
     // Get or create cart
@@ -97,11 +117,11 @@ export class CartService {
 
     // Check if item already exists in cart with SAME attributes
     let cartItem = await this.cartItemRepository.findOne({
-      where: { 
-        cartId: cart.id, 
+      where: {
+        cartId: cart.id,
         productId,
-        size: size || null as any, 
-        color: color || null as any 
+        size: size ?? IsNull(),
+        color: color ?? IsNull(),
       },
     });
 

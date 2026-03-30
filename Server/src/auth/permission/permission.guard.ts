@@ -57,7 +57,9 @@ export class PermissionGuard implements CanActivate {
     const result = requiredPermissions.every((perm) => {
       const normalizedPerm = normalize(perm);
       const isMatch = normalizedUserPerms.includes(normalizedPerm);
-      console.log(`Checking permission: ${perm} (normalized: ${normalizedPerm}) -> ${isMatch}`);
+      console.log(
+        `Checking permission: ${perm} (normalized: ${normalizedPerm}) -> ${isMatch}`,
+      );
       return isMatch;
     });
 

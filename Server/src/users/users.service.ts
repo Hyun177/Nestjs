@@ -14,36 +14,36 @@ export class UsersService {
     @InjectRepository(Role)
     private roleRepo: Repository<Role>,
   ) {}
-  async createUser(data: any): Promise<User> {
+  async createUser(data: CreateUserDto): Promise<User> {
     const { role, password, ...rest } = data;
-    const newUser = this.userRepo.create(rest as any) as any as User;
-    
+    const newUser = this.userRepo.create(rest as Partial<User>);
+
     if (password) {
       newUser.password = await bcrypt.hash(password, 10);
     }
-    
+
     if (role) {
       const roleEntity = await this.roleRepo.findOne({
         where: [
           { name: role.toLowerCase() },
           { name: role.toUpperCase() },
-          { name: role }
-        ]
+          { name: role },
+        ],
       });
       if (roleEntity) {
         newUser.roles = [roleEntity];
       }
     }
-    
+
     return await this.userRepo.save(newUser);
   }
   async getUsers(): Promise<User[]> {
     return await this.userRepo.find({ relations: ['roles', 'orders'] });
   }
   async getUserById(id: number): Promise<User> {
-    const user = await this.userRepo.findOne({ 
+    const user = await this.userRepo.findOne({
       where: { id },
-      relations: ['roles'] 
+      relations: ['roles'],
     });
     if (!user) {
       throw new NotFoundException('User not found');
@@ -55,14 +55,14 @@ export class UsersService {
     await this.userRepo.delete(user);
     return user;
   }
-  async updateUser(id: number, data: any): Promise<User> {
-    const user = (await this.getUserById(id)) as User;
+  async updateUser(id: number, data: Partial<CreateUserDto>): Promise<User> {
+    const user = await this.getUserById(id);
     if (!user) {
       throw new NotFoundException('User not found');
     }
 
     const { role, password, ...rest } = data;
-    
+
     if (password) {
       user.password = await bcrypt.hash(password, 10);
     }
@@ -72,8 +72,8 @@ export class UsersService {
         where: [
           { name: role.toLowerCase() },
           { name: role.toUpperCase() },
-          { name: role }
-        ]
+          { name: role },
+        ],
       });
       if (roleEntity) {
         user.roles = [roleEntity];
@@ -84,11 +84,15 @@ export class UsersService {
     return await this.userRepo.save(user);
   }
 
-  async changePassword(id: number, oldPass: string, newPass: string): Promise<User> {
+  async changePassword(
+    id: number,
+    oldPass: string,
+    newPass: string,
+  ): Promise<User> {
     const user = await this.getUserById(id);
     const isPasswordValid = await bcrypt.compare(oldPass, user.password);
     if (!isPasswordValid) {
-       throw new Error('Invalid old password');
+      throw new Error('Invalid old password');
     }
     user.password = await bcrypt.hash(newPass, 10);
     return await this.userRepo.save(user);

@@ -51,7 +51,10 @@ export class OrderController {
 
   @Patch(':id/status')
   @Permissions(Permission.ORDER_UPDATE)
-  updateStatus(@Param('id', ParseIntPipe) id: number, @Body('status') status: OrderStatus) {
+  updateStatus(
+    @Param('id', ParseIntPipe) id: number,
+    @Body('status') status: OrderStatus,
+  ) {
     return this.orderService.updateStatus(id, status);
   }
 

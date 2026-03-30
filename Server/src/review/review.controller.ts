@@ -1,6 +1,16 @@
 import {
-  Controller, Post, Get, Patch, Delete, Body, Param,
-  UseGuards, Req, ParseIntPipe, UseInterceptors, UploadedFile,
+  Controller,
+  Post,
+  Get,
+  Patch,
+  Delete,
+  Body,
+  Param,
+  UseGuards,
+  Req,
+  ParseIntPipe,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
 import { ReviewService } from './review.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -44,7 +54,14 @@ export class ReviewController {
   ) {
     const imageUrl = file ? `/uploads/reviews/${file.filename}` : undefined;
     const numericOrderId = orderId ? parseInt(orderId, 10) : undefined;
-    return this.reviewService.createOrUpdateReview(req.user.userId, productId, rating, comment, imageUrl, numericOrderId);
+    return this.reviewService.createOrUpdateReview(
+      req.user.userId,
+      productId,
+      rating,
+      comment,
+      imageUrl,
+      numericOrderId,
+    );
   }
 
   @Patch(':id')
@@ -60,7 +77,13 @@ export class ReviewController {
     @Body('comment') comment: string,
   ) {
     const imageUrl = file ? `/uploads/reviews/${file.filename}` : undefined;
-    return this.reviewService.updateReview(id, req.user.userId, rating, comment, imageUrl);
+    return this.reviewService.updateReview(
+      id,
+      req.user.userId,
+      rating,
+      comment,
+      imageUrl,
+    );
   }
 
   @Delete(':id')
@@ -78,14 +101,20 @@ export class ReviewController {
   @Get('my/:productId')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('accessToken')
-  async getMyReview(@Req() req: any, @Param('productId', ParseIntPipe) productId: number) {
+  async getMyReview(
+    @Req() req: any,
+    @Param('productId', ParseIntPipe) productId: number,
+  ) {
     return this.reviewService.getMyReview(req.user.userId, productId);
   }
 
   @Get('can-review/:productId')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('accessToken')
-  async canReview(@Req() req: any, @Param('productId', ParseIntPipe) productId: number) {
+  async canReview(
+    @Req() req: any,
+    @Param('productId', ParseIntPipe) productId: number,
+  ) {
     return this.reviewService.canUserReview(req.user.userId, productId);
   }
 }

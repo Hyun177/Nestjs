@@ -20,6 +20,15 @@ export class ProductDto {
   @IsOptional()
   image?: string;
 
+  @IsOptional()
+  descIntro?: string;
+
+  @IsOptional()
+  descFeatures?: string;
+
+  @IsOptional()
+  descPolicy?: string;
+
   @Type(() => Number)
   @IsNumber()
   categoryId: number;
@@ -82,6 +91,11 @@ export class ProductDto {
   @IsNumber()
   @IsOptional()
   viewCount?: number;
+
+  @IsOptional()
+  existingImages?: string | string[];
 }
+
 export class CreateProductDto extends ProductDto {}
+
 export class UpdateProductDto extends PartialType(ProductDto) {}

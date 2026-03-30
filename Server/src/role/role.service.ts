@@ -18,9 +18,13 @@ export class RoleService {
     return roleRepo.save(role);
   }
 
-  async ensurePermissions(permissionNames: Permission[]): Promise<PermissionEntity[]> {
+  async ensurePermissions(
+    permissionNames: Permission[],
+  ): Promise<PermissionEntity[]> {
     const permRepo = this.dataSource.getRepository(PermissionEntity);
-    const existing = await permRepo.find({ where: { name: In(permissionNames) } });
+    const existing = await permRepo.find({
+      where: { name: In(permissionNames) },
+    });
     const existingNames = existing.map((p) => p.name);
     const newPermissions = permissionNames
       .filter((name) => !existingNames.includes(name))
@@ -29,7 +33,10 @@ export class RoleService {
     return [...existing, ...newPermissions];
   }
 
-  async assignPermissions(roleName: string, permissionNames: Permission[]): Promise<Role> {
+  async assignPermissions(
+    roleName: string,
+    permissionNames: Permission[],
+  ): Promise<Role> {
     const roleRepo = this.dataSource.getRepository(Role);
     const role = await roleRepo.findOne({
       where: { name: roleName },
@@ -47,7 +54,10 @@ export class RoleService {
     const userRepo = this.dataSource.getRepository(User);
     const roleRepo = this.dataSource.getRepository(Role);
 
-    const user = await userRepo.findOne({ where: { email: userEmail }, relations: ['roles'] });
+    const user = await userRepo.findOne({
+      where: { email: userEmail },
+      relations: ['roles'],
+    });
     if (!user) throw new NotFoundException('User not found');
 
     const role = await roleRepo.findOne({ where: { name: roleName } });

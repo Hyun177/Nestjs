@@ -60,7 +60,9 @@ export class RoleController {
   }
 
   @Get(':roleName')
-  @ApiOperation({ summary: 'Get a specific role with permissions (admin only)' })
+  @ApiOperation({
+    summary: 'Get a specific role with permissions (admin only)',
+  })
   async getRole(@Param('roleName') roleName: string) {
     return this.roleService.getRoleWithPermissions(roleName);
   }

@@ -35,7 +35,9 @@ export class PostsController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Get post by id (public)' })
-  async getPostById(@Param('id', ParseIntPipe) id: number): Promise<Posts | null> {
+  async getPostById(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<Posts | null> {
     return this.PostsService.getPostById(id);
   }
 

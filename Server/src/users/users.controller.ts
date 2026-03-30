@@ -19,7 +19,13 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
-import { ApiBearerAuth, ApiOperation, ApiTags, ApiConsumes, ApiBody } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiTags,
+  ApiConsumes,
+  ApiBody,
+} from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { PermissionGuard } from '../auth/permission/permission.guard';
 import { Permissions } from '../auth/permission/permissions.decorator';
@@ -79,7 +85,11 @@ export class UsersController {
     @Body() body: any, // Should use a proper DTO, maybe {oldPassword, newPassword}
   ): Promise<any> {
     // We will implement this in the service
-    return this.UsersService.changePassword(req.user.userId, body.oldPassword, body.newPassword);
+    return this.UsersService.changePassword(
+      req.user.userId,
+      body.oldPassword,
+      body.newPassword,
+    );
   }
 
   @Get()

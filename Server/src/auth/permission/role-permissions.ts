@@ -40,7 +40,7 @@ export const ROLE_PERMISSIONS: Record<string, Permission[]> = {
     Permission.ORDER_CREATE,
     Permission.ORDER_READ,
     Permission.POST_READ,
-    Permission.POST_CREATE,   // customer được tạo/sửa/xoá bài của chính mình (PostOwnershipGuard)
+    Permission.POST_CREATE, // customer được tạo/sửa/xoá bài của chính mình (PostOwnershipGuard)
     Permission.POST_UPDATE,
     Permission.POST_DELETE,
   ],

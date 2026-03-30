@@ -15,7 +15,6 @@ import { VoucherService } from './voucher.service';
 import { CreateVoucherDto } from './dto/create-voucher.dto';
 import { UpdateVoucherDto } from './dto/update-voucher.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { RoleGuard } from '../auth/role.guard';
 import { PermissionGuard } from '../auth/permission/permission.guard';
 import { Permissions } from '../auth/permission/permissions.decorator';
 import { Permission } from '../auth/permission/permissions.enum';
@@ -63,7 +62,10 @@ export class VoucherController {
   @Patch(':id')
   @UseGuards(JwtAuthGuard, PermissionGuard)
   @Permissions(Permission.VOUCHER_UPDATE)
-  update(@Param('id', ParseIntPipe) id: number, @Body() updateVoucherDto: UpdateVoucherDto) {
+  update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateVoucherDto: UpdateVoucherDto,
+  ) {
     return this.voucherService.update(id, updateVoucherDto);
   }
 
@@ -76,7 +78,11 @@ export class VoucherController {
 
   @Post('apply')
   @UseGuards(JwtAuthGuard)
-  apply(@Body('code') code: string, @Body('itemIds') itemIds: number[], @Req() req: any) {
+  apply(
+    @Body('code') code: string,
+    @Body('itemIds') itemIds: number[],
+    @Req() req: any,
+  ) {
     return this.voucherService.applyVoucher(req.user.id, code, itemIds);
   }
 
@@ -84,7 +90,8 @@ export class VoucherController {
   @UseGuards(JwtAuthGuard)
   collectVoucher(@Body('voucherId') voucherId: any, @Req() req: any) {
     const id = parseInt(String(voucherId), 10);
-    if (isNaN(id)) throw new BadRequestException('voucherId must be a valid number');
+    if (isNaN(id))
+      throw new BadRequestException('voucherId must be a valid number');
     return this.voucherService.collectVoucher(req.user.id, id);
   }
 }

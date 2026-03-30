@@ -2,9 +2,24 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Product } from './entities/product.entity';
 import { Repository } from 'typeorm';
-import { ProductDto } from './dto/product.dto';
+import { ProductDto, UpdateProductDto } from './dto/product.dto';
 import { Category } from '../category/entities/category.entity/category.entity';
 import { Brand } from '../brand/entities/brand.entity/brand.entity';
+
+type ProductQueryParams = {
+  showAll?: boolean;
+  search?: string;
+  categoryId?: number | string;
+  brandId?: number | string;
+  minPrice?: number | string;
+  maxPrice?: number | string;
+  color?: string;
+  onSale?: boolean | 'true' | 'false';
+  newArrival?: boolean | 'true' | 'false';
+  sort?: 'newest' | 'price_asc' | 'price_desc';
+  page?: number | string;
+  limit?: number | string;
+};
 
 @Injectable()
 export class ProductService {
@@ -36,14 +51,16 @@ export class ProductService {
       throw new Error('Brand not found');
     }
 
-    const originalPrice = data.originalPrice ? Number(data.originalPrice) : undefined;
-    
+    const originalPrice = data.originalPrice
+      ? Number(data.originalPrice)
+      : undefined;
+
     // Parse labels and specs if they arrive as strings from multipart
     let labels = data.labels;
     if (typeof labels === 'string') {
       try {
         labels = JSON.parse(labels);
-      } catch (e) {
+      } catch {
         labels = [];
       }
     }
@@ -52,7 +69,7 @@ export class ProductService {
     if (typeof specs === 'string') {
       try {
         specs = JSON.parse(specs);
-      } catch (e) {
+      } catch {
         specs = [];
       }
     }
@@ -61,7 +78,7 @@ export class ProductService {
     if (typeof attributes === 'string') {
       try {
         attributes = JSON.parse(attributes);
-      } catch (e) {
+      } catch {
         attributes = [];
       }
     }
@@ -70,7 +87,7 @@ export class ProductService {
     if (typeof variants === 'string') {
       try {
         variants = JSON.parse(variants);
-      } catch (e) {
+      } catch {
         variants = [];
       }
     }
@@ -79,12 +96,12 @@ export class ProductService {
     if (typeof extraImages === 'string') {
       try {
         extraImages = JSON.parse(extraImages);
-      } catch (e) {
+      } catch {
         extraImages = [];
       }
     }
 
-    return await this.productRepository.save({
+    const product = this.productRepository.create({
       ...data,
       categoryId,
       brandId,
@@ -104,10 +121,15 @@ export class ProductService {
       variants,
       images: extraImages,
       promoNote: data.promoNote,
-    } as any);
+    });
+
+    return await this.productRepository.save(product);
   }
-  async getProducts(params?: any): Promise<any> {
-    const query = this.productRepository.createQueryBuilder('product')
+  async getProducts(
+    params?: ProductQueryParams,
+  ): Promise<{ data: Product[]; total: number; page: number; limit: number }> {
+    const query = this.productRepository
+      .createQueryBuilder('product')
       .leftJoinAndSelect('product.category', 'category')
       .leftJoinAndSelect('product.brand', 'brand');
 
@@ -117,19 +139,27 @@ export class ProductService {
     }
 
     if (params?.search) {
-      query.andWhere('product.name LIKE :search', { search: `%${params.search}%` });
+      query.andWhere('product.name LIKE :search', {
+        search: `%${params.search}%`,
+      });
     }
     if (params?.categoryId) {
-      query.andWhere('product.categoryId = :categoryId', { categoryId: params.categoryId });
+      query.andWhere('product.categoryId = :categoryId', {
+        categoryId: params.categoryId,
+      });
     }
     if (params?.brandId) {
       query.andWhere('product.brandId = :brandId', { brandId: params.brandId });
     }
     if (params?.minPrice) {
-      query.andWhere('product.price >= :minPrice', { minPrice: Number(params.minPrice) });
+      query.andWhere('product.price >= :minPrice', {
+        minPrice: Number(params.minPrice),
+      });
     }
     if (params?.maxPrice) {
-      query.andWhere('product.price <= :maxPrice', { maxPrice: Number(params.maxPrice) });
+      query.andWhere('product.price <= :maxPrice', {
+        maxPrice: Number(params.maxPrice),
+      });
     }
     if (params?.color) {
       // Filter products whose attributes JSON contains the given color value (MySQL uses AS CHAR instead of AS TEXT)
@@ -139,7 +169,9 @@ export class ProductService {
     }
 
     if (params?.onSale === 'true' || params?.onSale === true) {
-      query.andWhere('product.originalPrice IS NOT NULL AND product.originalPrice > product.price');
+      query.andWhere(
+        'product.originalPrice IS NOT NULL AND product.originalPrice > product.price',
+      );
     }
 
     if (params?.newArrival === 'true' || params?.newArrival === true) {
@@ -159,8 +191,26 @@ export class ProductService {
       query.orderBy('product.id', 'DESC');
     }
 
-    const page = params?.page || 1;
-    const limit = params?.limit || 10;
+    const pageRaw = params?.page;
+    const limitRaw = params?.limit;
+
+    let page = 1;
+    let limit = 10;
+
+    if (pageRaw !== undefined) {
+      const pageNum = Number(pageRaw);
+      if (!Number.isNaN(pageNum) && pageNum >= 1) {
+        page = Math.floor(pageNum);
+      }
+    }
+
+    if (limitRaw !== undefined) {
+      const limitNum = Number(limitRaw);
+      if (!Number.isNaN(limitNum) && limitNum >= 1) {
+        limit = Math.floor(limitNum);
+      }
+    }
+
     query.skip((page - 1) * limit).take(limit);
 
     const [data, total] = await query.getManyAndCount();
@@ -172,7 +222,7 @@ export class ProductService {
       relations: ['category', 'brand'],
     });
   }
-  async updateProduct(id: number, data: Partial<Product> | any): Promise<Product> {
+  async updateProduct(id: number, data: UpdateProductDto): Promise<Product> {
     if (data.categoryId) {
       data.categoryId = Number(data.categoryId);
       const category = await this.categoryRepository.findOne({
@@ -187,12 +237,15 @@ export class ProductService {
       });
       if (!brand) throw new Error('Brand not found');
     }
-    
+
     if (data.price !== undefined) data.price = Number(data.price);
     if (data.stock !== undefined) data.stock = Number(data.stock);
-    if (data.originalPrice !== undefined) data.originalPrice = Number(data.originalPrice);
-    if (data.isFeatured !== undefined) data.isFeatured = String(data.isFeatured) === 'true';
-    if (data.isArchived !== undefined) data.isArchived = String(data.isArchived) === 'true';
+    if (data.originalPrice !== undefined)
+      data.originalPrice = Number(data.originalPrice);
+    if (data.isFeatured !== undefined)
+      data.isFeatured = String(data.isFeatured) === 'true';
+    if (data.isArchived !== undefined)
+      data.isArchived = String(data.isArchived) === 'true';
 
     // Parse JSON
     const jsonFields = ['labels', 'specs', 'attributes', 'variants', 'images'];
@@ -210,7 +263,13 @@ export class ProductService {
     if (data.existingImages !== undefined) {
       let existing: string[] = [];
       if (typeof data.existingImages === 'string') {
-        try { existing = JSON.parse(data.existingImages); } catch { existing = []; }
+        try {
+          const jsonString: string = data.existingImages;
+          const parsed = JSON.parse(jsonString);
+          existing = Array.isArray(parsed) ? (parsed as string[]) : [];
+        } catch {
+          existing = [];
+        }
       } else if (Array.isArray(data.existingImages)) {
         existing = data.existingImages;
       }

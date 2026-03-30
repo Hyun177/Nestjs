@@ -8,7 +8,14 @@ import { Order } from '../order/entities/order.entity';
 import { OrderStatus } from '../order/enums/order-status.enum';
 import { OrderItem } from '../order/entities/order-item.entity';
 import { Product } from '../product/entities/product.entity';
-import { VNPay, ignoreLogger, HashAlgorithm, ProductCode, VnpLocale } from 'vnpay';
+import {
+  VNPay,
+  ignoreLogger,
+  HashAlgorithm,
+  ProductCode,
+  VnpLocale,
+  ReturnQueryFromVNPay,
+} from 'vnpay';
 
 @Injectable()
 export class PaymentService {
@@ -36,7 +43,9 @@ export class PaymentService {
   }
 
   async createPayment(order: Order): Promise<any> {
-    let payment = await this.paymentRepo.findOne({ where: { orderId: order.id } });
+    let payment = await this.paymentRepo.findOne({
+      where: { orderId: order.id },
+    });
     if (payment && payment.status === PaymentStatus.SUCCESS) {
       throw new BadRequestException('Order already paid.');
     }
@@ -81,7 +90,9 @@ export class PaymentService {
   private async restoreStock(orderId: number): Promise<void> {
     const items = await this.orderItemRepo.find({ where: { orderId } });
     for (const item of items) {
-      const product = await this.productRepo.findOne({ where: { id: item.productId } });
+      const product = await this.productRepo.findOne({
+        where: { id: item.productId },
+      });
       if (!product) continue;
 
       // Restore main stock
@@ -89,7 +100,9 @@ export class PaymentService {
 
       // Restore variant stock if applicable
       if (item.variantSku && product.variants) {
-        const variant = product.variants.find((v: any) => v.sku === item.variantSku);
+        const variant = product.variants.find(
+          (v: any) => v.sku === item.variantSku,
+        );
         if (variant) {
           variant.stock += item.quantity;
         }
@@ -99,7 +112,7 @@ export class PaymentService {
     }
   }
 
-  async handleVnpayCallback(vnpParams: any): Promise<any> {
+  async handleVnpayCallback(vnpParams: ReturnQueryFromVNPay): Promise<any> {
     const responseCode = vnpParams['vnp_ResponseCode'];
     const orderId = Number(vnpParams['vnp_TxnRef']);
 
@@ -109,10 +122,9 @@ export class PaymentService {
     // isSuccess will be false but signature may still be valid.
     // We use a try/catch to differentiate between invalid signatures (throws) and
     // valid-but-not-successful payments (returns {isSuccess: false}).
-    let verifyResult: any;
     try {
-      verifyResult = this.vnpayClient.verifyReturnUrl(vnpParams);
-    } catch (e) {
+      this.vnpayClient.verifyReturnUrl(vnpParams);
+    } catch {
       throw new BadRequestException('Invalid checksum');
     }
 
@@ -130,12 +142,13 @@ export class PaymentService {
 
       if (payment) {
         payment.status = PaymentStatus.SUCCESS;
-        payment.transactionId = vnpParams['vnp_TransactionNo'];
+        const transactionNo = vnpParams['vnp_TransactionNo'];
+        payment.transactionId =
+          transactionNo !== undefined ? String(transactionNo) : undefined;
         payment.paymentData = vnpParams;
         await this.paymentRepo.save(payment);
       }
       return { success: true, message: 'Thanh toán thành công' };
-
     } else {
       // ❌ Payment CANCELLED (code=24) or FAILED (any other code)
       // Only update if order is still in PENDING state (not already confirmed)

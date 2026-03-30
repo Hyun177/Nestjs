@@ -10,5 +10,5 @@ import { NzButtonModule } from 'ng-zorro-antd/button';
   styleUrl: './app.css',
 })
 export class App {
-  protected readonly title = signal('Frontend');
+  protected readonly title = signal('E-Commerce');
 }

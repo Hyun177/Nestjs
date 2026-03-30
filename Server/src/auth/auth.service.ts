@@ -48,7 +48,9 @@ export class AuthService {
     const savedUser = await this.userRepo.save(newUser);
 
     // Tặng voucher chào mừng
-    await this.voucherService.assignWelcomeVoucher(savedUser.id).catch(() => {});
+    await this.voucherService
+      .assignWelcomeVoucher(savedUser.id)
+      .catch(() => {});
 
     return savedUser;
   }

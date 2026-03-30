@@ -32,120 +32,147 @@ export class OrderService {
   ) {}
 
   async checkout(userId: number, checkoutDto: CheckoutDto) {
-      const user = await this.orderRepository.manager.findOne(User, { where: { id: userId } });
-      if (!user) throw new BadRequestException('Không tìm thấy người dùng');
+    const user = await this.orderRepository.manager.findOne(User, {
+      where: { id: userId },
+    });
+    if (!user) throw new BadRequestException('Không tìm thấy người dùng');
 
-      let shippingAddress = user.address;
-      let shippingPhone = user.phone;
+    let shippingAddress = user.address;
+    let shippingPhone = user.phone;
 
-      if (checkoutDto.addressId) {
-        const addr = await this.userAddressRepository.findOne({
-          where: { id: checkoutDto.addressId, userId },
-        });
-        if (addr) {
-          shippingAddress = `${addr.detail}, ${addr.wardName ? addr.wardName + ', ' : ''}${addr.provinceName}`;
-          shippingPhone = addr.phone;
-        }
-      }
-
-      if (!shippingAddress || !shippingPhone) {
-        throw new BadRequestException('Vui lòng thêm địa chỉ giao hàng trước khi đặt hàng');
-      }
-
-      let cartItems = await this.cartService.getCartItems(userId);
-      if (checkoutDto.itemIds && checkoutDto.itemIds.length > 0) {
-        cartItems = cartItems.filter((item) => checkoutDto.itemIds?.includes(item.id));
-      }
-      if (!cartItems.length) throw new BadRequestException('Empty cart or no items selected');
-
-      const queryRunner = this.dataSource.createQueryRunner();
-      await queryRunner.connect();
-      await queryRunner.startTransaction();
-
-      try {
-        let discountAmount = 0;
-        let appliedVoucherId: number | undefined = undefined;
-
-        if (checkoutDto.voucherCode) {
-          const result = await this.voucherService.applyVoucher(
-            userId,
-            checkoutDto.voucherCode,
-            checkoutDto.itemIds && checkoutDto.itemIds.length > 0 ? checkoutDto.itemIds : cartItems.map(i => i.id),
-          );
-          discountAmount = result.discount;
-          appliedVoucherId = result.voucherId;
-        }
-
-        const rawTotal = cartItems.reduce((acc, item) => acc + Number(item.price) * item.quantity, 0);
-        const shippingFee = Number(checkoutDto.shippingFee ?? 0);
-        const finalTotal = Math.max(0, rawTotal - discountAmount + shippingFee);
-
-        const order = this.orderRepository.create({
-          userId,
-          totalAmount: finalTotal,
-          discountAmount: discountAmount,
-          shippingFee: shippingFee,
-          voucherId: appliedVoucherId,
-          paymentMethod: checkoutDto.paymentMethod,
-          shippingAddress,
-          shippingPhone,
-          status: OrderStatus.PENDING,
-        });
-
-        const savedOrder = (await queryRunner.manager.save(order)) as Order;
-
-        const orderItems: OrderItem[] = [];
-        const cartItemIdsToRemove: number[] = [];
-
-        for (const item of cartItems) {
-          const product = await queryRunner.manager.findOne(Product, { where: { id: item.productId } });
-          if (product) {
-            if (item.variantSku && product.variants) {
-              const variant = product.variants.find((v: any) => v.sku === item.variantSku);
-              if (variant) variant.stock -= item.quantity;
-            }
-            product.stock -= item.quantity;
-            await queryRunner.manager.save(product);
-          }
-
-          const orderItem = this.orderItemRepository.create({
-            order: savedOrder,
-            productId: item.productId,
-            quantity: item.quantity,
-            price: item.price,
-            size: item.size,
-            color: item.color,
-            variantSku: item.variantSku,
-          });
-          orderItems.push(orderItem);
-          cartItemIdsToRemove.push(item.id);
-        }
-        await queryRunner.manager.save(orderItems);
-
-        if (appliedVoucherId) {
-          await queryRunner.manager.increment(Voucher, { id: appliedVoucherId }, 'usedCount', 1);
-          // Mark user voucher as used
-          await this.voucherService.markUserVoucherUsed(userId, checkoutDto.voucherCode!);
-        }
-
-        await queryRunner.manager.delete(CartItem, { id: In(cartItemIdsToRemove) });
-        await queryRunner.commitTransaction();
-
-        const paymentResult = await this.paymentService.createPayment(savedOrder);
-        if (user && user.email) this.sendOrderEmail(user.email, savedOrder.id).catch(console.error);
-
-        return {
-          ...savedOrder,
-          paymentUrl: paymentResult.url || null,
-          message: paymentResult.message || 'Hệ thống đã nhận được đơn hàng.',
-        };
-      } catch (err) {
-        await queryRunner.rollbackTransaction();
-        throw err;
-      } finally {
-        await queryRunner.release();
+    if (checkoutDto.addressId) {
+      const addr = await this.userAddressRepository.findOne({
+        where: { id: checkoutDto.addressId, userId },
+      });
+      if (addr) {
+        shippingAddress = `${addr.detail}, ${addr.wardName ? addr.wardName + ', ' : ''}${addr.provinceName}`;
+        shippingPhone = addr.phone;
       }
     }
+
+    if (!shippingAddress || !shippingPhone) {
+      throw new BadRequestException(
+        'Vui lòng thêm địa chỉ giao hàng trước khi đặt hàng',
+      );
+    }
+
+    let cartItems = await this.cartService.getCartItems(userId);
+    if (checkoutDto.itemIds && checkoutDto.itemIds.length > 0) {
+      cartItems = cartItems.filter((item) =>
+        checkoutDto.itemIds?.includes(item.id),
+      );
+    }
+    if (!cartItems.length)
+      throw new BadRequestException('Empty cart or no items selected');
+
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      let discountAmount = 0;
+      let appliedVoucherId: number | undefined = undefined;
+
+      if (checkoutDto.voucherCode) {
+        const result = await this.voucherService.applyVoucher(
+          userId,
+          checkoutDto.voucherCode,
+          checkoutDto.itemIds && checkoutDto.itemIds.length > 0
+            ? checkoutDto.itemIds
+            : cartItems.map((i) => i.id),
+        );
+        discountAmount = result.discount;
+        appliedVoucherId = result.voucherId;
+      }
+
+      const rawTotal = cartItems.reduce(
+        (acc, item) => acc + Number(item.price) * item.quantity,
+        0,
+      );
+      const shippingFee = Number(checkoutDto.shippingFee ?? 0);
+      const finalTotal = Math.max(0, rawTotal - discountAmount + shippingFee);
+
+      const order = this.orderRepository.create({
+        userId,
+        totalAmount: finalTotal,
+        discountAmount: discountAmount,
+        shippingFee: shippingFee,
+        voucherId: appliedVoucherId,
+        paymentMethod: checkoutDto.paymentMethod,
+        shippingAddress,
+        shippingPhone,
+        status: OrderStatus.PENDING,
+      });
+
+      const savedOrder = await queryRunner.manager.save(order);
+
+      const orderItems: OrderItem[] = [];
+      const cartItemIdsToRemove: number[] = [];
+
+      for (const item of cartItems) {
+        const product = await queryRunner.manager.findOne(Product, {
+          where: { id: item.productId },
+        });
+        if (product) {
+          if (item.variantSku && product.variants) {
+            const variant = product.variants.find(
+              (v: any) => v.sku === item.variantSku,
+            );
+            if (variant) variant.stock -= item.quantity;
+          }
+          product.stock -= item.quantity;
+          await queryRunner.manager.save(product);
+        }
+
+        const orderItem = this.orderItemRepository.create({
+          order: savedOrder,
+          productId: item.productId,
+          quantity: item.quantity,
+          price: item.price,
+          size: item.size,
+          color: item.color,
+          variantSku: item.variantSku,
+        });
+        orderItems.push(orderItem);
+        cartItemIdsToRemove.push(item.id);
+      }
+      await queryRunner.manager.save(orderItems);
+
+      if (appliedVoucherId) {
+        await queryRunner.manager.increment(
+          Voucher,
+          { id: appliedVoucherId },
+          'usedCount',
+          1,
+        );
+        // Mark user voucher as used
+        await this.voucherService.markUserVoucherUsed(
+          userId,
+          checkoutDto.voucherCode!,
+        );
+      }
+
+      await queryRunner.manager.delete(CartItem, {
+        id: In(cartItemIdsToRemove),
+      });
+      await queryRunner.commitTransaction();
+
+      const paymentResult = await this.paymentService.createPayment(savedOrder);
+      if (user && user.email)
+        this.sendOrderEmail(user.email, savedOrder.id).catch(console.error);
+
+      return {
+        ...savedOrder,
+        paymentUrl: paymentResult.url || null,
+        message: paymentResult.message || 'Hệ thống đã nhận được đơn hàng.',
+      };
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+      throw err;
+    } finally {
+      await queryRunner.release();
+    }
+  }
 
   async getOrderById(orderId: number, userId: number): Promise<Order | null> {
     return this.orderRepository.findOne({

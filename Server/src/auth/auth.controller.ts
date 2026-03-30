@@ -29,10 +29,8 @@ export class AuthController {
   @ApiBearerAuth('accessToken')
   @Get('profile')
   @UseGuards(JwtAuthGuard, RoleGuard)
-  // Dùng @Request() req: RequestWithUser thay vì @Body() hoặc any
   async getProfile(@Req() req: RequestWithUser): Promise<User> {
     console.log('User from token:', req.user);
-    // Truy cập req.user.userId (đã được định nghĩa trong interface)
     return this.authService.getProfile(req.user.userId);
   }
   @UseGuards(RoleGuard)

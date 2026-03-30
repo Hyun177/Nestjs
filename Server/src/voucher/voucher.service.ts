@@ -75,11 +75,14 @@ export class VoucherService {
     const { categoryIds, brandIds, ...updateData } = updateVoucherDto;
 
     // Manually handle dates if they come as strings
-    if (updateData.startDate) voucher.startDate = new Date(updateData.startDate);
+    if (updateData.startDate)
+      voucher.startDate = new Date(updateData.startDate);
     if (updateData.endDate) voucher.endDate = new Date(updateData.endDate);
 
     // Filter out dates from updateData to avoid re-assigning them as potential strings
     const { startDate, endDate, ...otherData } = updateData;
+    void startDate;
+    void endDate;
     Object.assign(voucher, otherData);
 
     if (categoryIds) {
@@ -126,7 +129,9 @@ export class VoucherService {
     });
 
     if (userVoucher && userVoucher.usedCount >= voucher.userUsageLimit) {
-      throw new BadRequestException(`Bạn đã sử dụng hết lượt của voucher này (Tối đa ${voucher.userUsageLimit} lần)`);
+      throw new BadRequestException(
+        `Bạn đã sử dụng hết lượt của voucher này (Tối đa ${voucher.userUsageLimit} lần)`,
+      );
     }
 
     // Get cart total and items
@@ -136,9 +141,10 @@ export class VoucherService {
     }
 
     // Filter to only selected items if itemIds provided
-    const cartItems = itemIds && itemIds.length > 0
-      ? allCartItems.filter(item => itemIds.includes(item.id))
-      : allCartItems;
+    const cartItems =
+      itemIds && itemIds.length > 0
+        ? allCartItems.filter((item) => itemIds.includes(item.id))
+        : allCartItems;
 
     if (!cartItems.length) {
       throw new BadRequestException('No selected items found in cart');
@@ -253,22 +259,37 @@ export class VoucherService {
   async getUserVouchers(userId: number): Promise<UserVoucher[]> {
     const uvs = await this.userVoucherRepository.find({
       where: { userId, voucher: { isActive: true } },
-      relations: ['voucher', 'voucher.applicableCategories', 'voucher.applicableBrands'],
+      relations: [
+        'voucher',
+        'voucher.applicableCategories',
+        'voucher.applicableBrands',
+      ],
     });
     // Only return those that haven't reached the per-user limit
-    return uvs.filter(uv => uv.usedCount < uv.voucher.userUsageLimit);
+    return uvs.filter((uv) => uv.usedCount < uv.voucher.userUsageLimit);
   }
 
-  async markUserVoucherUsed(userId: number, voucherCode: string): Promise<void> {
-    const voucher = await this.voucherRepository.findOne({ where: { code: voucherCode } });
+  async markUserVoucherUsed(
+    userId: number,
+    voucherCode: string,
+  ): Promise<void> {
+    const voucher = await this.voucherRepository.findOne({
+      where: { code: voucherCode },
+    });
     if (!voucher) return;
-    
-    const userVoucher = await this.userVoucherRepository.findOne({ where: { userId, voucherId: voucher.id } });
+
+    const userVoucher = await this.userVoucherRepository.findOne({
+      where: { userId, voucherId: voucher.id },
+    });
     if (userVoucher) {
       userVoucher.usedCount += 1;
       await this.userVoucherRepository.save(userVoucher);
     } else {
-      await this.userVoucherRepository.insert({ userId, voucherId: voucher.id, usedCount: 1 });
+      await this.userVoucherRepository.insert({
+        userId,
+        voucherId: voucher.id,
+        usedCount: 1,
+      });
     }
   }
 
@@ -285,41 +306,54 @@ export class VoucherService {
     });
 
     // Filter to only valid date range
-    const valid = vouchers.filter(v => now >= v.startDate && now <= v.endDate);
+    const valid = vouchers.filter(
+      (v) => now >= v.startDate && now <= v.endDate,
+    );
 
-    if (!userId) return valid.map(v => ({ ...v, isCollected: false }));
+    if (!userId) return valid.map((v) => ({ ...v, isCollected: false }));
 
-    const userVouchers = await this.userVoucherRepository.find({ where: { userId } });
-    const collectedMap = new Map<number, number>(userVouchers.map(uv => [uv.voucherId, uv.usedCount]));
+    const userVouchers = await this.userVoucherRepository.find({
+      where: { userId },
+    });
+    const collectedMap = new Map<number, number>(
+      userVouchers.map((uv) => [uv.voucherId, uv.usedCount]),
+    );
 
     return valid
-      .filter(v => {
+      .filter((v) => {
         const usedCount = collectedMap.get(v.id) || 0;
         return usedCount < v.userUsageLimit;
       })
-      .map(v => {
+      .map((v) => {
         const usedCount = collectedMap.get(v.id) || 0;
-        return { 
-          ...v, 
+        return {
+          ...v,
           isCollected: collectedMap.has(v.id),
-          isFullyUsed: usedCount >= v.userUsageLimit
+          isFullyUsed: usedCount >= v.userUsageLimit,
         };
       });
   }
 
   async collectVoucher(userId: number, voucherId: number): Promise<void> {
-    const voucher = await this.voucherRepository.findOne({ where: { id: voucherId, isActive: true } });
+    const voucher = await this.voucherRepository.findOne({
+      where: { id: voucherId, isActive: true },
+    });
     if (!voucher) throw new NotFoundException('Voucher not found or inactive');
 
     const now = new Date();
-    if (now > voucher.endDate) throw new BadRequestException('Voucher đã hết hạn');
+    if (now > voucher.endDate)
+      throw new BadRequestException('Voucher đã hết hạn');
 
-    const existing = await this.userVoucherRepository.findOne({ where: { userId, voucherId } });
+    const existing = await this.userVoucherRepository.findOne({
+      where: { userId, voucherId },
+    });
     if (existing && existing.usedCount >= voucher.userUsageLimit) {
-        throw new BadRequestException('Bạn đã thu thập và sử dụng hết lượt của voucher này rồi');
+      throw new BadRequestException(
+        'Bạn đã thu thập và sử dụng hết lượt của voucher này rồi',
+      );
     }
     if (existing) {
-        throw new BadRequestException('Bạn đã thu thập voucher này rồi');
+      throw new BadRequestException('Bạn đã thu thập voucher này rồi');
     }
 
     await this.userVoucherRepository.save(

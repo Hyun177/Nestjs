@@ -22,9 +22,11 @@ export class RoleGuard implements CanActivate {
     if (!user) return false;
     console.log('Required roles (metadata):', roles);
     console.log('User roles from token:', user?.roles);
-    
+
     const hasRole = roles.some((requiredRole) =>
-      user.roles?.map((r) => r.toLowerCase()).includes(requiredRole.toLowerCase()),
+      user.roles
+        ?.map((r) => r.toLowerCase())
+        .includes(requiredRole.toLowerCase()),
     );
     console.log('Final Access Granted:', hasRole);
     return hasRole;
