@@ -12,6 +12,9 @@ import { NzPopconfirmModule } from 'ng-zorro-antd/popconfirm';
 import { FormsModule } from '@angular/forms';
 import { ReviewService } from '../../core/services/review.service';
 import { AuthService } from '../../core/services/auth.service';
+import { ShopService } from '../../core/services/shop.service';
+import { ChatService } from '../../core/services/chat.service';
+import { UrlEncodePipe } from '../../shared/pipes/url-encode.pipe';
 import { Subject, Subscription } from 'rxjs';
 import { takeUntil, distinctUntilChanged } from 'rxjs/operators';
 
@@ -19,7 +22,7 @@ import { takeUntil, distinctUntilChanged } from 'rxjs/operators';
   selector: 'app-product-detail',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, NzIconModule, NzButtonModule, NzRateModule, NzPopconfirmModule, VndCurrencyPipe, RouterLink, FormsModule],
+  imports: [CommonModule, NzIconModule, NzButtonModule, NzRateModule, NzPopconfirmModule, VndCurrencyPipe, UrlEncodePipe, RouterLink, FormsModule],
   templateUrl: './product-detail.component.html',
   styleUrls: ['./product-detail.component.scss'],
   providers: [NzMessageService]
@@ -33,6 +36,8 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
   private authService = inject(AuthService);
   private message = inject(NzMessageService);
   private platformId = inject(PLATFORM_ID);
+  private shopService = inject(ShopService);
+  private chatService = inject(ChatService);
   private cdr = inject(ChangeDetectorRef);
 
   private destroy$ = new Subject<void>();
@@ -45,6 +50,7 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
   quantity: number = 1;
   isLoading: boolean = true;
   hasError: boolean = false;
+  shop: any = null;
 
   reviews: any[] = [];
   canUserReview: boolean = false;
@@ -125,7 +131,7 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
   loadProduct(id: number) {
     this.isLoading = true;
     this.hasError = false;
-    this.cdr.detectChanges(); // Use detectChanges instead of markForCheck for force update
+    this.cdr.detectChanges();
 
     this.productSub?.unsubscribe();
 
@@ -154,6 +160,9 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
         this.cdr.detectChanges();
         this.loadReviews();
         this.checkCanReview();
+        if (prod.userId) {
+          this.loadShop(prod.userId);
+        }
       },
       error: (err: any) => {
         console.error('Error fetching product:', err);
@@ -279,24 +288,15 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
 
   getStructuredDescription(): { type: 'header' | 'bullet' | 'text', content: string }[] {
     if (!this.product?.description) return [];
-
-    // Split into lines
     const lines = this.product.description.split('\n').filter(l => l.trim().length > 0);
-
     return lines.map(line => {
       const trimmedLine = line.trim();
-
-      // Header: Ends with ':' or very short all uppercase
       if (trimmedLine.endsWith(':') || (trimmedLine.length < 30 && trimmedLine === trimmedLine.toUpperCase() && trimmedLine.length > 3)) {
         return { type: 'header', content: trimmedLine };
       }
-
-      // Bullet point: Starts with '-', '*', or '•'
       if (trimmedLine.startsWith('-') || trimmedLine.startsWith('*') || trimmedLine.startsWith('•')) {
         return { type: 'bullet', content: trimmedLine.substring(1).trim() };
       }
-
-      // Default: regular text
       return { type: 'text', content: trimmedLine };
     });
   }
@@ -311,45 +311,30 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
       this.currentVariant = null;
       return;
     }
-
     this.currentVariant = this.product.variants.find((v: any) => {
-      // Robust matching: trim and ignore case
       return Object.keys(v.attributes).every(key => {
         const selectedVal = (this.selectedAttributes[key] || '').toLowerCase().trim();
         const variantVal = (v.attributes[key] || '').toLowerCase().trim();
         return selectedVal === variantVal;
       });
     });
-
-    // Handle quantity caps
     const maxStock = this.currentVariant?.stock ?? this.product?.stock ?? 0;
-    if (this.quantity > maxStock) {
-      this.quantity = Math.max(1, maxStock);
-    }
+    if (this.quantity > maxStock) this.quantity = Math.max(1, maxStock);
   }
 
   isAttrDisabled(attrName: string, value: string): boolean {
     if (!this.product?.variants || this.product.variants.length === 0) return false;
-
-    // Check if any variant exists with current other selected attributes + this value, and stock > 0
     return !this.product.variants.some(v => {
-      // Must match the value being checked
       if (v.attributes[attrName] !== value) return false;
-
-      // Must match all OTHER selected attributes
       return Object.keys(this.selectedAttributes).every(key => {
         if (key === attrName) return true;
         return v.attributes[key] === this.selectedAttributes[key];
       });
-      
-      // We can also check stock here if we want to hide out of stock options
-      // return v.attributes[key] === this.selectedAttributes[key] && v.stock > 0;
     });
   }
 
   buyNow() {
     if (!this.product) return;
-
     let size = '';
     let color = '';
     Object.keys(this.selectedAttributes).forEach(key => {
@@ -360,26 +345,19 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
         color = this.selectedAttributes[key];
       }
     });
-
     this.cartService.addToCart(this.product.id, this.quantity, size, color).subscribe({
       next: (cart: any) => {
         this.cartService.refreshCart();
-        // Find the cart item that matches this product+variant
         const items: any[] = cart.items || [];
         const match = items.find((i: any) =>
-          i.productId === this.product!.id &&
-          (i.size || '') === size &&
-          (i.color || '') === color
+          i.productId === this.product!.id && (i.size || '') === size && (i.color || '') === color
         );
         const itemIds = match ? [match.id] : [];
         this.router.navigate(['/order-confirm'], { state: { itemIds } });
       },
       error: (err) => {
-        if (err.status === 401) {
-          this.message.warning('Vui lòng đăng nhập để mua hàng');
-        } else {
-          this.message.error(err.error?.message || 'Không thể thêm vào giỏ hàng');
-        }
+        if (err.status === 401) this.message.warning('Vui lòng đăng nhập để mua hàng');
+        else this.message.error(err.error?.message || 'Không thể thêm vào giỏ hàng');
       }
     });
   }
@@ -390,11 +368,8 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
 
   addToCart() {
     if (!this.product) return;
-
-    // Smart attribute extraction for Backend
     let size = '';
     let color = '';
-
     Object.keys(this.selectedAttributes).forEach(key => {
       const lowerKey = key.toLowerCase();
       if (lowerKey.includes('size') || lowerKey.includes('dung lượng') || lowerKey.includes('bộ nhớ') || lowerKey.includes('kích thước')) {
@@ -403,19 +378,14 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
         color = this.selectedAttributes[key];
       }
     });
-
     this.cartService.addToCart(this.product.id, this.quantity, size, color).subscribe({
       next: () => {
         this.message.success('Đã thêm vào giỏ hàng thành công!');
-        this.cartService.refreshCart(); // Force refresh header count
+        this.cartService.refreshCart();
       },
       error: (err) => {
-        console.error('Cart Error:', err);
-        if (err.status === 401) {
-          this.message.warning('Vui lòng đăng nhập để mua hàng');
-        } else {
-          this.message.error(err.error?.message || 'Không thể thêm vào giỏ hàng. Vui lòng thử lại.');
-        }
+        if (err.status === 401) this.message.warning('Vui lòng đăng nhập để mua hàng');
+        else this.message.error(err.error?.message || 'Không thể thêm vào giỏ hàng');
       }
     });
   }
@@ -432,22 +402,55 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
 
   getColorCode(colorName: string): string {
     const colorMap: { [key: string]: string } = {
-      'đen': 'black',
-      'trắng': 'white',
-      'đỏ': 'red',
-      'xanh dương': 'blue',
-      'xanh lá': 'green',
-      'vàng': 'gold',
-      'tím': 'purple',
-      'hồng': 'pink',
-      'cam': 'orange',
-      'xám': 'gray',
-      'nâu': 'brown',
-      'bạc': 'silver',
-      'titan': '#8e8e8e'
+      'đen': 'black', 'trắng': 'white', 'đỏ': 'red', 'xanh dương': 'blue', 'xanh lá': 'green',
+      'vàng': 'gold', 'tím': 'purple', 'hồng': 'pink', 'cam': 'orange', 'xám': 'gray',
+      'nâu': 'brown', 'bạc': 'silver', 'titan': '#8e8e8e'
     };
+    return colorMap[colorName.toLowerCase().trim()] || colorName;
+  }
 
-    const lower = colorName.toLowerCase().trim();
-    return colorMap[lower] || colorName; // Trả về mã map hoặc chính nó nếu là hex
+  getFullUrl(path: string, fallback: string = ''): string {
+    if (!path) return fallback;
+    if (path.startsWith('http')) return path;
+    return `http://localhost:3000${path.startsWith('/') ? '' : '/'}${path}`;
+  }
+
+  loadShop(sellerId: number) {
+    this.shopService.getShopBySeller(sellerId).subscribe({
+      next: (res) => { this.shop = res; this.cdr.markForCheck(); },
+      error: () => { this.shop = null; this.cdr.markForCheck(); }
+    });
+  }
+
+  chatWithSeller() {
+    if (!this.isLoggedIn) {
+      this.message.warning('Vui lòng đăng nhập để chat với người bán');
+      this.router.navigate(['/login']);
+      return;
+    }
+
+    const currentUserId = this.currentUser?.id || this.currentUser?.userId;
+    if (this.product?.userId === currentUserId) {
+      this.message.info('Đây là sản phẩm của bạn');
+      return;
+    }
+
+    if (this.product?.userId) {
+      this.chatService.createConversation(this.product.userId).subscribe({
+        next: (convo) => {
+          this.router.navigate(['/chat'], { 
+            queryParams: { 
+              id: convo.id, 
+              productId: this.product?.id 
+            } 
+          });
+        },
+        error: (err) => {
+          this.message.error(err.error?.message || 'Không thể tạo cuộc hội thoại');
+        }
+      });
+    } else {
+      this.message.warning('Không tìm thấy thông tin người bán');
+    }
   }
 }

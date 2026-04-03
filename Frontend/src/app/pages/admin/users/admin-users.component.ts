@@ -93,7 +93,7 @@ export class AdminUsersComponent implements OnInit {
     email: ['', [Validators.required, Validators.email]],
     phone: [''],
     address: [''],
-    role: ['customer', [Validators.required]],
+    role: ['user', [Validators.required]],
     status: ['active', [Validators.required]],
   });
 
@@ -135,7 +135,7 @@ export class AdminUsersComponent implements OnInit {
           avatar: u.avatar
             ? 'http://localhost:3000' + u.avatar
             : 'https://api.realworld.io/images/demo-avatar.jpg',
-          role: u.roles && u.roles.length > 0 ? u.roles[0]?.name : 'customer',
+          role: u.roles && u.roles.length > 0 ? u.roles.map((r: any) => r.name).join(', ') : 'user',
           status: u.status || 'active',
           createdAt: u.createdAt || new Date().toISOString(),
           address: u.address || '',
@@ -167,7 +167,7 @@ export class AdminUsersComponent implements OnInit {
 
   openAddModal() {
     this.isEditMode.set(false);
-    this.userForm.reset({ role: 'customer', status: 'active' });
+    this.userForm.reset({ role: 'user', status: 'active' });
     this.isModalVisible.set(true);
   }
 
@@ -257,9 +257,10 @@ export class AdminUsersComponent implements OnInit {
   }
 
   getRoleColor(role: string) {
-    const r = (role || '').toLowerCase();
-    if (r === 'admin') return 'red';
-    if (r === 'moderator' || r === 'manager') return 'orange';
+    const roles = (role || '').split(',').map(r => r.trim().toLowerCase());
+    if (roles.includes('admin')) return 'red';
+    if (roles.includes('seller')) return 'gold';
+    if (roles.includes('moderator') || roles.includes('manager')) return 'orange';
     return 'blue';
   }
 

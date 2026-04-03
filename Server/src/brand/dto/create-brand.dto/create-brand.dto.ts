@@ -1,4 +1,5 @@
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class CreateBrandDto {
   @IsString()
@@ -6,5 +7,11 @@ export class CreateBrandDto {
   name: string;
 
   @IsString()
+  @IsOptional()
   description?: string;
+
+  @IsNumber()
+  @IsOptional()
+  @Type(() => Number)
+  categoryId?: number;
 }

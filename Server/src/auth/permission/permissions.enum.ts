@@ -75,4 +75,19 @@ export enum Permission {
   // ── Role / permission management (admin only) ────
   ROLE_MANAGE = 'role:manage',
   PERMISSION_MANAGE = 'permission:manage',
+
+  // ── Seller Request ──────────────────────────────
+  SELLER_REQUEST_CREATE = 'seller_request:create',
+  SELLER_REQUEST_READ = 'seller_request:read',
+  SELLER_REQUEST_UPDATE = 'seller_request:update',
+  SELLER_REQUEST_DELETE = 'seller_request:delete',
+  SELLER_REQUEST_APPROVE = 'seller_request:approve',
+  SELLER_REQUEST_REJECT = 'seller_request:reject',
+
+  // ── Shop ────────────────────────────────────────
+  SHOP_CREATE = 'shop:create',
+  SHOP_READ = 'shop:read',
+  SHOP_UPDATE = 'shop:update',
+  SHOP_DELETE = 'shop:delete',
+  SHOP_MANAGE = 'shop:manage',
 }

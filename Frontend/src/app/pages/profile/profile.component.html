@@ -54,10 +54,10 @@
             <p class="stat-value">2026</p>
           </div>
         </div>
-      </div>
-
-      <!-- Form Column -->
-      <div class="form-col">
+        </div>
+      
+        <!-- Form Column -->
+        <div class="form-col">
         <div class="section-label">
           <div class="dot"></div>
           <h3>Thông tin cá nhân</h3>
@@ -98,6 +98,45 @@
           <span>Lưu thông tin hồ sơ</span>
           <span nz-icon nzType="check-circle" style="font-size:18px"></span>
         </button>
+
+        <!-- Seller Center Section -->
+        <div class="custom-seller-box mt-8">
+            <div class="custom-section-header">
+                <div class="header-indicator gold"></div>
+                <h3>Kênh Người Bán</h3>
+            </div>
+            <div class="custom-seller-card" [class.is-seller]="isSeller">
+                <div class="card-body">
+                    <div class="card-icon-wrap">
+                      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                        <polyline points="9 22 9 12 15 12 15 22" />
+                      </svg>
+                    </div>
+                    <div class="card-text">
+                        <p class="status-title">{{ isSeller ? 'Bạn đã là Người bán' : 'Bắt đầu kinh doanh' }}</p>
+                        <p class="status-desc">{{ isSeller ? 'Quản lý cửa hàng và sản phẩm của bạn tại đây.' : 'Đăng ký để bán sản phẩm của bạn trên nền tảng của chúng tôi.' }}</p>
+                    </div>
+                </div>
+                
+                <div class="card-footer">
+                    <div *ngIf="isSeller" class="seller-dashboard-btns" style="display: flex; gap: 10px; width: 100%;">
+                        <button routerLink="/seller/orders" class="primary-btn-custom" style="flex: 1;">
+                            Đơn hàng
+                        </button>
+                        <button routerLink="/seller/product-upload" class="join-btn-custom" style="flex: 1;">
+                            Thêm sản phẩm
+                        </button>
+                    </div>
+                    <button *ngIf="!isSeller && pendingSellerRequest" class="disabled-btn-custom" disabled>
+                        Đang chờ xét duyệt
+                    </button>
+                    <button *ngIf="!isSeller && !pendingSellerRequest" routerLink="/seller/register" class="join-btn-custom">
+                        Đăng ký ngay
+                    </button>
+                </div>
+            </div>
+        </div>
       </div>
     </div>
   </div>
@@ -656,4 +695,3 @@
       </div>
     </div>
   </div>
-</div>

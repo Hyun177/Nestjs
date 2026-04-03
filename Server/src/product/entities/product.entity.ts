@@ -6,9 +6,13 @@ import {
   JoinColumn,
   CreateDateColumn,
   UpdateDateColumn,
+  ManyToMany,
+  JoinTable,
 } from 'typeorm';
 import { Category } from '../../category/entities/category.entity/category.entity';
 import { Brand } from '../../brand/entities/brand.entity/brand.entity';
+import { Shop } from '../../shop/entities/shop.entity';
+import { ShopCategory } from '../../shop-category/entities/shop-category.entity';
 
 @Entity()
 export class Product {
@@ -79,6 +83,17 @@ export class Product {
 
   @Column()
   userId: number;
+
+  @ManyToOne(() => Shop)
+  @JoinColumn({ name: 'shopId' })
+  shop: Shop;
+
+  @Column({ nullable: true })
+  shopId: number;
+
+  @ManyToMany(() => ShopCategory, (shopCategory) => shopCategory.products)
+  @JoinTable({ name: 'product_shop_categories' })
+  shopCategories: ShopCategory[];
 
   @CreateDateColumn()
   createdAt: Date;

@@ -24,14 +24,14 @@
         <div class="gallery-section">
           <div class="thumbnails">
             <div class="thumb" [class.active]="selectedImage === product.image" (click)="selectImage(product.image)">
-              <img [src]="'http://localhost:3000' + product.image" [alt]="product.name">
+              <img [src]="getFullUrl(product.image)" [alt]="product.name">
             </div>
             <div class="thumb" *ngFor="let img of product.images" [class.active]="selectedImage === img" (click)="selectImage(img)">
-              <img [src]="'http://localhost:3000' + img" [alt]="product.name">
+              <img [src]="getFullUrl(img)" [alt]="product.name">
             </div>
           </div>
           <div class="main-image">
-            <img [src]="'http://localhost:3000' + selectedImage" [alt]="product.name">
+            <img [src]="getFullUrl(selectedImage)" [alt]="product.name">
             <!-- Prev/Next arrows -->
             <button class="gallery-arrow prev" (click)="prevImage()" *ngIf="allImages.length > 1">
               <span nz-icon nzType="left"></span>
@@ -55,6 +55,22 @@
             <nz-rate [ngModel]="product.rating" nzDisabled></nz-rate>
             <span class="rating-text">{{ product.rating }}/5</span>
             <span class="review-count">({{ product.numReviews }} Reviews)</span>
+            <span class="sold-count-divider">|</span>
+            <span class="sold-count">Đã bán {{ product.soldCount || 0 }}</span>
+          </div>
+
+          <!-- Shop Section -->
+          <div class="shop-entry" *ngIf="shop">
+            <div class="shop-badge">
+              <img [src]="getFullUrl(shop.logo, 'https://ui-avatars.com/api/?name=' + (shop.name | urlEncode) + '&background=e2e8f0&color=64748b&size=128&bold=true')" class="shop-avatar">
+              <div class="shop-mini-details">
+                <p class="sold-by">Cung cấp bởi</p>
+                <a [routerLink]="['/shop', shop.userId]" class="shop-link">{{ shop.name }}</a>
+              </div>
+            </div>
+            <button class="shop-chat-btn" (click)="chatWithSeller()">
+              <span nz-icon nzType="message"></span> Chat ngay
+            </button>
           </div>
   
           <div class="price-row">
@@ -246,7 +262,7 @@
                       {{ (r.user?.firstname || r.user?.username || 'K')[0].toUpperCase() }}
                     </div>
                     <img *ngIf="r.user?.avatar" class="reviewer-avatar-img"
-                         [src]="r.user.avatar.startsWith('/uploads') ? 'http://localhost:3000' + r.user.avatar : r.user.avatar"
+                         [src]="getFullUrl(r.user.avatar)"
                          [alt]="r.user?.firstname">
                     <div>
                       <div class="reviewer-name">
@@ -276,7 +292,7 @@
                 <p class="review-comment">"{{ r.comment }}"</p>
 
                 <div class="review-image" *ngIf="r.image">
-                  <img [src]="'http://localhost:3000' + r.image" [alt]="'Review image'">
+                  <img [src]="getFullUrl(r.image)" [alt]="'Review image'">
                 </div>
 
                 <div class="verified-tag">

@@ -5,9 +5,10 @@ import { Repository } from 'typeorm';
 import { ProductDto, UpdateProductDto } from './dto/product.dto';
 import { Category } from '../category/entities/category.entity/category.entity';
 import { Brand } from '../brand/entities/brand.entity/brand.entity';
+import { Shop } from '../shop/entities/shop.entity';
 
 type ProductQueryParams = {
-  showAll?: boolean;
+  showAll?: boolean | 'true' | 'false';
   search?: string;
   categoryId?: number | string;
   brandId?: number | string;
@@ -17,6 +18,9 @@ type ProductQueryParams = {
   onSale?: boolean | 'true' | 'false';
   newArrival?: boolean | 'true' | 'false';
   sort?: 'newest' | 'price_asc' | 'price_desc';
+  userId?: number | string;
+  sellerId?: number | string;
+  shopId?: number | string;
   page?: number | string;
   limit?: number | string;
 };
@@ -30,6 +34,8 @@ export class ProductService {
     private categoryRepository: Repository<Category>,
     @InjectRepository(Brand)
     private brandRepository: Repository<Brand>,
+    @InjectRepository(Shop)
+    private shopRepository: Repository<Shop>,
   ) {}
   async createProduct(data: ProductDto, userId: number): Promise<Product> {
     const categoryId = Number(data.categoryId);
@@ -101,6 +107,22 @@ export class ProductService {
       }
     }
 
+    let shopCategoryIds = (data as any).shopCategoryIds;
+    if (typeof shopCategoryIds === 'string') {
+      try {
+        shopCategoryIds = JSON.parse(shopCategoryIds);
+      } catch {
+        shopCategoryIds = [];
+      }
+    }
+    const shopCategoriesRelation = Array.isArray(shopCategoryIds) 
+      ? shopCategoryIds.map((id: number) => ({ id })) 
+      : [];
+
+    // FIND SHOP FOR THIS USER
+    const shop = await this.shopRepository.findOne({ where: { userId } });
+    const shopId = shop ? shop.id : undefined;
+
     const product = this.productRepository.create({
       ...data,
       categoryId,
@@ -108,12 +130,17 @@ export class ProductService {
       price,
       stock,
       userId,
+      shopId,
       rating: data.rating ?? 5,
       numReviews: data.numReviews ?? 0,
-      isFeatured: data.isFeatured ?? false,
-      isArchived: data.isArchived ?? false,
-      soldCount: data.soldCount ?? 0,
-      viewCount: data.viewCount ?? 0,
+      isFeatured: typeof data.isFeatured === 'boolean' 
+        ? data.isFeatured 
+        : String(data.isFeatured) === 'true',
+      isArchived: typeof data.isArchived === 'boolean' 
+        ? data.isArchived 
+        : String(data.isArchived) === 'true',
+      soldCount: data.soldCount ? Number(data.soldCount) : 0,
+      viewCount: data.viewCount ? Number(data.viewCount) : 0,
       originalPrice,
       labels,
       specs,
@@ -121,6 +148,7 @@ export class ProductService {
       variants,
       images: extraImages,
       promoNote: data.promoNote,
+      shopCategories: shopCategoriesRelation,
     });
 
     return await this.productRepository.save(product);
@@ -131,17 +159,21 @@ export class ProductService {
     const query = this.productRepository
       .createQueryBuilder('product')
       .leftJoinAndSelect('product.category', 'category')
-      .leftJoinAndSelect('product.brand', 'brand');
+      .leftJoinAndSelect('product.brand', 'brand')
+      .leftJoinAndSelect('product.shopCategories', 'shopCategories')
+      .leftJoinAndSelect('product.shop', 'shop');
 
     // Chỉ hiển thị sản phẩm chưa bị ẩn cho user (admin có thể truyền showAll=true)
-    if (!params?.showAll) {
+    const showAll = params?.showAll === 'true' || params?.showAll === true;
+    if (!showAll) {
       query.andWhere('product.isArchived = :isArchived', { isArchived: false });
     }
 
     if (params?.search) {
-      query.andWhere('product.name LIKE :search', {
-        search: `%${params.search}%`,
-      });
+      query.andWhere(
+        '(product.name LIKE :search OR category.name LIKE :search OR brand.name LIKE :search OR shop.name LIKE :search)',
+        { search: `%${params.search}%` },
+      );
     }
     if (params?.categoryId) {
       query.andWhere('product.categoryId = :categoryId', {
@@ -150,6 +182,17 @@ export class ProductService {
     }
     if (params?.brandId) {
       query.andWhere('product.brandId = :brandId', { brandId: params.brandId });
+    }
+    if (params?.sellerId) {
+      query.andWhere('product.userId = :sellerId', { sellerId: params.sellerId });
+    }
+    if (params?.userId !== undefined && params?.userId !== null && params?.userId !== '') {
+      query.andWhere('product.userId = :userId', { userId: params.userId });
+    }
+    if (params?.shopId === '0' || params?.shopId === 0) {
+      query.andWhere('(product.shopId IS NULL OR product.shopId = 0)');
+    } else if (params?.shopId) {
+      query.andWhere('product.shopId = :shopId', { shopId: params.shopId });
     }
     if (params?.minPrice) {
       query.andWhere('product.price >= :minPrice', {
@@ -219,7 +262,7 @@ export class ProductService {
   async getProductById(id: number): Promise<Product | null> {
     return await this.productRepository.findOne({
       where: { id },
-      relations: ['category', 'brand'],
+      relations: ['category', 'brand', 'shop', 'shopCategories'],
     });
   }
   async updateProduct(id: number, data: UpdateProductDto): Promise<Product> {
@@ -242,13 +285,19 @@ export class ProductService {
     if (data.stock !== undefined) data.stock = Number(data.stock);
     if (data.originalPrice !== undefined)
       data.originalPrice = Number(data.originalPrice);
-    if (data.isFeatured !== undefined)
-      data.isFeatured = String(data.isFeatured) === 'true';
-    if (data.isArchived !== undefined)
-      data.isArchived = String(data.isArchived) === 'true';
+    if (data.isFeatured !== undefined) {
+      data.isFeatured = typeof data.isFeatured === 'boolean' 
+        ? data.isFeatured 
+        : String(data.isFeatured) === 'true';
+    }
+    if (data.isArchived !== undefined) {
+      data.isArchived = typeof data.isArchived === 'boolean' 
+        ? data.isArchived 
+        : String(data.isArchived) === 'true';
+    }
 
     // Parse JSON
-    const jsonFields = ['labels', 'specs', 'attributes', 'variants', 'images'];
+    const jsonFields = ['labels', 'specs', 'attributes', 'variants', 'images', 'shopCategoryIds'];
     for (const field of jsonFields) {
       if (typeof data[field] === 'string') {
         try {
@@ -257,6 +306,11 @@ export class ProductService {
           data[field] = [];
         }
       }
+    }
+
+    if (data['shopCategoryIds']) {
+      data['shopCategories'] = data['shopCategoryIds'].map((id: number) => ({ id }));
+      delete data['shopCategoryIds'];
     }
 
     // Merge existingImages (kept from before) with newly uploaded images
@@ -288,15 +342,16 @@ export class ProductService {
       throw new Error('No valid update values provided');
     }
 
-    await this.productRepository.update(id, data as Partial<Product>);
-    const updatedProduct = await this.productRepository.findOne({
+    const product = await this.productRepository.findOne({
       where: { id },
-      relations: ['category', 'brand'],
+      relations: ['shopCategories']
     });
-    if (!updatedProduct) {
-      throw new Error('Product not found');
-    }
-    return updatedProduct;
+    if (!product) throw new Error('Product not found');
+
+    // Use save() instead of update() to handle ManyToMany relations properly
+    // and trigger entity listeners
+    Object.assign(product, data);
+    return await this.productRepository.save(product);
   }
 
   async deleteProduct(id: number): Promise<void> {
@@ -305,6 +360,7 @@ export class ProductService {
 
   async getTopSelling(limit: number = 4): Promise<Product[]> {
     return await this.productRepository.find({
+      where: { isArchived: false },
       relations: ['category', 'brand'],
       order: {
         soldCount: 'DESC',

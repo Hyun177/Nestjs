@@ -43,6 +43,8 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
     orderCount: 0,
     productCount: 0,
     totalRevenue: 0,
+    adminRevenue: 0,
+    sellerRevenue: 0,
     trends: { users: 0, orders: 0, products: 0, revenue: 0 },
   });
 
@@ -86,11 +88,27 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
     },
     {
       key: 'totalRevenue',
-      title: 'Doanh thu',
+      title: 'Tổng doanh thu',
       unit: 'VND',
       color: '#ef4444',
       bgColor: '#fee2e2',
       svgIcon: this.sanitizer.bypassSecurityTrustHtml(`<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>`),
+    },
+    {
+      key: 'adminRevenue',
+      title: 'Doanh thu Admin',
+      unit: 'VND',
+      color: '#8b5cf6',
+      bgColor: '#f5f3ff',
+      svgIcon: this.sanitizer.bypassSecurityTrustHtml(`<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`),
+    },
+    {
+      key: 'sellerRevenue',
+      title: 'Doanh thu Seller',
+      unit: 'VND',
+      color: '#f59e0b',
+      bgColor: '#fef3c7',
+      svgIcon: this.sanitizer.bypassSecurityTrustHtml(`<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`),
     },
   ];
 
@@ -171,12 +189,14 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
     });
 
     // Order chart data (status distribution)
-    this.dashboardService.getAllOrdersAdmin?.()?.subscribe({
+    this.dashboardService.getAllOrdersAdmin().subscribe({
       next: (orders: any[]) => {
         const statusCount: Record<string, number> = {};
+
         (orders || []).forEach((o: any) => {
           statusCount[o.status] = (statusCount[o.status] || 0) + 1;
         });
+
         const labels = Object.keys(statusCount);
         this.statusData = {
           labels: labels.map(k => this.orderStatusCfg[k]?.label || k),
@@ -184,12 +204,12 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
           colors: labels.map(k => this.orderStatusCfg[k]?.color || '#6366f1'),
         };
 
-        // Monthly revenue from orders
+        // Monthly revenue from ALL DELIVERED orders (to match revenue stat cards)
         const monthly: Record<string, number> = {};
         (orders || [])
-          .filter((o: any) => o.status !== 'CANCELLED')
+          .filter((o: any) => o.status === 'DELIVERED')
           .forEach((o: any) => {
-            const d = new Date(o.createdAt);
+            const d = new Date(o.createdAt); // Group by creation month but only delivered ones
             const key = `Th.${d.getMonth() + 1}`;
             monthly[key] = (monthly[key] || 0) + Number(o.totalAmount || 0);
           });

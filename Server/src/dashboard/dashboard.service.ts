@@ -22,23 +22,54 @@ export class DashboardService {
     const orderCount = await this.orderRepository.count();
     const productCount = await this.productRepository.count();
 
-    // Sum total of all orders
-    const orders = await this.orderRepository.find({
+    // Fetch all delivered orders with items and products for revenue split
+    const deliveredOrders = await this.orderRepository.find({
       where: { status: OrderStatus.DELIVERED },
+      relations: ['items', 'items.product'],
     });
-    const totalRevenue = orders.reduce(
-      (sum, order) => sum + Number(order.totalAmount || 0),
-      0,
-    );
 
-    // Calculate growth (mocked for now, but could be real compared to last month)
+    let adminRevenue = 0;
+    let sellerRevenue = 0;
+
+    deliveredOrders.forEach((o) => {
+      const orderTotal = Number(o.totalAmount || 0);
+      
+      // 1. Calculate the subtotal of all items in this order (before order-level discounts/shipping)
+      const itemsSubtotal = (o.items || []).reduce((sum, item) => 
+        sum + (Number(item.price || 0) * Number(item.quantity || 0)), 0);
+
+      if (itemsSubtotal > 0) {
+        // 2. Distribute the final orderTotal proportionally
+        (o.items || []).forEach((item) => {
+          const itemPriceTotal = Number(item.price || 0) * Number(item.quantity || 0);
+          const sId = item.shopId ?? item.product?.shopId ?? 0;
+          
+          // Proportionally distribute shipping and vouchers: (itemSubtotal / itemsSubtotal) * orderTotal
+          const distributedRevenue = (itemPriceTotal / itemsSubtotal) * orderTotal;
+          
+          if (sId === 0) {
+            adminRevenue += distributedRevenue;
+          } else {
+            sellerRevenue += distributedRevenue;
+          }
+        });
+      } else {
+        // Fallback: If no items found but total exists, attribute to Admin (unlikely scenario)
+        adminRevenue += orderTotal;
+      }
+    });
+
+    const totalRevenue = adminRevenue + sellerRevenue;
+
     return {
       userCount,
       orderCount,
       productCount,
       totalRevenue,
+      adminRevenue,
+      sellerRevenue,
       trends: {
-        users: 12, // +12%
+        users: 12,
         orders: 8,
         products: 5,
         revenue: 15,

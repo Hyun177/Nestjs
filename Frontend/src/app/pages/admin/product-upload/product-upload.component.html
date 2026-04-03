@@ -239,7 +239,7 @@
                     </div>
                     <nz-switch formControlName="isArchived"></nz-switch>
                 </div>
-                <button nz-button nzType="primary" [nzLoading]="loading" nzSize="large" class="submit-btn">
+                <button nz-button nzType="primary" [nzLoading]="loading" [disabled]="loading || productForm.invalid" nzSize="large" class="submit-btn">
                     XÁC NHẬN THÊM SẢN PHẨM
                 </button>
             </div>

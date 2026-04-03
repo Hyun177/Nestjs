@@ -26,16 +26,12 @@
               }
             ],
             "styles": [
-  "node_modules/ng-zorro-antd/ng-zorro-antd.min.css",
-  "src/styles.css"
-],
-            "server": "src/main.server.ts",
-            "outputMode": "server",
+              "node_modules/ng-zorro-antd/ng-zorro-antd.min.css",
+              "src/styles.css"
+            ],
+            "outputMode": "static",
             "security": {
               "allowedHosts": []
-            },
-            "ssr": {
-              "entry": "src/server.ts"
             }
           },
           "configurations": {
@@ -52,6 +48,11 @@
                   "maximumError": "8kB"
                 }
               ],
+              "optimization": {
+                "fonts": {
+                  "inline": false
+                }
+              },
               "outputHashing": "all"
             },
             "development": {

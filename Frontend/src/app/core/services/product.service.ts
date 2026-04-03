@@ -26,6 +26,7 @@ export interface Product {
   category?: any;
   brand?: any;
   images?: string[];
+  userId?: number;
   attributes?: { name: string; options: string[] }[];
   variants?: {
     sku: string;
@@ -33,6 +34,7 @@ export interface Product {
     stock: number;
     attributes: { [key: string]: string };
   }[];
+  shop?: any;
 }
 
 @Injectable({

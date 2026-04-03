@@ -21,6 +21,7 @@ import { NzFormModule } from 'ng-zorro-antd/form';
 import { OrderService } from '../../../core/services/order.service';
 import { UserService } from '../../../core/services/user.service';
 import { ProductService } from '../../../core/services/product.service';
+import { ShopService } from '../../../core/services/shop.service';
 import { VndCurrencyPipe } from '../../../shared/pipes/vnd-currency.pipe';
 
 @Component({
@@ -54,6 +55,7 @@ export class AdminOrdersComponent implements OnInit {
   private orderService = inject(OrderService);
   private userService = inject(UserService);
   private productService = inject(ProductService);
+  private shopService = inject(ShopService);
   private message = inject(NzMessageService);
   private cdr = inject(ChangeDetectorRef);
   private fb = inject(FormBuilder);
@@ -67,10 +69,12 @@ export class AdminOrdersComponent implements OnInit {
 
   searchValue = signal('');
   statusFilter = signal('all');
+  shopFilter = signal<number | null>(null);
   pageIndex = signal(1);
   pageSize = signal(10);
   selectedOrder = signal<any | null>(null);
   orders = signal<any[]>([]);
+  sellersList = signal<any[]>([]);
 
   // For Add/Edit Order
   usersList: any[] = [];
@@ -88,6 +92,7 @@ export class AdminOrdersComponent implements OnInit {
   readonly statusOptions = [
     { label: 'Tất cả', value: 'all' },
     { label: 'Chờ xử lý', value: 'PENDING' },
+    { label: 'Đã xác nhận', value: 'CONFIRMED' },
     { label: 'Đã thanh toán', value: 'PAID' },
     { label: 'Đang giao', value: 'SHIPPED' },
     { label: 'Đã giao', value: 'DELIVERED' },
@@ -96,6 +101,7 @@ export class AdminOrdersComponent implements OnInit {
 
   readonly statusConfig: Record<string, { color: string; label: string; step: number }> = {
     PENDING: { color: '#f59e0b', label: 'Chờ xử lý', step: 0 },
+    CONFIRMED: { color: '#6366f1', label: 'Đã xác nhận', step: 1 },
     PAID: { color: '#3b82f6', label: 'Đã thanh toán', step: 1 },
     SHIPPED: { color: '#8b5cf6', label: 'Đang giao', step: 2 },
     DELIVERED: { color: '#10b981', label: 'Đã giao', step: 3 },
@@ -112,6 +118,28 @@ export class AdminOrdersComponent implements OnInit {
     this.loadOrders(); 
     this.loadUsers();
     this.loadProducts();
+    this.loadSellers();
+  }
+
+  loadSellers() {
+    this.userService.getAllUsers().subscribe({
+      next: (data: any) => {
+        const sellers = (data || [])
+          .filter((u: any) => u.roles?.some((r: any) => r.name === 'seller') && u.shop)
+          .map((u: any) => ({
+            id: u.shop.id,
+            displayName: u.shop.name || (u.firstname ? `${u.firstname} ${u.lastname}`.trim() : u.email)
+          }));
+        
+        // Add Admin as a synthetic option
+        const finalSellers = [
+          { id: 0, displayName: 'Sản phẩm Admin' },
+          ...sellers
+        ];
+        
+        this.sellersList.set(finalSellers);
+      }
+    });
   }
 
   loadUsers() {
@@ -126,19 +154,32 @@ export class AdminOrdersComponent implements OnInit {
     this.loading.set(true);
     this.orderService.getAllOrdersAdmin().subscribe({
       next: (res) => {
-        const mapped = (res || []).map((o: any) => ({
-          ...o,
-          orderCode: `#${String(o.id).padStart(6, '0')}`,
-          customerName: `${o.user?.firstname || ''} ${o.user?.lastname || ''}`.trim() || o.user?.name || 'Khách vãng lai',
-          customerPhone: o.user?.phone || '--',
-          customerEmail: o.user?.email || '--',
-          customerAvatar: o.user?.avatar ? 'http://localhost:3000' + o.user.avatar : null,
-          shippingAddress: o.shippingAddress || o.user?.address || 'Chưa cập nhật',
-          shippingPhone: o.shippingPhone || o.user?.phone || 'Chưa cập nhật',
-          totalAmount: parseFloat(o.totalAmount || 0),
-          discountAmount: parseFloat(o.discountAmount || 0),
-          itemsCount: o.items?.length || 0,
-        }));
+        const mapped = (res || []).map((o: any) => {
+          const names = (o.items || []).map((i: any) => {
+            if (i.product?.shop?.name) return i.product.shop.name;
+            if (i.shopId === 0 || !i.shopId) return 'Admin';
+            return 'Shop #' + i.shopId;
+          });
+          const uniqueNames = Array.from(new Set(names));
+          const shopNames = uniqueNames.join(', ');
+          const shopIds = Array.from(new Set(o.items?.map((i: any) => i.shopId || 0)));
+          
+          return {
+            ...o,
+            orderCode: `#${String(o.id).padStart(6, '0')}`,
+            customerName: `${o.user?.firstname || ''} ${o.user?.lastname || ''}`.trim() || o.user?.name || 'Khách vãng lai',
+            customerPhone: o.user?.phone || '--',
+            customerEmail: o.user?.email || '--',
+            customerAvatar: o.user?.avatar ? 'http://localhost:3000' + o.user.avatar : null,
+            shippingAddress: o.shippingAddress || o.user?.address || 'Chưa cập nhật',
+            shippingPhone: o.shippingPhone || o.user?.phone || 'Chưa cập nhật',
+            totalAmount: parseFloat(o.totalAmount || 0),
+            discountAmount: parseFloat(o.discountAmount || 0),
+            itemsCount: o.items?.length || 0,
+            shopNames: shopNames || 'N/A',
+            shopIds: shopIds
+          };
+        });
         this.orders.set(mapped);
         this.loading.set(false);
         this.cdr.detectChanges();
@@ -150,14 +191,23 @@ export class AdminOrdersComponent implements OnInit {
   get filteredOrders() {
     const search = this.searchValue().toLowerCase();
     const status = this.statusFilter();
+    const shopId = this.shopFilter();
+    
     return this.orders().filter(o => {
       const matchSearch = !search ||
         String(o.id).includes(search) ||
         o.customerName.toLowerCase().includes(search) ||
         o.customerEmail.toLowerCase().includes(search);
       const matchStatus = status === 'all' || o.status === status;
-      return matchSearch && matchStatus;
+      const matchShop = shopId === null || shopId === undefined || o.shopIds?.includes(shopId);
+      
+      return matchSearch && matchStatus && matchShop;
     });
+  }
+
+  onShopFilter(shopId: number | null) {
+    this.shopFilter.set(shopId);
+    this.pageIndex.set(1);
   }
 
   onSearch(value: string) { this.searchValue.set(value); this.pageIndex.set(1); }

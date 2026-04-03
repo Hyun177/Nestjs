@@ -24,7 +24,15 @@
       <input type="text" placeholder="Tìm theo mã, tên khách, email..." (keyup)="onSearch($event.target.value)"
         [value]="searchValue()" class="search-input" />
     </div>
-    <div class="status-tabs">
+
+    <div class="shop-filter-wrap" style="margin-left: 10px; min-width: 200px;">
+      <nz-select [ngModel]="shopFilter()" (ngModelChange)="onShopFilter($event)" nzPlaceHolder="Tất cả Shop"
+        nzShowSearch nzAllowClear style="width: 100%">
+        <nz-option *ngFor="let s of sellersList()" [nzLabel]="s.displayName" [nzValue]="s.id"></nz-option>
+      </nz-select>
+    </div>
+
+    <div class="status-tabs" style="margin-left: auto;">
       <button *ngFor="let opt of statusOptions" class="tab-btn" [class.active]="statusFilter() === opt.value"
         (click)="onStatusFilter(opt.value)">{{ opt.label }}</button>
     </div>
@@ -42,11 +50,12 @@
         <tr>
           <th nzWidth="110px">Mã đơn</th>
           <th>Khách hàng</th>
-          <th nzWidth="60px" nzAlign="center">Mục</th>
+          <th>Shop</th>
+
           <th nzWidth="150px" nzAlign="right">Tổng tiền</th>
           <th nzWidth="170px">Trạng thái</th>
           <th nzWidth="120px">Thanh toán</th>
-          <th nzWidth="130px">Ngày đặt</th>
+          <th nzWidth="110px">Ngày đặt</th>
           <th nzWidth="150px" nzAlign="center">Thao tác</th>
         </tr>
       </thead>
@@ -67,9 +76,13 @@
               </div>
             </div>
           </td>
-          <td nzAlign="center">
-            <span class="items-badge">{{ o.itemsCount }}</span>
+          <td>
+            <div class="shop-names-cell">
+
+              <span style="font-size: 0.85rem; font-weight: 600; color: #475569;">{{ o.shopNames }}</span>
+            </div>
           </td>
+
           <td nzAlign="right">
             <div class="order-total">{{ o.totalAmount | vndCurrency }}</div>
             <div *ngIf="o.discountAmount > 0" class="order-discount">-{{ o.discountAmount | vndCurrency }}</div>
@@ -100,12 +113,8 @@
               <button class="icon-btn edit" (click)="openEditModal(o)" nz-tooltip nzTooltipTitle="Sửa">
                 <span nz-icon nzType="edit"></span>
               </button>
-              <button class="icon-btn delete" 
-                      nz-popconfirm 
-                      nzPopconfirmTitle="Xóa đơn hàng này?" 
-                      (nzOnConfirm)="deleteOrder(o.id)" 
-                      nz-tooltip 
-                      nzTooltipTitle="Xóa">
+              <button class="icon-btn delete" nz-popconfirm nzPopconfirmTitle="Xóa đơn hàng này?"
+                (nzOnConfirm)="deleteOrder(o.id)" nz-tooltip nzTooltipTitle="Xóa">
                 <span nz-icon nzType="delete"></span>
               </button>
             </div>
@@ -132,8 +141,9 @@
 </div>
 
 <!-- ===== ORDER DETAIL MODAL ===== -->
-<nz-modal [nzVisible]="detailModalVisible()" (nzVisibleChange)="detailModalVisible.set($event)" (nzOnCancel)="closeDetail()"
-  [nzTitle]="'Chi tiết đơn hàng ' + (selectedOrder()?.orderCode || '')" nzWidth="760px" [nzFooter]="detailFooter">
+<nz-modal [nzVisible]="detailModalVisible()" (nzVisibleChange)="detailModalVisible.set($event)"
+  (nzOnCancel)="closeDetail()" [nzTitle]="'Chi tiết đơn hàng ' + (selectedOrder()?.orderCode || '')" nzWidth="760px"
+  [nzFooter]="detailFooter">
   <ng-container *nzModalContent>
     <div *ngIf="selectedOrder()" class="order-detail">
       <!-- Status Steps -->
@@ -350,13 +360,14 @@
       <h3>{{ isEditMode() ? 'Chỉnh sửa đơn hàng' : 'Thêm đơn hàng' }}</h3>
       <button class="close-btn" (click)="editModalVisible.set(false)">&times;</button>
     </div>
-    
+
     <div class="modal-body">
       <form [formGroup]="orderForm" class="custom-form">
         <div class="form-group">
           <label>Khách hàng *</label>
           <nz-select formControlName="userId" nzPlaceHolder="Chọn khách hàng" nzShowSearch style="width: 100%;">
-            <nz-option *ngFor="let u of usersList" [nzLabel]="u.name || (u.firstname + ' ' + u.lastname)" [nzValue]="u.id"></nz-option>
+            <nz-option *ngFor="let u of usersList" [nzLabel]="u.name || (u.firstname + ' ' + u.lastname)"
+              [nzValue]="u.id"></nz-option>
           </nz-select>
         </div>
 

@@ -24,8 +24,16 @@ export class CategoryService {
     return this.http.get<any[]>(this.apiUrl);
   }
 
+  getSellerCategories(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/seller/me`, { headers: this.getHeaders() });
+  }
+
   createCategory(data: any): Observable<any> {
     return this.http.post(this.apiUrl, data, { headers: this.getHeaders() });
+  }
+
+  createSellerCategory(data: any): Observable<any> {
+    return this.http.post(`${this.apiUrl}/seller`, data, { headers: this.getHeaders() });
   }
 
   updateCategory(id: number, data: any): Observable<any> {
@@ -34,5 +42,13 @@ export class CategoryService {
 
   deleteCategory(id: number): Observable<any> {
     return this.http.delete(`${this.apiUrl}/${id}`, { headers: this.getHeaders() });
+  }
+
+  updateSellerCategory(id: number, data: any): Observable<any> {
+    return this.http.put(`${this.apiUrl}/seller/${id}`, data, { headers: this.getHeaders() });
+  }
+
+  deleteSellerCategory(id: number): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/seller/${id}`, { headers: this.getHeaders() });
   }
 }

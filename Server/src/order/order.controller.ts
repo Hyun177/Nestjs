@@ -38,15 +38,26 @@ export class OrderController {
     return this.orderService.getHistory(req.user.userId);
   }
 
-  @Get(':id')
-  getOrderById(@Req() req: any, @Param('id', ParseIntPipe) id: number) {
-    return this.orderService.getOrderById(id, req.user.userId);
+  @Get('seller/all')
+  getSellerOrders(@Req() req: any) {
+    return this.orderService.getSellerOrders(req.user.userId);
+  }
+
+  @Get('seller/:sellerId')
+  @Permissions(Permission.ORDER_READ)
+  getSellerOrdersById(@Param('sellerId', ParseIntPipe) sellerId: number) {
+    return this.orderService.getSellerOrders(sellerId);
   }
 
   @Get('all/admin')
   @Permissions(Permission.ORDER_READ)
   getAllOrders() {
     return this.orderService.getAllOrders();
+  }
+
+  @Get(':id')
+  getOrderById(@Req() req: any, @Param('id', ParseIntPipe) id: number) {
+    return this.orderService.getOrderById(id, req.user.userId);
   }
 
   @Patch(':id/status')

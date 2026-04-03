@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, IsNull } from 'typeorm';
 import { Category } from './entities/category.entity/category.entity';
 import { CreateCategoryDto } from './dto/create-category.dto/create-category.dto';
 
@@ -10,11 +10,17 @@ export class CategoryService {
     @InjectRepository(Category)
     private categoryRepo: Repository<Category>,
   ) {}
-  async createCategory(data: CreateCategoryDto): Promise<Category> {
-    const newCategory = this.categoryRepo.create(data);
+  async createCategory(data: CreateCategoryDto, userId?: number): Promise<Category> {
+    const newCategory = this.categoryRepo.create({ ...data, userId: userId });
     return await this.categoryRepo.save(newCategory);
   }
   async getCategories(): Promise<Category[]> {
+    return await this.categoryRepo.find({ where: { userId: IsNull() } });
+  }
+  async getSellerCategories(userId: number): Promise<Category[]> {
+    return await this.categoryRepo.find({ where: { userId } });
+  }
+  async getAllCategoriesAdmin(): Promise<Category[]> {
     return await this.categoryRepo.find();
   }
   async getCategoryById(id: number): Promise<Category | null> {

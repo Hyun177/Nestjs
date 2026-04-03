@@ -1,0 +1,350 @@
+<!-- Templates for Modals -->
+<ng-template #createCategoryTpl>
+    <div style="padding-top: 10px;">
+        <p style="margin-bottom: 8px; color: #64748b;">Nhập tên danh mục bạn muốn tạo để phân loại sản phẩm tốt hơn:</p>
+        <input nz-input #catInput placeholder="Ví dụ: Đồ gia dụng thông minh..." />
+    </div>
+</ng-template>
+
+<ng-template #createBrandTpl>
+    <div style="padding-top: 10px;">
+        <p style="margin-bottom: 8px; color: #64748b;">Thương hiệu mới sẽ được gắn vào danh mục bạn đang chọn:</p>
+        <input nz-input #brandInput placeholder="Ví dụ: Samsung, Apple, Local Brand..." />
+    </div>
+</ng-template>
+
+<ng-template #createShopCategoryTpl>
+    <div style="padding-top: 10px;">
+        <p style="margin-bottom: 8px; color: #64748b;">Danh mục riêng giúp bạn nhóm sản phẩm trong trang cá nhân của
+            shop:</p>
+        <input nz-input #scInput placeholder="Ví dụ: Hàng khuyến mãi, Bộ sưu tập Hè..." />
+    </div>
+</ng-template>
+
+<div class="admin-container">
+    <div class="admin-header">
+        <div class="header-left">
+            <h2>{{ isEditMode ? 'Chỉnh sửa Sản phẩm' : 'Kênh Quản Lý Sản Phẩm Người Bán' }}</h2>
+            <p>{{ isEditMode ? 'Cập nhật thông tin chi tiết cho sản phẩm của bạn' : 'Thêm sản phẩm mới vào gian hàng của
+                bạn với đầy đủ các tùy chọn biến thể' }}</p>
+        </div>
+        <div class="header-right">
+            <a routerLink="/seller/profile" class="seller-btn seller-btn-default" style="border-radius: 20px">
+                <span nz-icon nzType="user"></span> Hồ sơ của tôi
+            </a>
+            <a routerLink="/seller/orders" class="seller-btn seller-btn-primary"
+                style="margin-left: 1rem; border-radius: 20px">
+                <span nz-icon nzType="shopping-cart"></span> Đơn hàng
+            </a>
+        </div>
+    </div>
+
+    <div class="upload-wrapper">
+        <form nz-form [formGroup]="productForm" (ngSubmit)="onSubmit()" nzLayout="vertical" class="product-form">
+            <div class="form-grid">
+                <!-- Left Column: Core Info -->
+                <div class="form-section">
+                    <h3><nz-icon nzType="form" nzTheme="outline" />Thông tin cơ bản</h3>
+
+                    <nz-form-item>
+                        <nz-form-label nzRequired>Tên sản phẩm</nz-form-label>
+                        <nz-form-control nzErrorTip="Vui lòng nhập tên">
+                            <input nz-input formControlName="name" placeholder="Ví dụ: iPhone 15 Pro Max" />
+                        </nz-form-control>
+                    </nz-form-item>
+
+                    <div class="price-grid">
+                        <nz-form-item>
+                            <nz-form-label nzRequired>Giá bán (VND)</nz-form-label>
+                            <nz-form-control nzErrorTip="Vui lòng nhập giá">
+                                <input nz-input type="number" formControlName="price" placeholder="Giá hiện tại" />
+                            </nz-form-control>
+                        </nz-form-item>
+
+                        <nz-form-item>
+                            <nz-form-label>Giá gốc (để tính % giảm giá)</nz-form-label>
+                            <nz-form-control>
+                                <input nz-input type="number" formControlName="originalPrice"
+                                    placeholder="Giá chưa giảm" />
+                            </nz-form-control>
+                        </nz-form-item>
+                    </div>
+
+
+                    <div class="brand-cat-grid">
+                        <nz-form-item>
+                            <nz-form-label nzRequired>
+                                Danh mục
+                                <span nz-icon nzType="info-circle" nzTheme="outline" nz-tooltip
+                                    nzTooltipTitle="Chọn danh mục của admin giúp sản phẩm dễ tìm và tiếp cận khách hàng hơn"
+                                    style="margin-left: 5px; color: #6366f1; cursor: help;"></span>
+                                <span class="action-link" (click)="openCreateCategoryModal()">
+
+                                </span>
+                            </nz-form-label>
+                            <nz-form-control nzErrorTip="Vui lòng chọn danh mục">
+                                <nz-select formControlName="categoryId" nzPlaceHolder="Chọn danh mục" nzShowSearch>
+                                    <nz-option-group nzLabel="Danh mục hệ thống">
+                                        <nz-option *ngFor="let item of adminCategories" [nzValue]="item.id"
+                                            [nzLabel]="item.name"></nz-option>
+                                    </nz-option-group>
+                                    <nz-option-group nzLabel="Danh mục của tôi">
+                                        <nz-option *ngFor="let item of sellerCategories" [nzValue]="item.id"
+                                            [nzLabel]="item.name"></nz-option>
+                                    </nz-option-group>
+                                </nz-select>
+                            </nz-form-control>
+                        </nz-form-item>
+
+                        <nz-form-item>
+                            <nz-form-label nzRequired>
+                                Thương hiệu
+                                <span class="action-link" (click)="openCreateBrandModal()">
+
+                                </span>
+                            </nz-form-label>
+                            <nz-form-control nzErrorTip="Vui lòng chọn thương hiệu">
+                                <nz-select formControlName="brandId" nzPlaceHolder="Chọn thương hiệu" nzShowSearch>
+                                    <nz-option-group nzLabel="Thương hiệu hệ thống">
+                                        <nz-option *ngFor="let item of adminBrands" [nzValue]="item.id"
+                                            [nzLabel]="item.name"></nz-option>
+                                    </nz-option-group>
+                                    <nz-option-group nzLabel="Thương hiệu của tôi">
+                                        <nz-option *ngFor="let item of sellerBrands" [nzValue]="item.id"
+                                            [nzLabel]="item.name"></nz-option>
+                                    </nz-option-group>
+                                </nz-select>
+                            </nz-form-control>
+                        </nz-form-item>
+                    </div>
+
+                    <nz-form-item>
+                        <nz-form-label>
+                            Danh mục riêng của Shop (Không bắt buộc)
+                            <span class="action-link" (click)="openCreateShopCategoryModal()">
+                                <span nz-icon nzType="plus-circle" nzTheme="outline"></span> Thêm mới danh mục riêng
+                            </span>
+                        </nz-form-label>
+                        <nz-form-control>
+                            <nz-select nzMode="multiple" formControlName="shopCategoryIds"
+                                nzPlaceHolder="Chọn danh mục riêng của shop" nzShowSearch>
+                                <nz-option *ngFor="let item of shopCategories" [nzValue]="item.id"
+                                    [nzLabel]="item.name"></nz-option>
+                            </nz-select>
+                        </nz-form-control>
+                    </nz-form-item>
+
+                    <nz-form-item>
+                        <nz-form-label nzRequired>Giới thiệu sản phẩm</nz-form-label>
+                        <nz-form-control nzErrorTip="Vui lòng nhập giới thiệu">
+                            <textarea nz-input formControlName="descIntro" rows="3"
+                                placeholder="Tóm tắt ngắn gọn về sản phẩm..."></textarea>
+                        </nz-form-control>
+                    </nz-form-item>
+
+                    <div class="features-section">
+                        <div class="section-header-row">
+                            <label><span nz-icon nzType="check-square"></span> Đặc điểm nổi bật (Highlights)</label>
+                            <button class="seller-btn seller-btn-default"
+                                style="padding: 4px 12px; font-size: 0.8rem; border-style: dashed;" type="button"
+                                (click)='addFeature()'>
+                                <span nz-icon nzType="plus"></span> Thêm ý
+                            </button>
+                        </div>
+                        <div formArrayName="descFeatures">
+                            <div *ngFor="let feat of features.controls; let i=index" class="feature-row">
+                                <input nz-input [formControlName]="i" placeholder="VD: Pin siêu trâu 5000mAh..." />
+                                <button class="seller-btn seller-btn-danger seller-btn-icon-only"
+                                    style="background: transparent; color: #ef4444; box-shadow: none;" type="button"
+                                    (click)="removeFeature(i)">
+                                    <span nz-icon nzType="delete"></span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <nz-form-item style="margin-top: 1rem;">
+                        <nz-form-label>Chính sách & Bảo hành</nz-form-label>
+                        <nz-form-control>
+                            <textarea nz-input formControlName="descPolicy" rows="2"
+                                placeholder="Thông tin bảo hành, đổi trả..."></textarea>
+                        </nz-form-control>
+                    </nz-form-item>
+                </div>
+
+                <!-- Right Column: Extras -->
+                <div class="form-section">
+                    <h3><nz-icon nzType="solution" nzTheme="outline" />Nhãn & Ưu đãi</h3>
+
+                    <nz-form-item>
+                        <nz-form-label>Nhãn (Labels)</nz-form-label>
+                        <nz-form-control>
+                            <nz-select nzMode="tags" formControlName="labels"
+                                nzPlaceHolder="Gõ và nhấn Enter (VD: HOT, FREESHIP, BÁN CHẠY)">
+                            </nz-select>
+                        </nz-form-control>
+                    </nz-form-item>
+
+                    <nz-form-item>
+                        <nz-form-label>Ghi chú ưu đãi (Promo Note)</nz-form-label>
+                        <nz-form-control>
+                            <input nz-input formControlName="promoNote"
+                                placeholder="Ví dụ: Trả góp 0%, Tặng quà 200k..." />
+                        </nz-form-control>
+                    </nz-form-item>
+
+                    <div class="specs-section">
+                        <div class="section-header-row">
+                            <label><span nz-icon nzType="appstore"></span> Thông số tóm tắt (Specs)</label>
+                            <button class="seller-btn seller-btn-default"
+                                style="padding: 4px 12px; font-size: 0.8rem; border-style: dashed;" type="button"
+                                (click)="addSpec()">
+                                <span nz-icon nzType="plus"></span> Thêm thông số
+                            </button>
+                        </div>
+
+                        <div formArrayName="specs">
+                            <div *ngFor="let spec of specs.controls; let i=index" [formGroupName]="i" class="spec-row">
+                                <nz-select formControlName="icon" style="width: 120px;">
+                                    <nz-option *ngFor="let ico of availableIcons" [nzValue]="ico"
+                                        [nzLabel]="ico"></nz-option>
+                                </nz-select>
+                                <input nz-input formControlName="text" placeholder="VD: Pin 5000mAh" />
+                                <button class="seller-btn seller-btn-danger seller-btn-icon-only"
+                                    style="background: transparent; color: #ef4444; box-shadow: none;" type="button"
+                                    (click)="removeSpec(i)">
+                                    <span nz-icon nzType="delete"></span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="attributes-admin-section">
+                        <div class="section-header-row">
+                            <label>Biến thể sản phẩm (Màu, Size, v.v...)</label>
+                            <button class="seller-btn seller-btn-default"
+                                style="padding: 4px 12px; font-size: 0.8rem; border-style: dashed;" type="button"
+                                (click)="addAttribute()">
+                                <span nz-icon nzType="plus"></span> Thêm loại biến thể
+                            </button>
+                        </div>
+                        <p class="hint-text">Nhập giá trị cách nhau bằng dấu phẩy (VD: Đen, Trắng, Vàng)</p>
+
+                        <div formArrayName="attributes" class="attr-inputs">
+                            <div *ngFor="let attr of attributes.controls; let i=index" [formGroupName]="i"
+                                class="attr-admin-row">
+                                <input nz-input formControlName="name" placeholder="Tên: Màu sắc"
+                                    style="width: 140px;" />
+                                <input nz-input formControlName="options" placeholder="Đen, Trắng..." class="flex-1" />
+                                <button class="seller-btn seller-btn-danger seller-btn-icon-only"
+                                    style="background: transparent; color: #ef4444; box-shadow: none;" type="button"
+                                    (click)="removeAttribute(i)">
+                                    <span nz-icon nzType="delete"></span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="variant-inventory-card">
+                            <div class="card-header">
+                                <h3>Thông tin tồn kho từng biến thể</h3>
+                                <div class="total-badge" *ngIf="variants.length > 0">Tổng tồn kho: <strong>{{
+                                        productForm.get('stock')?.value }}</strong></div>
+                            </div>
+
+                            <div class="table-container" *ngIf="variants.length > 0; else emptyVariants">
+                                <table class="variants-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Phân loại</th>
+                                            <th style="width: 130px;">Số lượng kho</th>
+                                            <th style="width: 150px;">Giá bán (VND)</th>
+                                            <th style="width: 250px;">Mã SKU</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody formArrayName="variants">
+                                        <tr *ngFor="let vGroup of variants.controls; let i=index" [formGroupName]="i">
+                                            <td class="sku-cell">{{ vGroup.value.sku.split('-').slice(1).join('-') }}
+                                            </td>
+                                            <td>
+                                                <input nz-input type="number" formControlName="stock" nzSize="small"
+                                                    class="stock-input" />
+                                            </td>
+                                            <td>
+                                                <input nz-input type="number" formControlName="price" nzSize="small" />
+                                            </td>
+                                            <td>
+                                                <input nz-input formControlName="sku" nzSize="small" />
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <ng-template #emptyVariants>
+                                <div class="empty-variants-state">
+                                    <span nz-icon nzType="table"
+                                        style="font-size: 24px; color: #bfbfbf; margin-bottom: 8px;"></span>
+                                    <p>Hãy nhập tên và giá trị (Màu sắc, Dung lượng...) ở trên để hệ thống tự động khởi
+                                        tạo bảng nhập tồn kho tại đây.</p>
+                                </div>
+                            </ng-template>
+                        </div>
+                    </div>
+
+                    <div class="image-upload-grid">
+                        <nz-form-item>
+                            <nz-form-label nzRequired>Ảnh đại diện (Thumbnail)</nz-form-label>
+                            <nz-form-control>
+                                <div class="existing-image-preview" *ngIf="existingImage">
+                                    <img [src]="getFullUrl(existingImage)" class="preview-thumb" />
+                                    <span class="preview-label">Ảnh hiện tại</span>
+                                </div>
+                                <nz-upload nzType="drag" [(nzFileList)]="mainFileList"
+                                    [nzBeforeUpload]="beforeUploadMain" [nzLimit]="1">
+                                    <p class="ant-upload-drag-icon"><span nz-icon nzType="picture"></span></p>
+                                    <p class="ant-upload-text text-xs">Ảnh chính của sản phẩm</p>
+                                </nz-upload>
+                            </nz-form-control>
+                        </nz-form-item>
+
+                        <nz-form-item>
+                            <nz-form-label>Ảnh chi tiết (Gallery)</nz-form-label>
+                            <nz-form-control>
+                                <div class="existing-gallery-preview" *ngIf="existingGallery.length > 0">
+                                    <div class="gallery-item" *ngFor="let img of existingGallery; let i=index">
+                                        <img [src]="getFullUrl(img)" />
+                                        <button type="button" (click)="removeExistingGallery(i)"
+                                            class="remove-btn">&times;</button>
+                                    </div>
+                                </div>
+                                <nz-upload nzType="drag" [(nzFileList)]="galleryFileList"
+                                    [nzBeforeUpload]="beforeUploadGallery" [nzMultiple]="true">
+                                    <p class="ant-upload-drag-icon"><span nz-icon nzType="images"></span></p>
+                                    <p class="ant-upload-text text-xs">Tải lên nhiều ảnh phụ</p>
+                                </nz-upload>
+                            </nz-form-control>
+                        </nz-form-item>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <div class="archive-toggle">
+                    <div class="toggle-info">
+                        <span nz-icon nzType="eye-invisible"></span>
+                        <div>
+                            <div class="toggle-label">Ẩn sản phẩm</div>
+                            <div class="toggle-sub">Sản phẩm sẽ không hiển thị với khách hàng</div>
+                        </div>
+                    </div>
+                    <nz-switch formControlName="isArchived"></nz-switch>
+                </div>
+                <button [disabled]="loading || productForm.invalid" class="seller-btn seller-btn-primary submit-btn"
+                    style="height: auto; padding: 16px 32px; width: 100%; border-radius: 12px; font-size: 1.1rem; justify-content: center; margin-top: 10px;">
+                    <span nz-icon nzType="loading" *ngIf="loading"></span> {{ isEditMode ? 'CẬP NHẬT SẢN PHẨM' : 'XÁC
+                    NHẬN THÊM SẢN PHẨM' }}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

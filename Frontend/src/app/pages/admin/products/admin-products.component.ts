@@ -16,7 +16,9 @@ import { NzSwitchModule } from 'ng-zorro-antd/switch';
 import { NzTooltipModule } from 'ng-zorro-antd/tooltip';
 import { NzDividerModule } from 'ng-zorro-antd/divider';
 import { NzSpaceModule } from 'ng-zorro-antd/space';
+import { NzIconModule } from 'ng-zorro-antd/icon';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { UserService } from '../../../core/services/user.service';
 
 import { ProductService, Product } from '../../../core/services/product.service';
 import { CategoryService } from '../../../core/services/category.service';
@@ -44,6 +46,7 @@ import { VndCurrencyPipe } from '../../../shared/pipes/vnd-currency.pipe';
     NzTooltipModule,
     NzDividerModule,
     NzSpaceModule,
+    NzIconModule,
     VndCurrencyPipe,
   ],
   templateUrl: './admin-products.component.html',
@@ -54,6 +57,7 @@ export class AdminProductsComponent implements OnInit {
   private productService = inject(ProductService);
   private categoryService = inject(CategoryService);
   private brandService = inject(BrandService);
+  private userService = inject(UserService);
   private message = inject(NzMessageService);
   private cdr = inject(ChangeDetectorRef);
 
@@ -62,6 +66,7 @@ export class AdminProductsComponent implements OnInit {
   isEditMode = signal(false);
   isSaving = signal(false);
   searchValue = signal('');
+  shopFilter = signal<number | null>(null);
   pageIndex = signal(1);
   pageSize = signal(10);
   totalProducts = signal(0);
@@ -69,6 +74,7 @@ export class AdminProductsComponent implements OnInit {
   products = signal<Product[]>([]);
   categories = signal<any[]>([]);
   brands = signal<any[]>([]);
+  sellersList = signal<any[]>([]);
 
   availableIcons = [
     { label: 'Thông tin', value: 'info-circle' },
@@ -112,18 +118,70 @@ export class AdminProductsComponent implements OnInit {
 
   ngOnInit() {
     this.categoryService.getCategories().subscribe(cats => this.categories.set(cats));
+    this.loadSellers();
+    
+    // Initial load: no category filter
     this.brandService.getBrands().subscribe(brands => this.brands.set(brands));
-    this.loadProducts();
 
-    // Removed auto-generate variants on value change to fix "buggy add buttons"
-    // and prevent resetting user's input while typing options.
+    // Listen for category selection to fetch relevant brands in the modal
+    this.productForm.get('categoryId')?.valueChanges.subscribe(catId => {
+      if (catId) {
+        this.brandService.getBrands(Number(catId)).subscribe(res => {
+          this.brands.set(res);
+          // Only reset brand if it's not present in the new brand list
+          const currentBrandId = this.productForm.get('brandId')?.value;
+          if (currentBrandId && !res.find((b: any) => b.id === currentBrandId)) {
+            this.productForm.patchValue({ brandId: null }, { emitEvent: false });
+          }
+          this.cdr.detectChanges();
+        });
+      } else {
+        // If no category selected, show all brands or clear? 
+        // Showing all is better for initial state, but clearing is more logical for "child" relationship.
+        // User says "danh mục là cha, thương hiệu là con", so if no father, no children list.
+        this.brands.set([]);
+        this.productForm.patchValue({ brandId: null }, { emitEvent: false });
+        this.cdr.detectChanges();
+      }
+    });
+
+    this.loadProducts();
 
     this.productForm.get('variants')?.valueChanges.subscribe(() => this.updateTotalStock());
   }
 
+  loadSellers() {
+    this.userService.getAllUsers().subscribe({
+      next: (data: any) => {
+        const sellers = (data || [])
+          .filter((u: any) => u.roles?.some((r: any) => r.name === 'seller') && u.shop)
+          .map((u: any) => ({
+            id: u.shop.id,
+            displayName: u.shop.name || (u.firstname ? `${u.firstname} ${u.lastname}`.trim() : u.email)
+          }));
+        
+        this.sellersList.set([
+          { id: 0, displayName: 'Sản phẩm Admin (Toàn sàn)' },
+          ...sellers
+        ]);
+      }
+    });
+  }
+
   loadProducts() {
     this.loading.set(true);
-    const params = { page: this.pageIndex(), limit: this.pageSize(), search: this.searchValue(), showAll: 'true' };
+    const params: any = { 
+      page: this.pageIndex(), 
+      limit: this.pageSize(), 
+      search: this.searchValue(), 
+      showAll: 'true' 
+    };
+
+    const sFilter = this.shopFilter();
+    if (sFilter !== null && sFilter !== undefined) {
+      params.shopId = sFilter;
+    }
+
     this.productService.getProductsPaginated(params).subscribe({
       next: (res) => {
         this.products.set(res.data || []);
@@ -388,6 +446,12 @@ export class AdminProductsComponent implements OnInit {
 
   onSearch(value: string) {
     this.searchValue.set(value);
+    this.pageIndex.set(1);
+    this.loadProducts();
+  }
+
+  onShopFilter(shopId: number | null) {
+    this.shopFilter.set(shopId);
     this.pageIndex.set(1);
     this.loadProducts();
   }
