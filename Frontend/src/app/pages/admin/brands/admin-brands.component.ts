@@ -18,6 +18,7 @@ import { NzMessageService } from 'ng-zorro-antd/message';
 import { NzAvatarModule } from 'ng-zorro-antd/avatar';
 
 import { BrandService } from '../../../core/services/brand.service';
+import { CategoryService } from '../../../core/services/category.service';
 
 @Component({
   selector: 'app-admin-brands',
@@ -47,6 +48,7 @@ import { BrandService } from '../../../core/services/brand.service';
 export class AdminBrandsComponent implements OnInit {
   private fb = inject(FormBuilder);
   private brandService = inject(BrandService);
+  private categoryService = inject(CategoryService);
   private message = inject(NzMessageService);
   private cdr = inject(ChangeDetectorRef);
 
@@ -63,10 +65,18 @@ export class AdminBrandsComponent implements OnInit {
     id: [0],
     name: ['', [Validators.required]],
     description: [''],
+    categoryId: [null as number | null, [Validators.required]],
   });
+
+  categories = signal<any[]>([]);
 
   ngOnInit() {
     this.loadBrands();
+    this.loadCategories();
+  }
+
+  loadCategories() {
+    this.categoryService.getCategories().subscribe(res => this.categories.set(res));
   }
 
   loadBrands() {
@@ -101,6 +111,7 @@ export class AdminBrandsComponent implements OnInit {
       id: brand.id,
       name: brand.name,
       description: brand.description,
+      categoryId: brand.categoryId
     });
     this.isModalVisible.set(true);
   }

@@ -21,6 +21,6 @@ import { VoucherModule } from '../voucher/voucher.module';
     PassportModule,
     forwardRef(() => VoucherModule),
   ],
-  exports: [PassportModule, JwtStrategy],
+  exports: [PassportModule, JwtStrategy, JwtModule],
 })
 export class AuthModule {}

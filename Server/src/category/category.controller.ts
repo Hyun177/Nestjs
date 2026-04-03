@@ -7,7 +7,9 @@ import {
   ParseIntPipe,
   Post,
   Put,
+  Request,
   UseGuards,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CategoryService } from './category.service';
@@ -17,6 +19,8 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { PermissionGuard } from '../auth/permission/permission.guard';
 import { Permissions } from '../auth/permission/permissions.decorator';
 import { Permission } from '../auth/permission/permissions.enum';
+import { RoleGuard } from '../auth/role.guard';
+import { Roles } from '../decorators/roles.decorator';
 
 @ApiTags('Categories')
 @Controller('category')
@@ -28,6 +32,58 @@ export class CategoryController {
   @ApiOperation({ summary: 'Get all categories (public)' })
   async getCategories() {
     return await this.categoryService.getCategories();
+  }
+
+  // ── Seller endpoints (role-based) ──────────────
+
+  // Seller: Get all their categories
+  @Get('seller/me')
+  @UseGuards(JwtAuthGuard, RoleGuard)
+  @Roles('seller')
+  @ApiOperation({ summary: 'Get all categories for seller dropdown' })
+  async getCategoriesForSeller(@Request() req: any) {
+    return await this.categoryService.getSellerCategories(req.user.id || req.user.userId);
+  }
+
+  // Seller: Create a category
+  @Post('seller')
+  @ApiBearerAuth('accessToken')
+  @UseGuards(JwtAuthGuard, RoleGuard)
+  @Roles('seller')
+  @ApiOperation({ summary: 'Create a category (seller)' })
+  async createCategoryBySeller(@Request() req: any, @Body() data: CreateCategoryDto) {
+    return await this.categoryService.createCategory(data, req.user.id || req.user.userId);
+  }
+
+  // Seller: Update a category
+  @Put('seller/:id')
+  @ApiBearerAuth('accessToken')
+  @UseGuards(JwtAuthGuard, RoleGuard)
+  @Roles('seller')
+  @ApiOperation({ summary: 'Update a category (seller)' })
+  async updateCategoryBySeller(
+    @Request() req: any,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() data: Partial<Category>,
+  ) {
+    const cat = await this.categoryService.getCategoryById(id);
+    const userId = req.user.id || req.user.userId;
+    if (!cat || cat.userId !== userId) throw new UnauthorizedException('Chỉ được sửa danh mục của mình');
+    return await this.categoryService.updateCategory(id, data);
+  }
+
+  // Seller: Delete a category
+  @Delete('seller/:id')
+  @ApiBearerAuth('accessToken')
+  @UseGuards(JwtAuthGuard, RoleGuard)
+  @Roles('seller')
+  @ApiOperation({ summary: 'Delete a category (seller)' })
+  async deleteCategoryBySeller(@Request() req: any, @Param('id', ParseIntPipe) id: number) {
+    const cat = await this.categoryService.getCategoryById(id);
+    const userId = req.user.id || req.user.userId;
+    if (!cat || cat.userId !== userId) throw new UnauthorizedException('Chỉ được xóa danh mục của mình');
+    await this.categoryService.deleteCategory(id);
+    return { message: 'Category deleted successfully' };
   }
 
   // Write operations — requires login + permission

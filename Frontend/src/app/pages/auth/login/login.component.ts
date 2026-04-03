@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, ChangeDetectorRef } from '@angular/core';
 import { RouterLink, Router } from '@angular/router';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import {
@@ -23,6 +23,7 @@ export class LoginComponent implements OnInit, OnDestroy {
   private authService = inject(AuthService);
   private router = inject(Router);
   private message = inject(NzMessageService);
+  private cdr = inject(ChangeDetectorRef);
 
   loginForm: FormGroup;
   loading = false;
@@ -39,10 +40,12 @@ export class LoginComponent implements OnInit, OnDestroy {
   onSubmit() {
     if (this.loginForm.valid) {
       this.loading = true;
+      this.cdr.detectChanges(); // Fix NG0100
       this.authService.login(this.loginForm.value).subscribe({
         next: () => {
           this.message.success('Đăng nhập thành công!');
           this.loading = false;
+          this.cdr.detectChanges(); // Fix NG0100
           this.authService.currentUser$.subscribe((user) => {
             if (user?.roles.includes('admin')) {
               this.router.navigate(['/admin/products']);
@@ -55,6 +58,7 @@ export class LoginComponent implements OnInit, OnDestroy {
         },
         error: (err) => {
           this.loading = false;
+          this.cdr.detectChanges(); // Fix NG0100
           this.message.error(err.error?.message || 'Đăng nhập thất bại!');
         },
       });

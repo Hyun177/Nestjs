@@ -20,12 +20,27 @@ export class BrandService {
     return new HttpHeaders().set('Authorization', `Bearer ${token}`);
   }
 
-  getBrands(): Observable<any[]> {
-    return this.http.get<any[]>(this.apiUrl);
+  getBrands(categoryId?: number): Observable<any[]> {
+    const params: any = {};
+    if (categoryId) params.categoryId = categoryId;
+    return this.http.get<any[]>(this.apiUrl, { params });
+  }
+
+  getSellerBrands(categoryId?: number): Observable<any[]> {
+    const params: any = {};
+    if (categoryId) params.categoryId = categoryId;
+    return this.http.get<any[]>(`${this.apiUrl}/seller/me`, { 
+      headers: this.getHeaders(),
+      params 
+    });
   }
 
   createBrand(data: any): Observable<any> {
     return this.http.post(this.apiUrl, data, { headers: this.getHeaders() });
+  }
+
+  createSellerBrand(data: any): Observable<any> {
+    return this.http.post(`${this.apiUrl}/seller`, data, { headers: this.getHeaders() });
   }
 
   updateBrand(id: number, data: any): Observable<any> {

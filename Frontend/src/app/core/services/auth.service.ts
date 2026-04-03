@@ -97,6 +97,14 @@ export class AuthService {
     );
   }
 
+  getUserId(): number | null {
+    return this.currentUserSubject.value?.id || null;
+  }
+
+  get currentUserValue(): User | null {
+    return this.currentUserSubject.value;
+  }
+
   logout() {
     if (this.isBrowser) {
       localStorage.removeItem('accessToken');

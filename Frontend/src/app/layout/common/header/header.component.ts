@@ -31,6 +31,12 @@ export class HeaderComponent implements OnInit {
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
 
+  get isSeller(): boolean {
+    const user = this.authService.currentUserValue;
+    if (!user || !user.roles) return false;
+    return user.roles.some((r: any) => (r.name || r) === 'SELLER');
+  }
+
   ngOnInit() {
     this.categoryService.getCategories().subscribe((data: any[]) => {
       this.categories = data;

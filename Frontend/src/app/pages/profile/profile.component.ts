@@ -21,6 +21,7 @@ import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzRateModule } from 'ng-zorro-antd/rate';
 import { NzPopconfirmModule } from 'ng-zorro-antd/popconfirm';
 import { Router, RouterModule } from '@angular/router';
+import { SellerRequestService } from '../../core/services/seller-request.service';
 
 @Component({
   selector: 'app-profile',
@@ -55,6 +56,7 @@ export class ProfileComponent implements OnInit {
   private voucherService = inject(VoucherService);
   private message = inject(NzMessageService);
   private cdr = inject(ChangeDetectorRef);
+  private sellerRequestService = inject(SellerRequestService);
   private router = inject(Router);
   private platformId = inject(PLATFORM_ID);
 
@@ -73,6 +75,8 @@ export class ProfileComponent implements OnInit {
   activeTab = 'info';
 
   userRoleName = '';
+  isSeller = false;
+  pendingSellerRequest = false;
 
   readonly statusConfig: Record<string, { color: string; label: string; step: number }> = {
     PENDING: { color: '#f59e0b', label: 'Chờ xử lý', step: 0 },
@@ -237,10 +241,27 @@ export class ProfileComponent implements OnInit {
         } else {
           this.userRoleName = res.role || 'Thành viên';
         }
+        this.checkSellerStatus();
         this.cdr.markForCheck();
       },
       error: () => this.message.error('Lỗi khi tải thông tin cá nhân'),
     });
+  }
+
+  checkSellerStatus() {
+    if (this.userProfile.roles) {
+      this.isSeller = this.userProfile.roles.some((r: any) => {
+        const roleName = (r.name || r || '').toString().toLowerCase();
+        return roleName === 'seller';
+      });
+    }
+    
+    if (!this.isSeller) {
+      this.sellerRequestService.getMyRequests().subscribe(res => {
+        this.pendingSellerRequest = res.some((req: any) => req.status === 'PENDING');
+        this.cdr.markForCheck();
+      });
+    }
   }
 
   toggleEdit() {
@@ -251,7 +272,7 @@ export class ProfileComponent implements OnInit {
   }
 
   getImageUrl(url?: string): string {
-    if (!url) return 'assets/placeholder-user.png';
+    if (!url) return 'https://ui-avatars.com/api/?name=User&background=random';
     if (url.startsWith('/uploads')) {
       return `http://localhost:3000${url}`;
     }

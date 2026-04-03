@@ -23,8 +23,21 @@
         <circle cx="11" cy="11" r="8" />
         <line x1="21" y1="21" x2="16.65" y2="16.65" />
       </svg>
-      <input type="text" placeholder="Tìm kiếm theo tên sản phẩm..." (keyup)="onSearch($event.target.value)"
-        [value]="searchValue()" class="search-input" />
+      <input type="text" nz-input placeholder="Tìm kiếm sản phẩm..." [ngModel]="searchValue()"
+        (ngModelChange)="onSearch($event)" />
+    </div>
+
+    <!-- Shop Filter -->
+    <div class="shop-filter" style="width: 200px;">
+      <nz-select [ngModel]="shopFilter()" (ngModelChange)="onShopFilter($event)" nzPlaceHolder="Tất cả Shop" nzShowSearch nzAllowClear style="width: 100%">
+        <nz-option *ngFor="let s of sellersList()" [nzLabel]="s.displayName" [nzValue]="s.id"></nz-option>
+      </nz-select>
+    </div>
+
+    <div class="filter-actions" style="margin-left: auto;">
+      <button nz-button nzType="primary" (click)="loadProducts()" [nzLoading]="loading()">
+        <span nz-icon nzType="sync"></span>
+      </button>
     </div>
     <div class="search-stats">
       <span>Tổng: <strong>{{ totalProducts() }}</strong> sản phẩm</span>
@@ -45,12 +58,13 @@
       [nzScroll]="{ x: '1100px' }" class="products-table">
       <thead>
         <tr>
-          <th>Sản phẩm</th>
-          <th nzWidth="140px">Danh mục</th>
-          <th nzAlign="right" nzWidth="160px">Giá</th>
-          <th nzAlign="center" nzWidth="110px">Kho</th>
-          <th nzAlign="center" nzWidth="100px">Trạng thái</th>
-          <th nzAlign="center" nzWidth="100px">Thao tác</th>
+          <th nzWidth="300px">Sản phẩm</th>
+          <th>Danh mục</th>
+          <th>Shop</th>
+          <th nzAlign="right">Giá</th>
+          <th nzAlign="center">Tồn kho</th>
+          <th nzAlign="center">Trạng thái</th>
+          <th nzAlign="center">Thao tác</th>
         </tr>
       </thead>
       <tbody>
@@ -78,7 +92,23 @@
             </div>
           </td>
           <td>
-            <nz-tag nzColor="geekblue">{{ p.category?.name || 'N/A' }}</nz-tag>
+            <div class="category-info">
+              <nz-tag nzColor="geekblue" style="margin-bottom: 4px;">{{ p.category?.name || 'N/A' }}</nz-tag>
+              <div *ngIf="p.brand" style="font-size: 0.75rem; color: #94a3b8;">{{ p.brand.name }}</div>
+            </div>
+          </td>
+          <td>
+            <div class="shop-badge-premium" style="display: flex; align-items: center; gap: 10px;">
+               <div style="width: 32px; height: 32px; border-radius: 10px; background: #e0e7ff; display: flex; align-items: center; justify-content: center; color: #4338ca; flex-shrink: 0;">
+                  <span nz-icon nzType="shop" nzTheme="outline"></span>
+               </div>
+               <div style="display: flex; flex-direction: column;">
+                  <span style="font-weight: 700; color: #1e293b; font-size: 0.85rem; line-height: 1.2;">
+                     {{ p.shop?.name || 'Admin' }}
+                  </span>
+                  <span style="font-size: 0.75rem; color: #94a3b8;">#{{ p.userId }}</span>
+               </div>
+            </div>
           </td>
           <td nzAlign="right">
             <div class="price-current">{{ p.price | vndCurrency }}</div>

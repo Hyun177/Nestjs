@@ -7,7 +7,9 @@ import {
   ParseIntPipe,
   Post,
   Put,
+  Request,
   UseGuards,
+  Query,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { BrandService } from './brand.service';
@@ -17,6 +19,8 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { PermissionGuard } from '../auth/permission/permission.guard';
 import { Permissions } from '../auth/permission/permissions.decorator';
 import { Permission } from '../auth/permission/permissions.enum';
+import { RoleGuard } from '../auth/role.guard';
+import { Roles } from '../decorators/roles.decorator';
 
 @ApiTags('Brands')
 @Controller('brand')
@@ -26,14 +30,35 @@ export class BrandController {
   // Public — anyone can browse brands
   @Get()
   @ApiOperation({ summary: 'Get all brands (public)' })
-  async getBrands() {
-    return await this.brandService.getBrands();
+  async getBrands(@Query('categoryId') categoryId?: number) {
+    return await this.brandService.getBrands(categoryId ? Number(categoryId) : undefined);
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get brand by id (public)' })
   async getBrandById(@Param('id', ParseIntPipe) id: number) {
     return await this.brandService.getBrandById(id);
+  }
+
+  // ── Seller endpoints (role-based, not permission-based) ──────────────
+
+  // Seller: Get all brands (public brands, for use in product upload)
+  @Get('seller/me')
+  @UseGuards(JwtAuthGuard, RoleGuard)
+  @Roles('seller')
+  @ApiOperation({ summary: 'Get all brands for seller dropdown' })
+  async getBrandsForSeller(@Request() req: any, @Query('categoryId') categoryId?: number) {
+    return await this.brandService.getSellerBrands(req.user.userId || req.user.id, categoryId ? Number(categoryId) : undefined);
+  }
+
+  // Seller: Create a brand
+  @Post('seller')
+  @ApiBearerAuth('accessToken')
+  @UseGuards(JwtAuthGuard, RoleGuard)
+  @Roles('seller')
+  @ApiOperation({ summary: 'Create a brand (seller)' })
+  async createBrandBySeller(@Request() req: any, @Body() data: CreateBrandDto) {
+    return await this.brandService.createBrand(data, req.user.userId || req.user.id);
   }
 
   // Write operations — requires login + permission

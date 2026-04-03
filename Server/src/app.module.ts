@@ -21,6 +21,9 @@ import { ReviewModule } from './review/review.module';
 import { PaymentModule } from './payment/payment.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { LocationModule } from './location/location.module';
+import { SellerRequestModule } from './seller-request/seller-request.module';
+import { ShopModule } from './shop/shop.module';
+import { ShopCategoryModule } from './shop-category/shop-category.module';
 
 @Module({
   imports: [
@@ -61,6 +64,9 @@ import { LocationModule } from './location/location.module';
     PaymentModule,
     DashboardModule,
     LocationModule,
+    SellerRequestModule,
+    ShopModule,
+    ShopCategoryModule,
   ],
   controllers: [MessageController],
   providers: [],

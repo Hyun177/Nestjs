@@ -38,7 +38,7 @@ export class UsersService {
     return await this.userRepo.save(newUser);
   }
   async getUsers(): Promise<User[]> {
-    return await this.userRepo.find({ relations: ['roles', 'orders'] });
+    return await this.userRepo.find({ relations: ['roles', 'orders', 'shop'] });
   }
   async getUserById(id: number): Promise<User> {
     const user = await this.userRepo.findOne({

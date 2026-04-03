@@ -28,8 +28,9 @@
     <table class="custom-table">
       <thead>
         <tr>
-          <th style="width: 40%">Thương hiệu</th>
-          <th style="width: 40%">Mô tả</th>
+          <th style="width: 25%">Thương hiệu</th>
+          <th style="width: 20%">Danh mục</th>
+          <th style="width: 35%">Mô tả</th>
           <th style="width: 20%; text-align: right;">Thao tác</th>
         </tr>
       </thead>
@@ -45,6 +46,12 @@
                 <span class="brand-name">{{ data.name }}</span>
               </div>
             </div>
+          </td>
+          <td>
+            <span class="category-badge" *ngIf="data.category">
+              {{ data.category.name }}
+            </span>
+            <span class="text-gray-400" *ngIf="!data.category">N/A</span>
           </td>
           <td>
             <span class="text-gray-500">{{ data.description || 'Chưa có mô tả' }}</span>
@@ -78,9 +85,16 @@
 
       <div class="modal-body">
         <form [formGroup]="brandForm">
-          <div class="form-group">
+          <div class="form-group" [formGroup]="brandForm">
             <label>Tên thương hiệu *</label>
             <input formControlName="name" placeholder="Ví dụ: Apple, Samsung, Sony..." />
+          </div>
+
+          <div class="form-group" [formGroup]="brandForm">
+            <label>Danh mục cha *</label>
+            <nz-select formControlName="categoryId" nzPlaceHolder="Chọn danh mục cha" style="width: 100%;">
+              <nz-option *ngFor="let cat of categories()" [nzValue]="cat.id" [nzLabel]="cat.name"></nz-option>
+            </nz-select>
           </div>
 
           <div class="form-group">

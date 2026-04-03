@@ -208,6 +208,7 @@ export class ProductUploadComponent implements OnInit {
   }
 
   onSubmit() {
+    if (this.loading) return; // Prevent double submission
     if (this.productForm.valid && this.mainFileList.length > 0) {
       this.loading = true;
       const formData = new FormData();

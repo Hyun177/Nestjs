@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { MainLayoutComponent } from './layout/main-layout/main-layout.component';
 import { AdminLayoutComponent } from './layout/admin-layout/admin-layout.component';
+import { SellerLayoutComponent } from './layout/seller-layout/seller-layout.component';
 import { roleGuard } from './core/guards/role.guard';
 
 export const routes: Routes = [
@@ -60,6 +61,21 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./pages/payment-result/payment-result').then((m) => m.PaymentResultComponent),
       },
+      {
+        path: 'seller/register',
+        loadComponent: () =>
+          import('./pages/seller-registration/seller-registration.component').then((m) => m.SellerRegistrationComponent),
+      },
+      {
+        path: 'shop/:sellerId',
+        loadComponent: () =>
+          import('./pages/shop/shop.component').then((m) => m.ShopComponent),
+      },
+      {
+        path: 'chat',
+        loadComponent: () =>
+          import('./pages/chat/chat.component').then((m) => m.ChatComponent),
+      }
     ],
   },
   {
@@ -126,6 +142,16 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./pages/profile/profile.component').then((m) => m.ProfileComponent),
       },
+      {
+        path: 'shops',
+        loadComponent: () =>
+          import('./pages/admin/shops/admin-shops.component').then((m) => m.AdminShopsComponent),
+      },
+      {
+        path: 'seller-requests',
+        loadComponent: () =>
+          import('./pages/admin/seller-requests/admin-seller-requests.component').then((m) => m.AdminSellerRequestsComponent),
+      }
     ],
   },
   {
@@ -145,6 +171,64 @@ export const routes: Routes = [
       import('./pages/manager/manager-home/manager-home.component').then(
         (m) => m.ManagerHomeComponent,
       ),
+  },
+  {
+    path: 'seller',
+    component: SellerLayoutComponent,
+    canActivate: [roleGuard],
+    data: { roles: ['seller'] },
+    children: [
+      {
+        path: 'dashboard',
+        loadComponent: () =>
+          import('./pages/seller/dashboard/seller-dashboard.component').then(
+            (m) => m.SellerDashboardComponent,
+          ),
+      },
+      {
+        path: 'product-upload',
+        loadComponent: () =>
+          import('./pages/seller/product-upload/seller-product-upload.component').then(
+            (m) => m.SellerProductUploadComponent,
+          ),
+      },
+      {
+        path: 'orders',
+        loadComponent: () =>
+          import('./pages/seller/orders/seller-orders.component').then(
+            (m) => m.SellerOrdersComponent,
+          ),
+      },
+      {
+        path: 'products',
+        loadComponent: () =>
+          import('./pages/seller/products/seller-products.component').then(
+            (m) => m.SellerProductsComponent,
+          ),
+      },
+      {
+        path: 'categories',
+        loadComponent: () =>
+          import('./pages/seller/categories/seller-categories.component').then(
+            (m) => m.SellerCategoriesComponent,
+          ),
+      },
+      {
+        path: 'brands',
+        loadComponent: () =>
+          import('./pages/seller/brands/seller-brands.component').then(
+            (m) => m.SellerBrandsComponent,
+          ),
+      },
+      {
+        path: 'shop-settings',
+        loadComponent: () =>
+          import('./pages/seller/shop-settings/seller-shop-settings.component').then(
+            (m) => m.SellerShopSettingsComponent,
+          ),
+      },
+      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+    ]
   },
   {
     path: 'login',

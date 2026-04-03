@@ -1,4 +1,5 @@
 import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
+import { ShopService } from '../../core/services/shop.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProductService, Product } from '../../core/services/product.service';
@@ -46,11 +47,13 @@ export class ProductsComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private favoriteService = inject(FavoriteService);
+  private shopService = inject(ShopService);
 
 
   products: Product[] = [];
   categories: any[] = [];
   brands: any[] = [];
+  matchingShops: any[] = [];
   pageTitle = 'Tất cả sản phẩm';
 
   query = {
@@ -185,6 +188,7 @@ export class ProductsComponent implements OnInit {
   }
 
   loadProducts() {
+    this.matchingShops = [];
     const raw: any = {
       page: this.query.page,
       limit: this.query.limit,
@@ -199,6 +203,13 @@ export class ProductsComponent implements OnInit {
       minPrice: this.query.price[0] > 0 ? this.query.price[0] : undefined,
       maxPrice: this.query.price[1] < 100000000 ? this.query.price[1] : undefined,
     };
+
+    if (this.query.search && this.query.page === 1) {
+      this.shopService.searchShops(this.query.search).subscribe(shops => {
+        this.matchingShops = shops;
+        this.cdr.markForCheck();
+      });
+    }
 
     // Strip undefined/null – Angular HttpClient serializes undefined as the
     // literal string "undefined", which breaks backend numeric comparisons.

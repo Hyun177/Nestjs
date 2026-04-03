@@ -1,0 +1,215 @@
+<div class="seller-orders-container">
+  <!-- Header -->
+  <div class="dashboard-header">
+    <div class="header-content">
+      <h1>Quản lý đơn hàng</h1>
+      <p>Theo dõi và xử lý đơn hàng của Shop</p>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="stats-and-filters">
+    <div class="filter-card">
+      <div class="search-bar">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8" />
+          <line x1="21" y1="21" x2="16.65" y2="16.65" />
+        </svg>
+        <input type="text" placeholder="Tìm kiếm theo mã đơn hoặc tên khách..." [value]="searchValue()" (input)="onSearch($event)" />
+      </div>
+
+      <div class="status-tabs">
+        <button *ngFor="let opt of statusOptions" 
+                class="tab-btn" 
+                [class.active]="statusFilter() === opt.value"
+                (click)="onStatusFilter(opt.value)">
+          {{ opt.label }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading()" class="loading-state">
+    <div class="spinner"></div>
+    <p>Đang tải đơn hàng...</p>
+  </div>
+
+  <!-- Data Table -->
+  <div *ngIf="!loading()" class="table-frame">
+    <table class="custom-table">
+      <thead>
+        <tr>
+          <th>Mã đơn</th>
+          <th>Khách hàng</th>
+          <th class="center">SL</th>
+          <th class="right">Tổng tiền</th>
+          <th>Trạng thái</th>
+          <th class="center">Thao tác</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let order of filteredOrders" class="data-row">
+          <td>
+            <span class="id-tag">{{ order.orderCode }}</span>
+          </td>
+          <td>
+            <div class="user-info-cell">
+              <span class="user-name">{{ order.customerName }}</span>
+              <span class="user-sub">{{ order.shippingPhone }}</span>
+            </div>
+          </td>
+          <td class="center">
+            <span class="qty-badge">{{ order.itemsCount }}</span>
+          </td>
+          <td class="right">
+            <div class="seller-price-box">
+              <span class="price-val">{{ (order.sellerTotal || 0) | vndCurrency }}</span>
+              <small class="total-ref" *ngIf="order.totalAmount !== order.sellerTotal">Tổng đơn: {{ order.totalAmount | vndCurrency }}</small>
+            </div>
+          </td>
+          <td>
+            <div class="status-selector-wrap">
+              <select (change)="updateStatus(order.id, $event)" 
+                      [disabled]="updatingStatus() === order.id"
+                      class="status-select"
+                      [style.color]="getStatusCfg(order.status).color"
+                      [style.backgroundColor]="getStatusCfg(order.status).bg">
+                <option *ngFor="let s of statusOptions.slice(1)" 
+                        [value]="s.value"
+                        [selected]="s.value === order.status">{{ s.label }}</option>
+              </select>
+            </div>
+          </td>
+          <td class="center">
+            <button class="seller-btn seller-btn-default" style="padding: 6px 12px; font-size: 0.8rem;" (click)="openDetail(order)">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+              Chi tiết
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Empty State -->
+    <div *ngIf="filteredOrders.length === 0" class="empty-results">
+      <div class="empty-icon">📂</div>
+      <p>Không tìm thấy đơn hàng nào.</p>
+    </div>
+  </div>
+
+  <!-- Custom Modal Overlay -->
+  <div class="modal-overlay" *ngIf="detailModalVisible()" (click)="closeDetail()">
+    <div class="custom-modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title">
+           <h3>Chi tiết Đơn hàng</h3>
+           <span class="modal-subtitle">Mã đơn: {{ selectedOrder()?.orderCode }}</span>
+        </div>
+        <button class="modal-close-trigger" (click)="closeDetail()">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Customer & Shipping Grid -->
+        <div class="info-grid-row">
+          <div class="info-card-seller">
+            <div class="info-card-header">
+               <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
+               Thông tin khách hàng
+            </div>
+            <div class="info-card-body">
+               <div class="info-field"><span>Người đặt:</span> <strong>{{ selectedOrder()?.customerName }}</strong></div>
+               <div class="info-field"><span>Email:</span> <strong>{{ selectedOrder()?.user?.email }}</strong></div>
+               <div class="info-field"><span>SĐT Tài khoản:</span> <strong>{{ selectedOrder()?.user?.phone || 'Chưa cập nhật' }}</strong></div>
+            </div>
+          </div>
+
+          <div class="info-card-seller">
+            <div class="info-card-header">
+               <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" /></svg>
+               Địa chỉ nhận hàng (Shipping)
+            </div>
+            <div class="info-card-body">
+               <div class="info-field"><span>Người nhận:</span> <strong>{{ selectedOrder()?.shippingName || selectedOrder()?.customerName }}</strong></div>
+               <div class="info-field"><span>SĐT nhận:</span> <strong>{{ selectedOrder()?.shippingPhone }}</strong></div>
+               <div class="info-field"><span>Địa chỉ:</span> <strong>{{ selectedOrder()?.shippingAddress }}</strong></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="info-grid-row" style="margin-top: 1rem;">
+          <div class="info-card-seller">
+            <div class="info-card-header">
+               <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2" /><line x1="1" y1="10" x2="23" y2="10" /></svg>
+               Thanh toán & Thời gian
+            </div>
+            <div class="info-card-body">
+               <div class="info-field"><span>Phương thức:</span> <strong>{{ getPaymentLabel(selectedOrder()?.paymentMethod) }}</strong></div>
+               <div class="info-field"><span>Ngày đặt:</span> <strong>{{ selectedOrder()?.createdAt | date:'HH:mm · dd/MM/yyyy' }}</strong></div>
+               <div class="info-field"><span>Trạng thái:</span> 
+                  <span class="status-badge" [style.color]="getStatusCfg(selectedOrder()?.status).color" [style.background]="getStatusCfg(selectedOrder()?.status).bg">
+                    {{ getStatusCfg(selectedOrder()?.status).label }}
+                  </span>
+               </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-divider section-divider-indigo">
+          <span>Sản phẩm trong Shop của bạn</span>
+        </div>
+
+        <div class="items-list-custom">
+          <div *ngFor="let item of selectedOrder()?.sellerItems" class="order-item-card">
+            <div class="item-img-placeholder">
+               <img *ngIf="item.product?.image" [src]="getProductImage(item.product)" />
+               <span *ngIf="!item.product?.image">📦</span>
+            </div>
+            <div class="item-details">
+              <span class="item-name-tag">{{ item.product?.name }}</span>
+              <span class="item-sku-tag">SKU: {{ item.variantSku || 'N/A' }}</span>
+              <div class="item-variant-meta" *ngIf="item.color || item.size">
+                <span *ngIf="item.color">Màu: {{ item.color }}</span>
+                <span *ngIf="item.size" style="margin-left: 8px;">Size: {{ item.size }}</span>
+              </div>
+            </div>
+            <div class="item-pricing">
+              <span class="unit-qty">x{{ item.quantity }}</span>
+              <span class="unit-price">{{ item.price | vndCurrency }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Totals Summary -->
+        <div class="order-totals-card">
+           <div class="total-row">
+              <span>Tổng doanh thu các mục của Shop (Tạm tính)</span>
+              <strong>{{ (selectedOrder()?.sellerTotal || 0) | vndCurrency }}</strong>
+           </div>
+           <div class="total-row divider"></div>
+           <div class="total-row main-total">
+              <span>Tổng giá trị toàn bộ Đơn hàng (Khách phải trả)</span>
+              <strong>{{ (selectedOrder()?.totalAmount || 0) | vndCurrency }}</strong>
+           </div>
+           <div class="total-row discount" *ngIf="selectedOrder()?.discountAmount > 0">
+              <span>Voucher đã áp dụng</span>
+              <strong>-{{ selectedOrder()?.discountAmount | vndCurrency }}</strong>
+           </div>
+        </div>
+
+        <div class="multi-vendor-notice" *ngIf="selectedOrder()?.items.length > selectedOrder()?.sellerItems.length">
+          <span class="notice-icon">ℹ️</span>
+          Đơn hàng chứa sản phẩm từ seller khác. Chỉ hiển thị mục thuộc shop bạn.
+        </div>
+      </div>
+
+      <div class="modal-footer-custom">
+        <button class="seller-btn seller-btn-default" (click)="closeDetail()">Đóng</button>
+        <button class="seller-btn seller-btn-primary" (click)="closeDetail()">Đã Xem</button>
+      </div>
+    </div>
+  </div>
+</div>

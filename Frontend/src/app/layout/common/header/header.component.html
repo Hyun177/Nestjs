@@ -57,6 +57,9 @@
                 <nz-dropdown-menu #userMenu="nzDropdownMenu">
                     <ul nz-menu>
                         <li nz-menu-item routerLink="/profile">Profile</li>
+                        <li nz-menu-item routerLink="/chat">Messages</li>
+                        <li nz-menu-item *ngIf="user.roles.includes('seller')" routerLink="/seller/orders">Seller
+                            Dashboard</li>
                         <li nz-menu-item *ngIf="user.roles.includes('admin')" routerLink="/admin/products">Admin Panel
                         </li>
                         <li nz-menu-item *ngIf="user.roles.includes('manager')" routerLink="/manager/home">Manager Panel

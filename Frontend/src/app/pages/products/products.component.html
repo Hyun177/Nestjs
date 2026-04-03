@@ -101,6 +101,27 @@
         </nz-select>
       </div>
     </div>
+    <!-- Shop Suggestions Section -->
+    <div class="shop-suggestions" *ngIf="matchingShops && matchingShops.length > 0">
+      <h3 class="section-title-small">Cửa hàng liên quan</h3>
+      <div class="shop-grid">
+        <div class="shop-card" *ngFor="let shop of matchingShops" [routerLink]="['/shop', shop.userId]">
+          <div class="shop-avatar-wrap">
+            <img [src]="getImageUrl(shop.logo)" [alt]="shop.name">
+          </div>
+          <div class="shop-details">
+            <h4 class="shop-name">{{ shop.name }}</h4>
+            <p class="shop-description">{{ shop.description }}</p>
+            <div class="shop-meta">
+              <span><span nz-icon nzType="shop"></span> Shop</span>
+              <span class="view-shop-btn">Xem cửa hàng</span>
+            </div>
+          </div>
+          <!-- Shop Products Preview -->
+
+        </div>
+      </div>
+    </div>
 
     <!-- Empty state -->
     <div class="empty-state" *ngIf="products.length === 0">

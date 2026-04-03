@@ -132,6 +132,7 @@ export class OrderService {
           size: item.size,
           color: item.color,
           variantSku: item.variantSku,
+          shopId: product?.shopId || 0,
         });
         orderItems.push(orderItem);
         cartItemIdsToRemove.push(item.id);
@@ -212,10 +213,28 @@ export class OrderService {
   }
 
   async getAllOrders(): Promise<Order[]> {
-    return this.orderRepository.find({
-      relations: ['items', 'items.product', 'user', 'voucher'],
-      order: { createdAt: 'DESC' },
-    });
+    return this.orderRepository.createQueryBuilder('order')
+      .leftJoinAndSelect('order.items', 'item')
+      .leftJoinAndSelect('item.product', 'product')
+      .leftJoinAndSelect('product.shop', 'shop')
+      .leftJoinAndSelect('order.user', 'user')
+      .leftJoinAndSelect('order.voucher', 'voucher')
+      .orderBy('order.createdAt', 'DESC')
+      .getMany();
+  }
+
+  async getSellerOrders(sellerId: number): Promise<Order[]> {
+    // We want orders that have at least one item belonging to this seller's shop
+    // Since we added shopId to OrderItem, we can join and filter
+    const query = this.orderRepository.createQueryBuilder('order')
+      .leftJoinAndSelect('order.items', 'item')
+      .leftJoinAndSelect('item.product', 'product')
+      .leftJoinAndSelect('order.user', 'user')
+      .leftJoinAndSelect('order.voucher', 'voucher')
+      .where('item.shopId IN (SELECT id FROM shops WHERE userId = :sellerId)', { sellerId })
+      .orderBy('order.createdAt', 'DESC');
+
+    return query.getMany();
   }
 
   async updateStatus(orderId: number, status: OrderStatus): Promise<Order> {

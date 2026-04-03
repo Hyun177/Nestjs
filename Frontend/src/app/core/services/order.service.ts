@@ -45,6 +45,10 @@ export class OrderService {
     return this.http.get<any[]>(`${this.apiUrl}/all/admin`, { headers: this.getHeaders() });
   }
 
+  getSellerOrders(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/seller/all`, { headers: this.getHeaders() });
+  }
+
   updateOrderStatus(id: number, status: string): Observable<any> {
     return this.http.patch(
       `${this.apiUrl}/${id}/status`,

@@ -56,10 +56,13 @@
           <td>{{ data.email }}</td>
           <td>{{ data.phone }}</td>
           <td>
-            <span class="role-tag" [style.background-color]="getRoleColor(data.role) === 'red' ? '#fef2f2' : (getRoleColor(data.role) === 'blue' ? '#eff6ff' : '#fff7ed')" 
-                  [style.color]="getRoleColor(data.role) === 'red' ? '#ef4444' : (getRoleColor(data.role) === 'blue' ? '#3b82f6' : '#f59e0b')">
-              {{ data.role }}
-            </span>
+            <div class="roles-container" style="display: flex; gap: 4px; flex-wrap: wrap;">
+              <span *ngFor="let role of data.role.split(',')" class="role-tag" 
+                    [style.background-color]="getRoleColor(role) === 'red' ? '#fef2f2' : (getRoleColor(role) === 'gold' ? '#fffbeb' : (getRoleColor(role) === 'orange' ? '#fff7ed' : '#eff6ff'))" 
+                    [style.color]="getRoleColor(role) === 'red' ? '#ef4444' : (getRoleColor(role) === 'gold' ? '#f59e0b' : (getRoleColor(role) === 'orange' ? '#f97316' : '#3b82f6'))">
+                {{ role.trim() }}
+              </span>
+            </div>
           </td>
           <td>
             <span class="status-dot" [style.background-color]="getStatusColor(data.status) === 'success' ? '#10b981' : (getStatusColor(data.status) === 'error' ? '#ef4444' : '#94a3b8')"></span>

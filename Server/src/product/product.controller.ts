@@ -12,6 +12,8 @@ import {
   UploadedFiles,
   UseInterceptors,
   Query,
+  UnauthorizedException,
+  NotFoundException,
 } from '@nestjs/common';
 import { ProductService } from './product.service';
 import { Product } from './entities/product.entity';
@@ -118,6 +120,9 @@ export class ProductController {
     @Query('showAll') showAll?: string,
     @Query('onSale') onSale?: string,
     @Query('newArrival') newArrival?: string,
+    @Query('userId') userId?: string,
+    @Query('sellerId') sellerId?: string,
+    @Query('shopId') shopId?: string,
   ): Promise<{ data: Product[]; total: number; page: number; limit: number }> {
     const normalizedSort =
       sort === 'newest' || sort === 'price_asc' || sort === 'price_desc'
@@ -137,6 +142,9 @@ export class ProductController {
       showAll: showAll === 'true',
       onSale: onSale === 'true',
       newArrival: newArrival === 'true',
+      userId: userId ? Number(userId) : undefined,
+      sellerId: sellerId ? Number(sellerId) : undefined,
+      shopId: shopId ? Number(shopId) : undefined,
     });
   }
 
@@ -151,6 +159,37 @@ export class ProductController {
   async getProductById(@Param('id', ParseIntPipe) id: number) {
     return this.ProductService.getProductById(id);
   }
+
+  // ---- Archive specific endpoints ----
+  @Put('seller/:id/archive')
+  @ApiBearerAuth('accessToken')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Toggle archive status (seller)' })
+  async toggleArchiveSeller(
+    @Param('id', ParseIntPipe) id: number,
+    @Body('isArchived') isArchived: boolean,
+    @Req() req: any
+  ) {
+    const prod = await this.ProductService.getProductById(id);
+    if (!prod) throw new NotFoundException('Sản phẩm không tồn tại');
+    const userId = req.user.id || req.user.userId;
+    if (prod.userId !== userId) throw new UnauthorizedException('Không có quyền ẩn sản phẩm này');
+    
+    return this.ProductService.updateProduct(id, { isArchived } as any);
+  }
+
+  @Put(':id/archive')
+  @ApiBearerAuth('accessToken')
+  @UseGuards(JwtAuthGuard, PermissionGuard)
+  @Permissions(Permission.PRODUCT_UPDATE)
+  @ApiOperation({ summary: 'Toggle archive status (admin)' })
+  async toggleArchiveAdmin(
+    @Param('id', ParseIntPipe) id: number,
+    @Body('isArchived') isArchived: boolean,
+  ) {
+    return this.ProductService.updateProduct(id, { isArchived } as any);
+  }
+  // ------------------------------------
 
   @Put(':id')
   @ApiBearerAuth('accessToken')
