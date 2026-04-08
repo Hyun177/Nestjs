@@ -62,6 +62,27 @@ export class ProductService {
     return this.http.get<Product[]>(`${this.apiUrl}/top-selling`);
   }
 
+  getRecommended(productId: number, brandId: number, categoryId: number): Observable<Product[]> {
+    return this.http.get<any>(`${this.apiUrl}?pageSize=8&brandId=${brandId}&excludeId=${productId}`).pipe(
+      map(res => {
+        const items: Product[] = res.data ? res.data : (Array.isArray(res) ? res : []);
+        // Filter out current product
+        const filtered = items.filter(p => p.id !== productId);
+        if (filtered.length >= 4) return filtered.slice(0, 8);
+        return filtered; // will fallback to category/top-selling in component
+      })
+    );
+  }
+
+  getByCategory(categoryId: number, excludeId: number): Observable<Product[]> {
+    return this.http.get<any>(`${this.apiUrl}?pageSize=8&categoryId=${categoryId}`).pipe(
+      map(res => {
+        const items: Product[] = res.data ? res.data : (Array.isArray(res) ? res : []);
+        return items.filter(p => p.id !== excludeId).slice(0, 8);
+      })
+    );
+  }
+
   getProductById(id: number): Observable<Product> {
     return this.http.get<Product>(`${this.apiUrl}/${id}`);
   }

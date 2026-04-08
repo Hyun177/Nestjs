@@ -324,7 +324,7 @@
     // Brand Marquee
     .brand-marquee {
         background-color: #000;
-        padding: 2.2rem 0; // Slightly thicker
+        padding: 2.2rem 0;
         overflow: hidden;
         white-space: nowrap;
         display: flex;
@@ -335,7 +335,7 @@
 
         .marquee-content {
             display: flex;
-            animation: marquee-rotate 25s linear infinite;
+            animation: marquee-rotate 30s linear infinite; // Adjusted speed
             flex-shrink: 0;
             width: fit-content;
             will-change: transform;
@@ -344,41 +344,47 @@
         .marquee-group {
             display: flex;
             align-items: center;
-            gap: 8rem; // Consistent gap between items
-            padding-right: 8rem; // Identical gap at end of group so it repeats perfectly
+            gap: 10rem;
+            padding-right: 10rem;
             flex-shrink: 0;
-            width: max-content; // Let items define width
+            width: max-content;
         }
 
         .marquee-item {
             color: #fff;
-            font-family: 'Inter', sans-serif;
+            font-family: 'Archivo Black', 'Inter', sans-serif;
             font-size: 2.2rem;
             font-weight: 800;
             text-transform: uppercase;
             letter-spacing: 2px;
-            opacity: 0.95;
+            opacity: 0.9;
             flex-shrink: 0;
-            cursor: default;
-            transition: color 0.3s;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
 
-            &:hover {
+            &.clickable {
+                cursor: pointer;
+                &:hover {
+                    opacity: 1;
+                    color: #D70018;
+                    transform: scale(1.1);
+                }
+            }
+
+            &.clickable:hover {
+                opacity: 1;
                 color: #D70018;
+                transform: scale(1.1);
             }
         }
     }
 }
 
 @keyframes marquee-rotate {
-    0% {
-        transform: translateX(0);
-    }
-
-    100% {
-        transform: translateX(-10%);
-    }
-
-    // 10% because we have 10 identical groups
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-20%); } // 20% for 5 groups
 }
 
 @media (max-width: 768px) {
@@ -397,3 +403,26 @@
         }
     }
 }
+
+    .view-all-wrap {
+        text-align: center;
+        margin-top: 2.5rem;
+    }
+
+    .btn-view-all {
+        background: transparent;
+        color: #000;
+        border: 2px solid #000;
+        padding: 0.9rem 3rem;
+        border-radius: 99px;
+        font-weight: 700;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.2s;
+
+        &:hover {
+            background: #000;
+            color: #fff;
+            transform: scale(1.03);
+        }
+    }

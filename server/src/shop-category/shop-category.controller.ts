@@ -1,8 +1,19 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+  Request,
+} from '@nestjs/common';
 import { ShopCategoryService } from './shop-category.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RoleGuard } from '../auth/role.guard';
 import { Roles } from '../decorators/roles.decorator';
+import type { RequestWithUser } from 'src/users/types/user-payload.type';
 
 @Controller('shop-category')
 export class ShopCategoryController {
@@ -11,8 +22,11 @@ export class ShopCategoryController {
   @Post()
   @UseGuards(JwtAuthGuard, RoleGuard)
   @Roles('seller')
-  create(@Request() req, @Body() createDto: any) {
-    return this.shopCategoryService.create(req.user.id, createDto);
+  create(
+    @Request() req: RequestWithUser,
+    @Body() createDto: Record<string, any>,
+  ) {
+    return this.shopCategoryService.create(req.user.userId, createDto);
   }
 
   // Get categories for a specific shop (public accessible for buyers)
@@ -25,21 +39,25 @@ export class ShopCategoryController {
   @Get('me')
   @UseGuards(JwtAuthGuard, RoleGuard)
   @Roles('seller')
-  findMyCategories(@Request() req) {
-    return this.shopCategoryService.findAllBySeller(req.user.id);
+  findMyCategories(@Request() req: RequestWithUser) {
+    return this.shopCategoryService.findAllBySeller(req.user.userId);
   }
 
   @Patch(':id')
   @UseGuards(JwtAuthGuard, RoleGuard)
   @Roles('seller')
-  update(@Request() req, @Param('id') id: string, @Body() updateDto: any) {
-    return this.shopCategoryService.update(req.user.id, +id, updateDto);
+  update(
+    @Request() req: RequestWithUser,
+    @Param('id') id: string,
+    @Body() updateDto: Record<string, any>,
+  ) {
+    return this.shopCategoryService.update(req.user.userId, +id, updateDto);
   }
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RoleGuard)
   @Roles('seller')
-  remove(@Request() req, @Param('id') id: string) {
-    return this.shopCategoryService.remove(req.user.id, +id);
+  remove(@Request() req: RequestWithUser, @Param('id') id: string) {
+    return this.shopCategoryService.remove(req.user.userId, +id);
   }
 }

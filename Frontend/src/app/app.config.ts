@@ -104,6 +104,10 @@ import {
   SafetyCertificateFill,
   DashboardOutline,
   DashboardFill,
+  SendOutline,
+  RobotOutline,
+  RobotFill,
+
 } from '@ant-design/icons-angular/icons';
 import { routes } from './app.routes';
 import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
@@ -210,6 +214,9 @@ export const appConfig: ApplicationConfig = {
       SafetyCertificateFill,
       DashboardOutline,
       DashboardFill,
+      SendOutline,
+      RobotOutline,
+      RobotFill,
     ]),
     provideRouter(routes),
     provideHttpClient(withFetch(), withInterceptors([authInterceptor])),

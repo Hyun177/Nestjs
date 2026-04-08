@@ -305,5 +305,28 @@
         </div>
       </div>
     </div>
+
+    <!-- ===== Recommended Products ===== -->
+    <div class="container" *ngIf="recommendedProducts.length > 0">
+      <div class="recommended-section">
+        <h2 class="recommended-title">Sản phẩm gợi ý</h2>
+        <div class="recommended-grid">
+          <div *ngFor="let p of recommendedProducts" class="rec-card" [routerLink]="['/product', p.id]">
+            <div class="rec-img">
+              <img [src]="getFullUrl(p.image)" [alt]="p.name">
+              <span class="rec-discount" *ngIf="getDiscountPercent(p) > 0">-{{ getDiscountPercent(p) }}%</span>
+            </div>
+            <div class="rec-info">
+              <p class="rec-brand">{{ p.brand?.name }}</p>
+              <h4 class="rec-name">{{ p.name }}</h4>
+              <div class="rec-price">
+                <span class="rec-current">{{ p.price | vndCurrency }}</span>
+                <span class="rec-old" *ngIf="p.originalPrice && p.originalPrice > p.price">{{ p.originalPrice | vndCurrency }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
   

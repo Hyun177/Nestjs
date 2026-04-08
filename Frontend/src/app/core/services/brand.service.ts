@@ -26,12 +26,18 @@ export class BrandService {
     return this.http.get<any[]>(this.apiUrl, { params });
   }
 
+  getAdminBrands(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/admin/all`, {
+      headers: this.getHeaders()
+    });
+  }
+
   getSellerBrands(categoryId?: number): Observable<any[]> {
     const params: any = {};
     if (categoryId) params.categoryId = categoryId;
-    return this.http.get<any[]>(`${this.apiUrl}/seller/me`, { 
+    return this.http.get<any[]>(`${this.apiUrl}/seller/me`, {
       headers: this.getHeaders(),
-      params 
+      params
     });
   }
 
@@ -49,5 +55,9 @@ export class BrandService {
 
   deleteBrand(id: number): Observable<any> {
     return this.http.delete(`${this.apiUrl}/${id}`, { headers: this.getHeaders() });
+  }
+
+  approveBrand(id: number): Observable<any> {
+    return this.http.put(`${this.apiUrl}/approve/${id}`, {}, { headers: this.getHeaders() });
   }
 }

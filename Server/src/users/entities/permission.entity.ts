@@ -4,11 +4,11 @@ import { Role } from './role.entity';
 @Entity('permissions')
 export class Permission {
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
 
   @Column({ unique: true })
-  name: string; // ví dụ: 'product_create'
+  name!: string; // ví dụ: 'product_create'
 
   @ManyToMany(() => Role, (role) => role.permissions)
-  roles: Role[];
+  roles!: Role[];
 }

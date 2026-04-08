@@ -43,6 +43,13 @@
               </svg>
               +{{ getTrendValue(card.key) }}% so với tháng trước
             </div>
+            <div class="stat-trend down" *ngIf="getTrendValue(card.key) < 0" style="color: #ef4444; background: #fee2e2;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+              {{ getTrendValue(card.key) }}% so với tháng trước
+            </div>
             <div class="stat-unit" *ngIf="card.unit !== 'VND' && getTrendValue(card.key) === 0">
               {{ card.unit }}
             </div>
@@ -58,10 +65,10 @@
       <div class="chart-card wide">
         <div class="chart-card-header">
           <div>
-            <h4 class="chart-title">Doanh thu 6 tháng gần đây</h4>
-            <p class="chart-sub">Tổng giá trị giao dịch của toàn bộ đơn hàng</p>
+            <h4 class="chart-title">Biểu đồ Doanh thu (Admin & Seller)</h4>
+            <p class="chart-sub">So sánh hiệu quả kinh doanh giữa sàn và người bán</p>
           </div>
-          <div class="chart-badge green">Tổng quát</div>
+          <div class="chart-badge green">Trực quan</div>
         </div>
         <div class="chart-body">
           <canvas id="salesChart"></canvas>
@@ -85,6 +92,34 @@
       </div>
     </div>
 
+    <!-- Revenue Breakdown Table (New) -->
+    <div class="panel wide mt-6" style="margin-bottom: 24px;">
+      <div class="panel-header">
+        <h4 class="panel-title">Chi tiết doanh thu theo tháng (Số liệu thật)</h4>
+        <div class="chart-badge">2 Cột Hệ thống</div>
+      </div>
+      <div class="p-4 overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="bg-gray-50 border-b border-gray-100">
+              <th class="p-3 text-xs font-bold text-gray-500 uppercase">Tháng</th>
+              <th class="p-3 text-xs font-bold text-indigo-600 uppercase">Doanh thu Admin</th>
+              <th class="p-3 text-xs font-bold text-orange-500 uppercase">Doanh thu Seller</th>
+              <th class="p-3 text-xs font-bold text-gray-800 uppercase">Tổng cộng</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let month of salesData.labels; let i = index" class="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
+              <td class="p-3 font-bold text-gray-600">{{ month }}</td>
+              <td class="p-3 font-medium">{{ salesData.adminValues[i] | vndCurrency }}</td>
+              <td class="p-3 font-medium">{{ salesData.sellerValues[i] | vndCurrency }}</td>
+              <td class="p-3 font-black text-gray-900">{{ (salesData.adminValues[i] + salesData.sellerValues[i]) | vndCurrency }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
     <!-- Bottom Row: Recent Orders + Top Products -->
     <div class="bottom-row">
       <!-- Recent Orders -->
@@ -95,7 +130,10 @@
         </div>
         <div class="orders-list">
           <div *ngFor="let o of recentOrders()" class="order-item">
-            <div class="order-code">{{ o.orderCode }}</div>
+            <div class="order-code" style="line-height: 1.2;">
+                <div>{{ o.orderCode }}</div>
+                <div style="font-size: 0.7rem; color: #6366f1; margin-top: 2px; font-weight: 600;">{{ getOrderShopNames(o) }}</div>
+            </div>
             <div class="order-customer">{{ o.customer }}</div>
             <div class="order-total">{{ o.total | vndCurrency }}</div>
             <div class="order-status-wrap">
@@ -144,7 +182,7 @@
               alt="" />
             <div class="prod-main flex-1 min-w-0">
               <div class="prod-n font-bold truncate">{{ p.name }}</div>
-              <div class="prod-c text-xs text-blue-500">{{ p.category?.name || 'Sản phẩm' }}</div>
+              <div class="prod-c text-xs text-blue-500">{{ p.category?.name || 'Sản phẩm' }} <span class="text-gray-400">·</span> <span class="font-bold text-indigo-500">{{ getShopName(p) }}</span></div>
             </div>
             <div class="prod-v flex flex-col items-end w-24">
               <span class="text-gray-400 text-[10px] uppercase font-bold">Đã bán</span>

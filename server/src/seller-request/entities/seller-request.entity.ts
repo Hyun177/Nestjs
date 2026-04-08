@@ -1,4 +1,12 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  JoinColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 
 export enum RequestStatus {
@@ -10,45 +18,45 @@ export enum RequestStatus {
 @Entity('seller_requests')
 export class SellerRequest {
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
 
   @ManyToOne(() => User)
   @JoinColumn({ name: 'userId' })
-  user: User;
+  user!: User;
 
   @Column()
-  userId: number;
+  userId!: number;
 
   @Column()
-  shopName: string;
+  shopName!: string;
 
   @Column('text', { nullable: true })
-  description: string;
+  description!: string;
 
   @Column({ nullable: true })
-  logo: string;
+  logo!: string;
 
   @Column()
-  phone: string;
+  phone!: string;
 
   @Column('text')
-  address: string;
+  address!: string;
 
   @Column({ nullable: true })
-  idCardNumber: string;
+  idCardNumber!: string;
 
   @Column({ nullable: true })
-  businessLicenseUrl: string;
+  businessLicenseUrl!: string;
 
   @Column({ type: 'varchar', default: RequestStatus.PENDING })
-  status: RequestStatus;
+  status!: RequestStatus;
 
   @Column({ type: 'text', nullable: true })
-  rejectionReason: string;
+  rejectionReason!: string;
 
   @CreateDateColumn()
-  createdAt: Date;
+  createdAt!: Date;
 
   @UpdateDateColumn()
-  updatedAt: Date;
+  updatedAt!: Date;
 }

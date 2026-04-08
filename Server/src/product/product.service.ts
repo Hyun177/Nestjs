@@ -107,7 +107,7 @@ export class ProductService {
       }
     }
 
-    let shopCategoryIds = (data as any).shopCategoryIds;
+    let shopCategoryIds: number[] | string | undefined = data.shopCategoryIds;
     if (typeof shopCategoryIds === 'string') {
       try {
         shopCategoryIds = JSON.parse(shopCategoryIds);
@@ -115,8 +115,8 @@ export class ProductService {
         shopCategoryIds = [];
       }
     }
-    const shopCategoriesRelation = Array.isArray(shopCategoryIds) 
-      ? shopCategoryIds.map((id: number) => ({ id })) 
+    const shopCategoriesRelation = Array.isArray(shopCategoryIds)
+      ? shopCategoryIds.map((id) => ({ id }))
       : [];
 
     // FIND SHOP FOR THIS USER
@@ -133,12 +133,14 @@ export class ProductService {
       shopId,
       rating: data.rating ?? 5,
       numReviews: data.numReviews ?? 0,
-      isFeatured: typeof data.isFeatured === 'boolean' 
-        ? data.isFeatured 
-        : String(data.isFeatured) === 'true',
-      isArchived: typeof data.isArchived === 'boolean' 
-        ? data.isArchived 
-        : String(data.isArchived) === 'true',
+      isFeatured:
+        typeof data.isFeatured === 'boolean'
+          ? data.isFeatured
+          : String(data.isFeatured) === 'true',
+      isArchived:
+        typeof data.isArchived === 'boolean'
+          ? data.isArchived
+          : String(data.isArchived) === 'true',
       soldCount: data.soldCount ? Number(data.soldCount) : 0,
       viewCount: data.viewCount ? Number(data.viewCount) : 0,
       originalPrice,
@@ -184,9 +186,15 @@ export class ProductService {
       query.andWhere('product.brandId = :brandId', { brandId: params.brandId });
     }
     if (params?.sellerId) {
-      query.andWhere('product.userId = :sellerId', { sellerId: params.sellerId });
+      query.andWhere('product.userId = :sellerId', {
+        sellerId: params.sellerId,
+      });
     }
-    if (params?.userId !== undefined && params?.userId !== null && params?.userId !== '') {
+    if (
+      params?.userId !== undefined &&
+      params?.userId !== null &&
+      params?.userId !== ''
+    ) {
       query.andWhere('product.userId = :userId', { userId: params.userId });
     }
     if (params?.shopId === '0' || params?.shopId === 0) {
@@ -265,7 +273,10 @@ export class ProductService {
       relations: ['category', 'brand', 'shop', 'shopCategories'],
     });
   }
-  async updateProduct(id: number, data: UpdateProductDto): Promise<Product> {
+  async updateProduct(
+    id: number,
+    data: Partial<UpdateProductDto>,
+  ): Promise<Product> {
     if (data.categoryId) {
       data.categoryId = Number(data.categoryId);
       const category = await this.categoryRepository.findOne({
@@ -286,18 +297,27 @@ export class ProductService {
     if (data.originalPrice !== undefined)
       data.originalPrice = Number(data.originalPrice);
     if (data.isFeatured !== undefined) {
-      data.isFeatured = typeof data.isFeatured === 'boolean' 
-        ? data.isFeatured 
-        : String(data.isFeatured) === 'true';
+      data.isFeatured =
+        typeof data.isFeatured === 'boolean'
+          ? data.isFeatured
+          : String(data.isFeatured) === 'true';
     }
     if (data.isArchived !== undefined) {
-      data.isArchived = typeof data.isArchived === 'boolean' 
-        ? data.isArchived 
-        : String(data.isArchived) === 'true';
+      data.isArchived =
+        typeof data.isArchived === 'boolean'
+          ? data.isArchived
+          : String(data.isArchived) === 'true';
     }
 
     // Parse JSON
-    const jsonFields = ['labels', 'specs', 'attributes', 'variants', 'images', 'shopCategoryIds'];
+    const jsonFields = [
+      'labels',
+      'specs',
+      'attributes',
+      'variants',
+      'images',
+      'shopCategoryIds',
+    ];
     for (const field of jsonFields) {
       if (typeof data[field] === 'string') {
         try {
@@ -308,9 +328,20 @@ export class ProductService {
       }
     }
 
-    if (data['shopCategoryIds']) {
-      data['shopCategories'] = data['shopCategoryIds'].map((id: number) => ({ id }));
-      delete data['shopCategoryIds'];
+    if (data.shopCategoryIds) {
+      if (typeof data.shopCategoryIds === 'string') {
+        try {
+          const parsed = JSON.parse(data.shopCategoryIds);
+          if (Array.isArray(parsed)) {
+            data.shopCategories = parsed.map((id) => ({ id }));
+          }
+        } catch {
+          data.shopCategories = [];
+        }
+      } else if (Array.isArray(data.shopCategoryIds)) {
+        data.shopCategories = data.shopCategoryIds.map((id) => ({ id }));
+      }
+      delete data.shopCategoryIds;
     }
 
     // Merge existingImages (kept from before) with newly uploaded images
@@ -344,7 +375,7 @@ export class ProductService {
 
     const product = await this.productRepository.findOne({
       where: { id },
-      relations: ['shopCategories']
+      relations: ['shopCategories'],
     });
     if (!product) throw new Error('Product not found');
 

@@ -154,14 +154,15 @@ export class AdminProductsComponent implements OnInit {
     this.userService.getAllUsers().subscribe({
       next: (data: any) => {
         const sellers = (data || [])
-          .filter((u: any) => u.roles?.some((r: any) => r.name === 'seller') && u.shop)
+          .filter((u: any) => u.shop || u.roles?.some((r: any) => r.name?.toLowerCase() === 'seller'))
           .map((u: any) => ({
-            id: u.shop.id,
-            displayName: u.shop.name || (u.firstname ? `${u.firstname} ${u.lastname}`.trim() : u.email)
+            id: u.shop?.id || u.id,
+            userId: u.id,
+            displayName: u.shop?.name || (u.firstname ? `${u.firstname} ${u.lastname}`.trim() : u.email || 'Seller')
           }));
         
         this.sellersList.set([
-          { id: 0, displayName: 'Sản phẩm Admin (Toàn sàn)' },
+          { id: 0, userId: 0, displayName: 'Sản phẩm Admin (Toàn sàn)' },
           ...sellers
         ]);
       }
@@ -179,7 +180,14 @@ export class AdminProductsComponent implements OnInit {
 
     const sFilter = this.shopFilter();
     if (sFilter !== null && sFilter !== undefined) {
-      params.shopId = sFilter;
+      if (sFilter === 0) {
+        params.shopId = 0; // Admin fallback
+      } else {
+        const selected = this.sellersList().find(s => s.id === sFilter);
+        if (selected) {
+           params.sellerId = selected.userId;
+        }
+      }
     }
 
     this.productService.getProductsPaginated(params).subscribe({
@@ -269,28 +277,64 @@ export class AdminProductsComponent implements OnInit {
   openEditModal(product: any) {
     this.isEditMode.set(true);
 
-    // Reload form arrays
+    // Reload form arrays — clear tất cả trước
     this.features.clear();
     this.specs.clear();
     this.attributes.clear();
     this.variants.clear();
-    let intro = product.description || '';
+
+    // Parse description thành 3 phần: intro / features / policy
+    const desc = (product.description || '').replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+    let intro = '';
     let parsedFeatures: string[] = [];
     let policy = '';
 
-    if (intro.includes('ĐẶC ĐIỂM NỔI BẬT:')) {
-      const parts = intro.split('ĐẶC ĐIỂM NỔI BẬT:');
-      intro = parts[0].trim();
-      
-      if (parts[1]) {
-        if (parts[1].includes('BẢO HÀNH:')) {
-          const subParts = parts[1].split('BẢO HÀNH:');
-          const featureStr = subParts[0];
-          policy = subParts[1].trim();
-          parsedFeatures = featureStr.split('\n').map((f: string) => f.replace(/^- /, '').trim()).filter((f: string) => f.length > 0);
-        } else {
-          parsedFeatures = parts[1].split('\n').map((f: string) => f.replace(/^- /, '').trim()).filter((f: string) => f.length > 0);
-        }
+    // Tất cả các separator có thể có
+    const FEAT_SEPS = ['\n\nĐẶC ĐIỂM NỔI BẬT:\n', '\nĐẶC ĐIỂM NỔI BẬT:\n', '\n\nĐẶC ĐIỂM NỔI BẬT:'];
+    const POLICY_SEPS = ['\n\nTHÔNG TIN BẢO HÀNH:\n', '\n\nBẢO HÀNH:\n', '\nTHÔNG TIN BẢO HÀNH:\n', '\nBẢO HÀNH:\n', '\n\nTHÔNG TIN BẢO HÀNH:', '\n\nBẢO HÀNH:'];
+
+    let featIdx = -1;
+    let featSepLen = 0;
+    for (const sep of FEAT_SEPS) {
+      const idx = desc.indexOf(sep);
+      if (idx !== -1) { featIdx = idx; featSepLen = sep.length; break; }
+    }
+
+    if (featIdx !== -1) {
+      intro = desc.substring(0, featIdx).trim();
+      const afterFeat = desc.substring(featIdx + featSepLen);
+
+      let policyIdx = -1;
+      let policyLen = 0;
+      for (const sep of POLICY_SEPS) {
+        const idx = afterFeat.indexOf(sep);
+        if (idx !== -1) { policyIdx = idx; policyLen = sep.length; break; }
+      }
+
+      if (policyIdx !== -1) {
+        const featStr = afterFeat.substring(0, policyIdx);
+        policy = afterFeat.substring(policyIdx + policyLen).trim();
+        parsedFeatures = featStr.split('\n')
+          .map((f: string) => f.replace(/^[-•*]\s*/, '').trim())
+          .filter((f: string) => f.length > 0);
+      } else {
+        parsedFeatures = afterFeat.split('\n')
+          .map((f: string) => f.replace(/^[-•*]\s*/, '').trim())
+          .filter((f: string) => f.length > 0);
+      }
+    } else {
+      // Không có section headers — kiểm tra chỉ có policy không
+      let policyIdx = -1;
+      let policyLen = 0;
+      for (const sep of POLICY_SEPS) {
+        const idx = desc.indexOf(sep);
+        if (idx !== -1) { policyIdx = idx; policyLen = sep.length; break; }
+      }
+      if (policyIdx !== -1) {
+        intro = desc.substring(0, policyIdx).trim();
+        policy = desc.substring(policyIdx + policyLen).trim();
+      } else {
+        intro = desc.trim();
       }
     }
 
@@ -365,7 +409,7 @@ export class AdminProductsComponent implements OnInit {
 
     const featuresText = (val.descFeatures as string[])
       .filter(f => f.trim().length > 0).map(f => '- ' + f.trim()).join('\n');
-    const fullDescription = `${val.descIntro}\n\nĐẶC ĐIỂM NỔI BẬT:\n${featuresText}\n\nBẢO HÀNH:\n${val.descPolicy}`;
+    const fullDescription = `${val.descIntro}\n\nĐẶC ĐIỂM NỔI BẬT:\n${featuresText}\n\nTHÔNG TIN BẢO HÀNH:\n${val.descPolicy}`;
 
     formData.append('name', val.name || '');
     formData.append('price', String(val.price));
@@ -460,6 +504,15 @@ export class AdminProductsComponent implements OnInit {
     if (stock > 20) return { color: 'success', label: 'Còn hàng' };
     if (stock > 0) return { color: 'warning', label: 'Sắp hết' };
     return { color: 'error', label: 'Hết hàng' };
+  }
+
+  getShopName(p: any) {
+    if (p.shop?.name) return p.shop.name;
+    if (p.userId) {
+       const seller = this.sellersList().find(s => s.userId === p.userId);
+       if (seller && seller.userId !== 0) return seller.displayName;
+    }
+    return 'Admin';
   }
 
   getBase64(file: File): Promise<string | ArrayBuffer | null> {

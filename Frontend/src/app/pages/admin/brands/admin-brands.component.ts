@@ -58,6 +58,7 @@ export class AdminBrandsComponent implements OnInit {
   searchValue = signal('');
   pageIndex = signal(1);
   pageSize = signal(10);
+  previewError = false;
 
   brands = signal<any[]>([]);
 
@@ -66,6 +67,8 @@ export class AdminBrandsComponent implements OnInit {
     name: ['', [Validators.required]],
     description: [''],
     categoryId: [null as number | null, [Validators.required]],
+    isPremium: [false],
+    logo: ['']
   });
 
   categories = signal<any[]>([]);
@@ -81,13 +84,23 @@ export class AdminBrandsComponent implements OnInit {
 
   loadBrands() {
     this.loading.set(true);
-    this.brandService.getBrands().subscribe({
+    this.brandService.getAdminBrands().subscribe({
       next: (res) => {
         this.brands.set(res || []);
         this.loading.set(false);
         this.cdr.detectChanges();
       },
       error: () => this.loading.set(false)
+    });
+  }
+
+  approveBrand(id: number) {
+    this.brandService.approveBrand(id).subscribe({
+      next: () => {
+        this.message.success('Đã duyệt thương hiệu');
+        this.loadBrands();
+      },
+      error: (err) => this.message.error(err.error?.message || 'Không thể duyệt thương hiệu này')
     });
   }
 
@@ -101,7 +114,7 @@ export class AdminBrandsComponent implements OnInit {
 
   openAddModal() {
     this.isEditMode.set(false);
-    this.brandForm.reset();
+    this.brandForm.reset({ id: 0, isPremium: false, logo: '' });
     this.isModalVisible.set(true);
   }
 
@@ -111,9 +124,23 @@ export class AdminBrandsComponent implements OnInit {
       id: brand.id,
       name: brand.name,
       description: brand.description,
-      categoryId: brand.categoryId
+      categoryId: brand.categoryId,
+      isPremium: brand.isPremium || false,
+      logo: brand.logo || ''
     });
     this.isModalVisible.set(true);
+  }
+
+  togglePremium(brand: any) {
+    const newVal = !brand.isPremium;
+    this.brandService.updateBrand(brand.id, { ...brand, isPremium: newVal }).subscribe({
+      next: () => {
+        brand.isPremium = newVal;
+        this.message.success(newVal ? 'Đã kích hoạt Brand "Xịn"' : 'Đã bỏ Brand "Xịn"');
+        this.cdr.detectChanges();
+      },
+      error: () => this.message.error('Lỗi khi cập nhật trạng thái')
+    });
   }
 
   handleOk() {

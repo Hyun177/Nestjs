@@ -37,8 +37,9 @@
                         <div class="item-details">
                             <div class="item-row">
                                 <h3 class="item-name">{{ item.product.name }}</h3>
-                                <button class="remove-btn" (click)="removeItem(item.id)">
-                                    <span nz-icon nzType="delete" nzTheme="fill"></span>
+                                <button class="remove-btn" (click)="removeItem(item.id)" title="Xóa sản phẩm">
+                                    <span nz-icon nzType="delete" nzTheme="outline"></span>
+                                    <span class="remove-text">Xóa</span>
                                 </button>
                             </div>
                             <div class="item-meta">
@@ -58,15 +59,19 @@
                                     </span>
                                 </div>
 
-                                <div class="quantity-picker">
-                                    <button (click)="updateQuantity(item, item.quantity - 1)"
-                                        [disabled]="item.quantity <= 1">
-                                        <span nz-icon nzType="minus"></span>
-                                    </button>
-                                    <span class="quantity-val">{{ item.quantity }}</span>
-                                    <button (click)="updateQuantity(item, item.quantity + 1)">
-                                        <span nz-icon nzType="plus"></span>
-                                    </button>
+                                <div class="item-actions">
+                                    <div class="quantity-picker">
+                                        <button (click)="updateQuantity(item, item.quantity - 1)"
+                                            [disabled]="item.quantity <= 1">
+                                            <span nz-icon nzType="minus"></span>
+                                        </button>
+                                        <span class="quantity-val">{{ item.quantity }}</span>
+                                        <button (click)="updateQuantity(item, item.quantity + 1)">
+                                            <span nz-icon nzType="plus"></span>
+                                        </button>
+                                    </div>
+                                    
+                                 
                                 </div>
                             </div>
                         </div>

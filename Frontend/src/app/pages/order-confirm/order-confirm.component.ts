@@ -106,6 +106,14 @@ export class OrderConfirmComponent implements OnInit {
     if (isPlatformBrowser(this.platformId)) {
       const nav = history.state;
       this.selectedItemIds = nav?.itemIds ?? [];
+      
+      // Set payment method from chatbot if provided
+      if (nav?.paymentMethod) {
+        const method = nav.paymentMethod.toUpperCase();
+        if (method === 'COD' || method === 'VNPAY' || method === 'VISA') {
+          this.selectedPaymentMethod = method;
+        }
+      }
     }
 
     this.locationService.getProvinces().subscribe(p => { this.provinces = p; this.cdr.detectChanges(); });
@@ -282,6 +290,25 @@ export class OrderConfirmComponent implements OnInit {
         this.isPlacingOrder = false;
         this.message.error(err.error?.message || 'Có lỗi xảy ra');
       },
+    });
+  }
+
+  removeItem(itemId: number) {
+    this.cartService.removeItem(itemId).subscribe({
+      next: () => {
+        this.message.success('Đã xóa sản phẩm khỏi giỏ hàng');
+        // Refresh cart
+        this.cartService.refreshCart();
+        // Remove from selectedItemIds
+        this.selectedItemIds = this.selectedItemIds.filter(id => id !== itemId);
+        // If no items left, go back to cart
+        if (this.selectedItems.length === 0) {
+          this.router.navigate(['/cart']);
+        }
+      },
+      error: () => {
+        this.message.error('Không thể xóa sản phẩm');
+      }
     });
   }
 }

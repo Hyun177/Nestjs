@@ -31,18 +31,18 @@ export class CreateUserDto {
   @IsString()
   @MinLength(2)
   @MaxLength(100)
-  firstname: string;
+  firstname!: string;
 
   @IsString()
   @MinLength(2)
   @MaxLength(100)
-  lastname: string;
+  lastname!: string;
 
   @IsEmail()
-  email: string;
+  email!: string;
 
   @IsStrongPassword()
-  password: string;
+  password!: string;
 
   @IsString()
   @IsOptional()

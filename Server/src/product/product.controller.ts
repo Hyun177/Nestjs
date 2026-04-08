@@ -168,14 +168,15 @@ export class ProductController {
   async toggleArchiveSeller(
     @Param('id', ParseIntPipe) id: number,
     @Body('isArchived') isArchived: boolean,
-    @Req() req: any
+    @Req() req: RequestWithUser,
   ) {
     const prod = await this.ProductService.getProductById(id);
-    if (!prod) throw new NotFoundException('Sản phẩm không tồn tại');
-    const userId = req.user.id || req.user.userId;
-    if (prod.userId !== userId) throw new UnauthorizedException('Không có quyền ẩn sản phẩm này');
-    
-    return this.ProductService.updateProduct(id, { isArchived } as any);
+    if (!prod) throw new NotFoundException('Sản phẩm không tồnại');
+    const userId = req.user.userId;
+    if (prod.userId !== userId)
+      throw new UnauthorizedException('Không có quyền ẩn sản phẩm này');
+
+    return this.ProductService.updateProduct(id, { isArchived });
   }
 
   @Put(':id/archive')
@@ -187,7 +188,7 @@ export class ProductController {
     @Param('id', ParseIntPipe) id: number,
     @Body('isArchived') isArchived: boolean,
   ) {
-    return this.ProductService.updateProduct(id, { isArchived } as any);
+    return this.ProductService.updateProduct(id, { isArchived });
   }
   // ------------------------------------
 

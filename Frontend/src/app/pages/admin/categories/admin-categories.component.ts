@@ -69,13 +69,24 @@ export class AdminCategoriesComponent implements OnInit {
 
   loadCategories() {
     this.loading.set(true);
-    this.categoryService.getCategories().subscribe({
+    // Use getAllCategoriesAdmin to see both official and seller categories
+    this.categoryService.getAllCategoriesAdmin().subscribe({
       next: (res) => {
         this.categories.set(res || []);
         this.loading.set(false);
         this.cdr.detectChanges();
       },
       error: () => this.loading.set(false)
+    });
+  }
+
+  approveCategory(id: number) {
+    this.categoryService.approveCategory(id).subscribe({
+      next: () => {
+        this.message.success('Đã duyệt danh mục');
+        this.loadCategories();
+      },
+      error: (err) => this.message.error(err.error?.message || 'Không thể duyệt danh mục này')
     });
   }
 

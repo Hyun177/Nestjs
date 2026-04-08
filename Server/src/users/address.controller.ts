@@ -14,6 +14,8 @@ import {
 import { AddressService } from './address.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import type { RequestWithUser } from './types/user-payload.type';
+import { UserAddress } from './entities/user-address.entity';
 
 @ApiTags('address')
 @ApiBearerAuth('accessToken')
@@ -23,31 +25,34 @@ export class AddressController {
   constructor(private readonly addressService: AddressService) {}
 
   @Get()
-  getAll(@Req() req: any) {
+  getAll(@Req() req: RequestWithUser) {
     return this.addressService.getAddresses(req.user.userId);
   }
 
   @Post()
-  create(@Req() req: any, @Body() dto: any) {
+  create(@Req() req: RequestWithUser, @Body() dto: Partial<UserAddress>) {
     return this.addressService.createAddress(req.user.userId, dto);
   }
 
   @Put(':id')
   update(
-    @Req() req: any,
+    @Req() req: RequestWithUser,
     @Param('id', ParseIntPipe) id: number,
-    @Body() dto: any,
+    @Body() dto: Partial<UserAddress>,
   ) {
     return this.addressService.updateAddress(id, req.user.userId, dto);
   }
 
   @Delete(':id')
-  delete(@Req() req: any, @Param('id', ParseIntPipe) id: number) {
+  delete(@Req() req: RequestWithUser, @Param('id', ParseIntPipe) id: number) {
     return this.addressService.deleteAddress(id, req.user.userId);
   }
 
   @Patch(':id/default')
-  setDefault(@Req() req: any, @Param('id', ParseIntPipe) id: number) {
+  setDefault(
+    @Req() req: RequestWithUser,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
     return this.addressService.setDefault(id, req.user.userId);
   }
 }

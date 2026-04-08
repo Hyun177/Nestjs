@@ -15,7 +15,7 @@ export class ShopService {
     @InjectRepository(ShopFollower)
     private followerRepository: Repository<ShopFollower>,
     private dataSource: DataSource,
-  ) { }
+  ) {}
 
   async findBySeller(userId: number) {
     if (isNaN(userId)) throw new NotFoundException('Invalid Seller ID');
@@ -56,7 +56,7 @@ export class ShopService {
 
     // Check if already following
     const existing = await this.followerRepository.findOne({
-      where: { userId, shopId: shop.id }
+      where: { userId, shopId: shop.id },
     });
 
     if (existing) {
@@ -65,7 +65,10 @@ export class ShopService {
       shop.followerCount = Math.max(0, shop.followerCount - 1);
     } else {
       // Follow
-      const follow = this.followerRepository.create({ userId, shopId: shop.id });
+      const follow = this.followerRepository.create({
+        userId,
+        shopId: shop.id,
+      });
       await this.followerRepository.save(follow);
       shop.followerCount++;
     }
@@ -74,43 +77,51 @@ export class ShopService {
   }
 
   async isFollowing(userId: number, sellerId: number) {
-    const shop = await this.shopRepository.findOne({ where: { userId: sellerId } });
+    const shop = await this.shopRepository.findOne({
+      where: { userId: sellerId },
+    });
     if (!shop) return false;
     const follow = await this.followerRepository.findOne({
-      where: { userId, shopId: shop.id }
+      where: { userId, shopId: shop.id },
     });
     return !!follow;
   }
 
   async getShopStats(sellerId: number) {
-    const products = await this.productRepository.find({ where: { userId: sellerId } });
+    const products = await this.productRepository.find({
+      where: { userId: sellerId },
+    });
     const totalProducts = products.length;
-    const ratedProducts = products.filter(p => p.numReviews > 0);
-    const avgRating = ratedProducts.length > 0
-      ? ratedProducts.reduce((acc, p) => acc + Number(p.rating), 0) / ratedProducts.length
-      : 0;
+    const ratedProducts = products.filter((p) => p.numReviews > 0);
+    const avgRating =
+      ratedProducts.length > 0
+        ? ratedProducts.reduce((acc, p) => acc + Number(p.rating), 0) /
+          ratedProducts.length
+        : 0;
 
     return {
       totalProducts,
       avgRating: Number(avgRating.toFixed(1)),
-      totalReviews: products.reduce((acc, p) => acc + (p.numReviews || 0), 0)
+      totalReviews: products.reduce((acc, p) => acc + (p.numReviews || 0), 0),
     };
   }
   async searchShops(query: string) {
     if (!query) return [];
     const shops = await this.shopRepository.find({
       where: { name: Like(`%${query}%`) },
-      take: 3
+      take: 3,
     });
 
     // Add some products for each shop
-    const results = await Promise.all(shops.map(async (shop) => {
-      const sampleProducts = await this.productRepository.find({
-        where: { shopId: shop.id, isArchived: false },
-        take: 4
-      });
-      return { ...shop, sampleProducts };
-    }));
+    const results = await Promise.all(
+      shops.map(async (shop) => {
+        const sampleProducts = await this.productRepository.find({
+          where: { shopId: shop.id, isArchived: false },
+          take: 4,
+        });
+        return { ...shop, sampleProducts };
+      }),
+    );
 
     return results;
   }

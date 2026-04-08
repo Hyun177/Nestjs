@@ -10,38 +10,38 @@ import { User } from './user.entity';
 @Entity('user_addresses')
 export class UserAddress {
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
 
   @ManyToOne(() => User, { onDelete: 'CASCADE' })
-  user: User;
+  user!: User;
 
   @Column()
-  userId: number;
+  userId!: number;
 
   @Column()
-  fullName: string;
+  fullName!: string;
 
   @Column()
-  phone: string;
+  phone!: string;
 
   @Column()
-  provinceCode: string;
+  provinceCode!: string;
 
   @Column()
-  provinceName: string;
+  provinceName!: string;
 
   @Column({ nullable: true })
-  wardCode: string;
+  wardCode!: string;
 
   @Column({ nullable: true })
-  wardName: string;
+  wardName!: string;
 
   @Column()
-  detail: string; // số nhà, tên đường
+  detail!: string; // số nhà, tên đường
 
   @Column({ default: false })
-  isDefault: boolean;
+  isDefault!: boolean;
 
   @CreateDateColumn()
-  createdAt: Date;
+  createdAt!: Date;
 }

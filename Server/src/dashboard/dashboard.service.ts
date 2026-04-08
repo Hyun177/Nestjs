@@ -28,38 +28,137 @@ export class DashboardService {
       relations: ['items', 'items.product'],
     });
 
-    let adminRevenue = 0;
-    let sellerRevenue = 0;
+    // Retrieve all sellers to robustly map revenue by userId if shopId is missing
+    const users = await this.userRepository.find({ relations: ['roles'] });
+    const sellerIds = users
+      .filter((u) => u.roles?.some((r: any) => r.name === 'seller'))
+      .map((u) => u.id);
 
-    deliveredOrders.forEach((o) => {
-      const orderTotal = Number(o.totalAmount || 0);
-      
-      // 1. Calculate the subtotal of all items in this order (before order-level discounts/shipping)
-      const itemsSubtotal = (o.items || []).reduce((sum, item) => 
-        sum + (Number(item.price || 0) * Number(item.quantity || 0)), 0);
+    // Helper to calculate split revenue
+    const getSplitRev = (orders: Order[]) => {
+      let adminRev = 0;
+      let sellerRev = 0;
+      orders.forEach((o) => {
+        const orderTotal = Number(o.totalAmount || 0);
+        const itemsSubtotal = (o.items || []).reduce(
+          (sum, item) =>
+            sum + Number(item.price || 0) * Number(item.quantity || 0),
+          0,
+        );
 
-      if (itemsSubtotal > 0) {
-        // 2. Distribute the final orderTotal proportionally
-        (o.items || []).forEach((item) => {
-          const itemPriceTotal = Number(item.price || 0) * Number(item.quantity || 0);
-          const sId = item.shopId ?? item.product?.shopId ?? 0;
-          
-          // Proportionally distribute shipping and vouchers: (itemSubtotal / itemsSubtotal) * orderTotal
-          const distributedRevenue = (itemPriceTotal / itemsSubtotal) * orderTotal;
-          
-          if (sId === 0) {
-            adminRevenue += distributedRevenue;
-          } else {
-            sellerRevenue += distributedRevenue;
-          }
-        });
-      } else {
-        // Fallback: If no items found but total exists, attribute to Admin (unlikely scenario)
-        adminRevenue += orderTotal;
-      }
+        if (itemsSubtotal > 0) {
+          (o.items || []).forEach((item) => {
+            const itemPriceTotal =
+              Number(item.price || 0) * Number(item.quantity || 0);
+            let isSeller = false;
+            if (item.shopId && item.shopId > 0) isSeller = true;
+            else if (item.product?.shopId && item.product.shopId > 0)
+              isSeller = true;
+            else if (
+              item.product?.userId &&
+              sellerIds.includes(item.product.userId)
+            )
+              isSeller = true;
+
+            const distributedRevenue =
+              (itemPriceTotal / itemsSubtotal) * orderTotal;
+            if (!isSeller) adminRev += distributedRevenue;
+            else sellerRev += distributedRevenue;
+          });
+        } else {
+          adminRev += orderTotal;
+        }
+      });
+      return { adminRev, sellerRev, totalRev: adminRev + sellerRev };
+    };
+
+    const overallRev = getSplitRev(deliveredOrders);
+    const adminRevenue = Math.round(overallRev.adminRev);
+    const sellerRevenue = Math.round(overallRev.sellerRev);
+    const totalRevenue = Math.round(overallRev.totalRev);
+
+    // Calculate real trends based on current vs previous month
+    const currentDate = new Date();
+    const currentMonthStart = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth(),
+      1,
+    );
+    const lastMonthStart = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth() - 1,
+      1,
+    );
+
+    // Users trend (User entity lacks createdAt, defaulting to 0)
+    const usersTrend = 0;
+
+    // Orders trend
+    const currentMonthOrders = await this.orderRepository.count({
+      where: { createdAt: Between(currentMonthStart, currentDate) },
+    });
+    const lastMonthOrders = await this.orderRepository.count({
+      where: { createdAt: Between(lastMonthStart, currentMonthStart) },
+    });
+    const ordersTrend =
+      lastMonthOrders === 0
+        ? currentMonthOrders > 0
+          ? 100
+          : 0
+        : ((currentMonthOrders - lastMonthOrders) / lastMonthOrders) * 100;
+
+    // Products trend
+    const currentMonthProducts = await this.productRepository.count({
+      where: { createdAt: Between(currentMonthStart, currentDate) },
+    });
+    const lastMonthProducts = await this.productRepository.count({
+      where: { createdAt: Between(lastMonthStart, currentMonthStart) },
+    });
+    const productsTrend =
+      lastMonthProducts === 0
+        ? currentMonthProducts > 0
+          ? 100
+          : 0
+        : ((currentMonthProducts - lastMonthProducts) / lastMonthProducts) *
+          100;
+
+    // Revenue trend (All delivered orders this month vs last month)
+    const currentMonthDeliveredOrders = await this.orderRepository.find({
+      where: {
+        status: OrderStatus.DELIVERED,
+        createdAt: Between(currentMonthStart, currentDate),
+      },
+      relations: ['items', 'items.product'],
+    });
+    const lastMonthDeliveredOrders = await this.orderRepository.find({
+      where: {
+        status: OrderStatus.DELIVERED,
+        createdAt: Between(lastMonthStart, currentMonthStart),
+      },
+      relations: ['items', 'items.product'],
     });
 
-    const totalRevenue = adminRevenue + sellerRevenue;
+    const currRev = getSplitRev(currentMonthDeliveredOrders);
+    const lastRev = getSplitRev(lastMonthDeliveredOrders);
+
+    const revenueTrend =
+      lastRev.totalRev === 0
+        ? currRev.totalRev > 0
+          ? 100
+          : 0
+        : ((currRev.totalRev - lastRev.totalRev) / lastRev.totalRev) * 100;
+    const adminRevenueTrend =
+      lastRev.adminRev === 0
+        ? currRev.adminRev > 0
+          ? 100
+          : 0
+        : ((currRev.adminRev - lastRev.adminRev) / lastRev.adminRev) * 100;
+    const sellerRevenueTrend =
+      lastRev.sellerRev === 0
+        ? currRev.sellerRev > 0
+          ? 100
+          : 0
+        : ((currRev.sellerRev - lastRev.sellerRev) / lastRev.sellerRev) * 100;
 
     return {
       userCount,
@@ -69,10 +168,12 @@ export class DashboardService {
       adminRevenue,
       sellerRevenue,
       trends: {
-        users: 12,
-        orders: 8,
-        products: 5,
-        revenue: 15,
+        users: Math.round(usersTrend),
+        orders: Math.round(ordersTrend),
+        products: Math.round(productsTrend),
+        revenue: Math.round(revenueTrend),
+        adminRevenue: Math.round(adminRevenueTrend),
+        sellerRevenue: Math.round(sellerRevenueTrend),
       },
     };
   }
@@ -81,7 +182,7 @@ export class DashboardService {
     return this.orderRepository.find({
       order: { createdAt: 'DESC' },
       take: limit,
-      relations: ['user'],
+      relations: ['user', 'items', 'items.product', 'items.product.shop'],
     });
   }
 
@@ -89,7 +190,7 @@ export class DashboardService {
     return this.productRepository.find({
       order: { soldCount: 'DESC' },
       take: limit,
-      relations: ['category'],
+      relations: ['category', 'shop'],
     });
   }
 }

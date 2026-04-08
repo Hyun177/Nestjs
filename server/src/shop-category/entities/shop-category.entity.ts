@@ -1,34 +1,43 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn, ManyToMany } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  JoinColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+  ManyToMany,
+} from 'typeorm';
 import { Shop } from '../../shop/entities/shop.entity';
 import { Product } from '../../product/entities/product.entity';
 
 @Entity('shop_categories')
 export class ShopCategory {
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
 
   @ManyToOne(() => Shop)
   @JoinColumn({ name: 'shopId' })
-  shop: Shop;
+  shop!: Shop;
 
   @Column()
-  shopId: number;
+  shopId!: number;
 
   @Column()
-  name: string;
+  name!: string;
 
   @Column({ default: 0 })
-  sortOrder: number;
+  sortOrder!: number;
 
   @Column({ default: false })
-  isHidden: boolean;
+  isHidden!: boolean;
 
   @ManyToMany(() => Product, (product) => product.shopCategories)
-  products: Product[];
+  products!: Product[];
 
   @CreateDateColumn()
-  createdAt: Date;
+  createdAt!: Date;
 
   @UpdateDateColumn()
-  updatedAt: Date;
+  updatedAt!: Date;
 }

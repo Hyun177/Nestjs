@@ -270,18 +270,49 @@ export class SellerProductUploadComponent implements OnInit {
         this.existingImage = p.image;
         this.existingGallery = p.images || [];
 
-        // Parse description
+        // Parse description — same logic as admin
         let descIntro = '', descFeatures: string[] = [], descPolicy = '';
         if (p.description) {
-          const parts = p.description.split('\n\n');
-          descIntro = parts[0] || '';
-          const featuresPart = parts.find((pt: string) => pt.includes('ĐẶC ĐIỂM NỔI BẬT:'));
-          if (featuresPart) {
-            descFeatures = featuresPart.replace('ĐẶC ĐIỂM NỔI BẬT:\n', '').split('\n').map((f: string) => f.replace('- ', '').trim());
+          const desc = p.description.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+
+          const FEAT_SEPS = ['\n\nĐẶC ĐIỂM NỔI BẬT:\n', '\nĐẶC ĐIỂM NỔI BẬT:\n', '\n\nĐẶC ĐIỂM NỔI BẬT:'];
+          const POLICY_SEPS = ['\n\nTHÔNG TIN BẢO HÀNH:\n', '\n\nBẢO HÀNH:\n', '\nTHÔNG TIN BẢO HÀNH:\n', '\nBẢO HÀNH:\n', '\n\nTHÔNG TIN BẢO HÀNH:', '\n\nBẢO HÀNH:'];
+
+          let featIdx = -1, featSepLen = 0;
+          for (const sep of FEAT_SEPS) {
+            const idx = desc.indexOf(sep);
+            if (idx !== -1) { featIdx = idx; featSepLen = sep.length; break; }
           }
-          const policyPart = parts.find((pt: string) => pt.includes('THÔNG TIN BẢO HÀNH:'));
-          if (policyPart) {
-            descPolicy = policyPart.replace('THÔNG TIN BẢO HÀNH:\n', '').trim();
+
+          if (featIdx !== -1) {
+            descIntro = desc.substring(0, featIdx).trim();
+            const afterFeat = desc.substring(featIdx + featSepLen);
+
+            let policyIdx = -1, policyLen = 0;
+            for (const sep of POLICY_SEPS) {
+              const idx = afterFeat.indexOf(sep);
+              if (idx !== -1) { policyIdx = idx; policyLen = sep.length; break; }
+            }
+
+            if (policyIdx !== -1) {
+              const featStr = afterFeat.substring(0, policyIdx);
+              descPolicy = afterFeat.substring(policyIdx + policyLen).trim();
+              descFeatures = featStr.split('\n').map((f: string) => f.replace(/^[-•*]\s*/, '').trim()).filter((f: string) => f.length > 0);
+            } else {
+              descFeatures = afterFeat.split('\n').map((f: string) => f.replace(/^[-•*]\s*/, '').trim()).filter((f: string) => f.length > 0);
+            }
+          } else {
+            let policyIdx = -1, policyLen = 0;
+            for (const sep of POLICY_SEPS) {
+              const idx = desc.indexOf(sep);
+              if (idx !== -1) { policyIdx = idx; policyLen = sep.length; break; }
+            }
+            if (policyIdx !== -1) {
+              descIntro = desc.substring(0, policyIdx).trim();
+              descPolicy = desc.substring(policyIdx + policyLen).trim();
+            } else {
+              descIntro = desc.trim();
+            }
           }
         }
 

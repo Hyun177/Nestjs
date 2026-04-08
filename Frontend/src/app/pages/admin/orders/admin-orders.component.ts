@@ -125,15 +125,15 @@ export class AdminOrdersComponent implements OnInit {
     this.userService.getAllUsers().subscribe({
       next: (data: any) => {
         const sellers = (data || [])
-          .filter((u: any) => u.roles?.some((r: any) => r.name === 'seller') && u.shop)
+          .filter((u: any) => u.shop || u.roles?.some((r: any) => r.name?.toLowerCase() === 'seller'))
           .map((u: any) => ({
-            id: u.shop.id,
-            displayName: u.shop.name || (u.firstname ? `${u.firstname} ${u.lastname}`.trim() : u.email)
+            id: u.shop?.id || u.id, // Store for fallback
+            userId: u.id,
+            displayName: u.shop?.name || (u.firstname ? `${u.firstname} ${u.lastname}`.trim() : u.email || 'Seller')
           }));
         
-        // Add Admin as a synthetic option
         const finalSellers = [
-          { id: 0, displayName: 'Sản phẩm Admin' },
+          { id: 0, userId: 0, displayName: 'Admin' },
           ...sellers
         ];
         
@@ -155,14 +155,8 @@ export class AdminOrdersComponent implements OnInit {
     this.orderService.getAllOrdersAdmin().subscribe({
       next: (res) => {
         const mapped = (res || []).map((o: any) => {
-          const names = (o.items || []).map((i: any) => {
-            if (i.product?.shop?.name) return i.product.shop.name;
-            if (i.shopId === 0 || !i.shopId) return 'Admin';
-            return 'Shop #' + i.shopId;
-          });
-          const uniqueNames = Array.from(new Set(names));
-          const shopNames = uniqueNames.join(', ');
-          const shopIds = Array.from(new Set(o.items?.map((i: any) => i.shopId || 0)));
+          // Use userId for sellerIds to ensure robustness even if shopId is null
+          const sellerIds = Array.from(new Set((o.items || []).map((i: any) => i.product ? (i.product.userId || 0) : 0)));
           
           return {
             ...o,
@@ -176,8 +170,8 @@ export class AdminOrdersComponent implements OnInit {
             totalAmount: parseFloat(o.totalAmount || 0),
             discountAmount: parseFloat(o.discountAmount || 0),
             itemsCount: o.items?.length || 0,
-            shopNames: shopNames || 'N/A',
-            shopIds: shopIds
+            sellerIds: sellerIds,
+            items: o.items
           };
         });
         this.orders.set(mapped);
@@ -191,7 +185,7 @@ export class AdminOrdersComponent implements OnInit {
   get filteredOrders() {
     const search = this.searchValue().toLowerCase();
     const status = this.statusFilter();
-    const shopId = this.shopFilter();
+    const sellerId = this.shopFilter();
     
     return this.orders().filter(o => {
       const matchSearch = !search ||
@@ -199,9 +193,17 @@ export class AdminOrdersComponent implements OnInit {
         o.customerName.toLowerCase().includes(search) ||
         o.customerEmail.toLowerCase().includes(search);
       const matchStatus = status === 'all' || o.status === status;
-      const matchShop = shopId === null || shopId === undefined || o.shopIds?.includes(shopId);
       
-      return matchSearch && matchStatus && matchShop;
+      let matchSeller = true;
+      if (sellerId !== null && sellerId !== undefined) {
+         // sellerId drop down contains shop.id or u.id. 
+         const selectedSeller = this.sellersList().find(s => s.id === sellerId);
+         if (selectedSeller) {
+            matchSeller = o.sellerIds?.includes(selectedSeller.userId);
+         }
+      }
+      
+      return matchSearch && matchStatus && matchSeller;
     });
   }
 
@@ -315,5 +317,17 @@ export class AdminOrdersComponent implements OnInit {
 
   getPaymentLabel(method: string) {
     return this.paymentLabels[method] || method;
+  }
+
+  getOrderShopNames(order: any): string {
+    const names = (order.items || []).map((i: any) => {
+      if (i.product?.shop?.name) return i.product.shop.name;
+      if (i.product?.userId) {
+        const seller = this.sellersList().find(s => s.userId === i.product.userId || s.id === i.product.userId);
+        if (seller && seller.userId !== 0) return seller.displayName;
+      }
+      return 'Admin';
+    });
+    return Array.from(new Set(names)).join(', ');
   }
 }

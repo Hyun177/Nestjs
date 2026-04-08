@@ -1,6 +1,6 @@
 export class LoginDto {
-  access_token: string;
-  refresh_token: string;
+  access_token!: string;
+  refresh_token!: string;
   user?: {
     id: number;
     name?: string;

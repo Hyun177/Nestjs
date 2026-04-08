@@ -5,7 +5,7 @@
             <div class="hero-content">
                 <h1 class="hero-title">{{ heroData.title }}</h1>
                 <p class="hero-subtitle">{{ heroData.subtitle }}</p>
-                <button class="btn-black">{{ heroData.primaryCta }}</button>
+                <button class="btn-black" [routerLink]="['/products']">{{ heroData.primaryCta }}</button>
             </div>
             <div class="hero-image">
                 <img src="https://cdnv2.tgdd.vn/mwg-static/common/News/1576413/hinh-nen-may-tinh-6.jpg"
@@ -15,12 +15,12 @@
     </section>
 
     <!-- Brand Marquee -->
-    <div class="brand-marquee" *ngIf="brands.length > 0">
-        <div class="marquee-content" [style.animationDuration]="brands.length * 6 + 's'">
-            <div class="marquee-group" *ngFor="let g of [1,2,3,4,5,6,7,8,9,10]">
-                @for (brand of brands; track brand.id) {
-                <span class="marquee-item">{{ brand.name }}</span>
-                }
+    <div class="brand-marquee" *ngIf="premiumBrands.length > 0">
+        <div class="marquee-content">
+            <div class="marquee-group" *ngFor="let g of [1,2,3,4,5]">
+                <div class="marquee-item clickable" *ngFor="let brand of premiumBrands" (click)="navigateToBrand(brand)">
+                   <span>{{ brand.name }}</span>
+                </div>
             </div>
         </div>
     </div>
@@ -29,9 +29,9 @@
         <div class="container">
             <h2 class="section-heading">XU HƯỚNG MUA SẮM</h2>
 
-            @if (topSelling.length > 0) {
+            @if (topSellingProducts.length > 0) {
             <div class="product-grid">
-                @for (product of topSelling; track product.id) {
+                @for (product of topSellingProducts; track product.id) {
                 <div class="product-card">
                     <div class="card-overlay-top">
                         <div class="overlay-left">
@@ -100,6 +100,11 @@
                 </div>
                 }
             </div>
+            <div class="view-all-wrap">
+                <button class="btn-view-all" [routerLink]="['/products']" [queryParams]="{sort: 'sold'}">
+                    Xem tất cả xu hướng
+                </button>
+            </div>
             }
         </div>
     </section>
@@ -110,7 +115,7 @@
 
             @if (products.length > 0) {
             <div class="product-grid">
-                @for (product of products; track product.id) {
+                @for (product of newArrivalProducts; track product.id) {
                 <div class="product-card">
                     <div class="card-overlay-top">
                         <div class="overlay-left">
@@ -179,6 +184,11 @@
                     </div>
                 </div>
                 }
+            </div>
+            <div class="view-all-wrap" *ngIf="hasMoreProducts">
+                <button class="btn-view-all" [routerLink]="['/products']">
+                    Xem tất cả sản phẩm
+                </button>
             </div>
             } @else {
             <div style="text-align: center; padding: 5rem 0;">

@@ -329,7 +329,7 @@ $red: #ef4444;
   position: sticky;
   top: 24px;
   box-sizing: border-box;
-  width: 100%;
+  width: 150%;
 }
 
 .summary-title {
@@ -350,6 +350,66 @@ $red: #ef4444;
     font-size: 11px; font-weight: 800; text-transform: uppercase;
     letter-spacing: .1em; color: #666;
     margin-bottom: 10px;
+  }
+
+  .voucher-input-row {
+    display: flex;
+    gap: 8px;
+    align-items: stretch;
+
+    input {
+      flex: 1;
+      height: 42px;
+      border: 1.5px solid $border;
+      border-radius: 10px;
+      padding: 0 14px;
+      font-size: 13px;
+      font-weight: 600;
+      outline: none;
+      transition: all .2s;
+      box-sizing: border-box;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+
+      &:focus {
+        border-color: $ink;
+        background: #fafafa;
+      }
+
+      &::placeholder {
+        text-transform: none;
+        letter-spacing: 0;
+        font-weight: 500;
+        color: #bbb;
+      }
+    }
+
+    button {
+      height: 42px;
+      padding: 0 20px;
+      background: $ink;
+      color: $white;
+      border: none;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      cursor: pointer;
+      transition: all .2s;
+      white-space: nowrap;
+      flex-shrink: 0;
+
+      &:hover {
+        background: #333;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0,0,0,.15);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+    }
   }
 
   .voucher-picker-link {
@@ -391,6 +451,7 @@ $red: #ef4444;
         button {
             background: none; border: none; cursor: pointer; color: #888;
             display: flex; align-items: center; flex-shrink: 0;
+            transition: color .2s;
             &:hover { color: $red; }
         }
     }

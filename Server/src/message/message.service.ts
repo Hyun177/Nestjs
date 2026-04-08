@@ -22,7 +22,7 @@ export class MessageService {
 
     let conversation = await this.conversationRepo.findOne({
       where: { buyerId, sellerId },
-      relations: ['buyer', 'seller'],
+      relations: ['buyer', 'seller', 'buyer.shop', 'seller.shop'],
     });
 
     if (!conversation) {
@@ -31,7 +31,7 @@ export class MessageService {
       // reload relations
       conversation = await this.conversationRepo.findOne({
          where: { id: conversation.id },
-         relations: ['buyer', 'seller'],
+         relations: ['buyer', 'seller', 'buyer.shop', 'seller.shop'],
       });
     }
     return conversation;
@@ -41,14 +41,14 @@ export class MessageService {
     // A user can be a buyer OR a seller
     const conversations = await this.conversationRepo.find({
       where: [{ buyerId: userId }, { sellerId: userId }],
-      relations: ['buyer', 'seller'],
+      relations: ['buyer', 'seller', 'buyer.shop', 'seller.shop'],
       order: { lastMessageAt: 'DESC', createdAt: 'DESC' },
     });
     return conversations;
   }
 
   async getConversationById(id: number) {
-     return this.conversationRepo.findOne({ where: { id }, relations: ['buyer', 'seller']});
+     return this.conversationRepo.findOne({ where: { id }, relations: ['buyer', 'seller', 'buyer.shop', 'seller.shop']});
   }
 
   async sendMessage(senderId: number, conversationId: number, content: string, type: string = 'TEXT', metadata: any = null) {

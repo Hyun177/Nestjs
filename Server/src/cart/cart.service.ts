@@ -116,12 +116,18 @@ export class CartService {
     const cart = await this.getOrCreateCart(userId);
 
     // Check if item already exists in cart with SAME attributes
+    // Handle empty strings as null for comparison
+    const sizeForQuery =
+      size === '' || size === null || size === undefined ? IsNull() : size;
+    const colorForQuery =
+      color === '' || color === null || color === undefined ? IsNull() : color;
+
     let cartItem = await this.cartItemRepository.findOne({
       where: {
         cartId: cart.id,
         productId,
-        size: size ?? IsNull(),
-        color: color ?? IsNull(),
+        size: sizeForQuery,
+        color: colorForQuery,
       },
     });
 

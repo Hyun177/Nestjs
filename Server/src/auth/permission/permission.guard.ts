@@ -22,8 +22,6 @@ export class PermissionGuard implements CanActivate {
     const request = context.switchToHttp().getRequest<RequestWithUser>();
     const user = request.user;
     if (!user) return false;
-
-    // Fetch all roles with their permissions from database
     const roleRepo = this.dataSource.getRepository(Role);
     const roles = await roleRepo.find({
       where: { name: In(user.roles) },
@@ -34,8 +32,6 @@ export class PermissionGuard implements CanActivate {
       console.log(`Roles ${user.roles.join(', ')} not found in database`);
       return false;
     }
-
-    // Combine permissions from all roles
     const userPermissions: string[] = [];
     roles.forEach((r) => {
       (r.permissions || []).forEach((p) => {
@@ -48,9 +44,6 @@ export class PermissionGuard implements CanActivate {
     console.log('User roles from request:', user.roles);
     console.log('Combined user permissions from DB:', userPermissions);
     console.log('Required permissions:', requiredPermissions);
-
-    // Check if every required permission is covered by user permissions
-    // We normalize both by replacing ':' with '_' to handle naming inconsistencies
     const normalize = (p: string) => p.replace(':', '_').toLowerCase().trim();
 
     const normalizedUserPerms = userPermissions.map(normalize);

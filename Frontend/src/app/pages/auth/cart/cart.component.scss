@@ -95,12 +95,31 @@
         }
 
         .remove-btn {
-            background: transparent;
-            border: none;
-            color: #FF3333;
-            font-size: 1.25rem;
+            background: #fff;
+            border: 1px solid #ff4d4f;
+            color: #ff4d4f;
+            font-size: 0.85rem;
             cursor: pointer;
-            padding: 0;
+            padding: 6px 12px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.2s ease;
+            
+            &:hover {
+                background: #ff4d4f;
+                color: #fff;
+            }
+            
+            .remove-text {
+                font-size: 0.8rem;
+                font-weight: 500;
+            }
+            
+            [nz-icon] {
+                font-size: 0.9rem;
+            }
         }
 
         .item-meta {
@@ -127,6 +146,12 @@
             margin-top: auto;
         }
 
+        .item-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
         .item-price-info {
             display: flex;
             flex-direction: column;
@@ -146,6 +171,31 @@
             }
         }
 
+        .delete-item-btn {
+            background: #fff;
+            border: 1px solid #ff4d4f;
+            color: #ff4d4f;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            min-width: 36px;
+            height: 36px;
+            
+            &:hover {
+                background: #ff4d4f;
+                color: #fff;
+                transform: scale(1.05);
+            }
+            
+            [nz-icon] {
+                font-size: 1rem;
+            }
+        }
+
         .quantity-picker {
             display: flex;
             align-items: center;
@@ -153,7 +203,6 @@
             background: #F0F0F0;
             border-radius: 99px;
             padding: 0.5rem 1rem;
-            align-self: flex-end;
 
             button {
                 background: transparent;

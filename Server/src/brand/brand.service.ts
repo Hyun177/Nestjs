@@ -11,32 +11,57 @@ export class BrandService {
     private brandRepository: Repository<Brand>,
   ) {}
   async createBrand(data: CreateBrandDto, userId?: number): Promise<Brand> {
-    const newBrand = this.brandRepository.create({ ...data, userId: userId });
+    const isApproved = !userId; // Auto-approve if no userId (admin)
+    const newBrand = this.brandRepository.create({
+      ...data,
+      userId: userId,
+      isApproved,
+    });
     return await this.brandRepository.save(newBrand);
   }
   async getBrands(categoryId?: number): Promise<Brand[]> {
-    const where: any = { userId: IsNull() };
-    if (categoryId) where.categoryId = categoryId;
-    return await this.brandRepository.find({ 
+    const where: any[] = [{ userId: IsNull() }, { isApproved: true }];
+    if (categoryId) {
+      where.forEach((cond) => (cond.categoryId = categoryId));
+    }
+    return await this.brandRepository.find({
       where,
-      relations: ['category'] 
+      relations: ['category'],
+    });
+  }
+  async approveBrand(id: number): Promise<Brand> {
+    const brand = await this.brandRepository.findOne({ where: { id } });
+    if (!brand) {
+      throw new Error('Brand not found');
+    }
+    brand.isApproved = true;
+    // If approved and from seller, make it a system brand
+    if (brand.userId) {
+      brand.userId = undefined;
+    }
+    return await this.brandRepository.save(brand);
+  }
+  async getPremiumBrands(): Promise<Brand[]> {
+    return await this.brandRepository.find({
+      where: { isPremium: true },
+      relations: ['category'],
     });
   }
   async getSellerBrands(userId: number, categoryId?: number): Promise<Brand[]> {
-    const where: any = { userId };
-    if (categoryId) where.categoryId = categoryId;
-    return await this.brandRepository.find({ 
-      where,
-      relations: ['category']
+    const conditions: any = { userId };
+    if (categoryId) conditions.categoryId = categoryId;
+    return await this.brandRepository.find({
+      where: conditions,
+      relations: ['category'],
     });
   }
   async getAllBrandsAdmin(): Promise<Brand[]> {
     return await this.brandRepository.find({ relations: ['category'] });
   }
   async getBrandById(id: number): Promise<Brand | null> {
-    return await this.brandRepository.findOne({ 
+    return await this.brandRepository.findOne({
       where: { id },
-      relations: ['category']
+      relations: ['category'],
     });
   }
   async updateBrand(id: number, data: Partial<Brand>): Promise<Brand> {

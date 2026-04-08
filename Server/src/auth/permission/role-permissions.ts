@@ -1,13 +1,5 @@
 import { Permission } from './permissions.enum';
 
-/**
- * Default permissions per role for the e-commerce platform.
- *
- * admin    – toàn quyền hệ thống
- * manager  – quản lý sản phẩm / danh mục / thương hiệu / đơn hàng, xem user
- * customer – đặt hàng, xem sản phẩm/danh mục/thương hiệu
- * guest    – chỉ đọc public (sản phẩm, danh mục, thương hiệu)
- */
 export const ROLE_PERMISSIONS: Record<string, Permission[]> = {
   admin: Object.values(Permission) as Permission[],
 
