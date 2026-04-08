@@ -13,44 +13,50 @@ import { Shop } from '../../shop/entities/shop.entity';
 @Entity('users')
 export class User {
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
 
   @Column({ nullable: true })
-  name: string;
+  name!: string;
 
   @Column({ unique: true })
-  email: string;
+  email!: string;
 
   @Column()
-  password: string;
+  password!: string;
 
   @Column({ nullable: true })
-  firstname: string;
+  firstname!: string;
 
   @Column({ nullable: true })
-  lastname: string;
+  lastname!: string;
 
   @Column({ nullable: true })
-  phone: string;
+  phone!: string;
 
   @Column({ nullable: true })
-  address: string;
+  address!: string;
 
   @Column({ nullable: true })
-  avatar: string;
+  avatar!: string;
 
   @Column({ nullable: true })
-  refreshToken: string;
+  refreshToken!: string;
 
   @Column({ default: 'active' })
-  status: string; // active, blocked, inactive
+  status!: string; // active, blocked, inactive
+
+  @Column({ type: 'timestamp', nullable: true })
+  lastActive!: Date;
+
+  @Column({ default: false })
+  isOnline!: boolean;
 
   @ManyToMany(() => Role, (role) => role.users)
-  roles: Role[];
+  roles!: Role[];
 
   @OneToMany(() => Order, (order) => order.user)
-  orders: Order[];
+  orders!: Order[];
 
   @OneToOne(() => Shop, (shop) => shop.user)
-  shop: Shop;
+  shop!: Shop;
 }

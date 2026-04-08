@@ -28,11 +28,8 @@ export class AuthService {
     if (user) {
       throw new ConflictException('User already exists');
     }
-
-    // Tìm role 'user' mặc định
     let defaultRole = await this.roleRepo.findOne({ where: { name: 'user' } });
     if (!defaultRole) {
-      // Nếu chưa có trong DB thì tạo mới (tùy logic, thường nên có sẵn)
       defaultRole = this.roleRepo.create({ name: 'user' });
       await this.roleRepo.save(defaultRole);
     }
@@ -43,11 +40,9 @@ export class AuthService {
       lastname: data.lastname,
       email: data.email,
       password: hashedPassword,
-      roles: [defaultRole], // Gán role mặc định ở đây
+      roles: [defaultRole],
     });
     const savedUser = await this.userRepo.save(newUser);
-
-    // Tặng voucher chào mừng
     await this.voucherService
       .assignWelcomeVoucher(savedUser.id)
       .catch(() => {});

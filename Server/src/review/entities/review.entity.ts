@@ -12,35 +12,35 @@ import { Product } from '../../product/entities/product.entity';
 @Entity()
 export class Review {
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
 
   @ManyToOne(() => User)
-  user: User;
+  user!: User;
 
   @Column()
-  userId: number;
+  userId!: number;
 
   @ManyToOne(() => Product)
-  product: Product;
+  product!: Product;
 
   @Column()
-  productId: number;
+  productId!: number;
 
   @Column({ nullable: true })
-  orderId: number;
+  orderId!: number;
 
   @Column({ type: 'int' })
-  rating: number;
+  rating!: number;
 
   @Column({ type: 'text' })
-  comment: string;
+  comment!: string;
 
   @Column({ nullable: true })
-  image: string;
+  image!: string;
 
   @CreateDateColumn()
-  createdAt: Date;
+  createdAt!: Date;
 
   @UpdateDateColumn()
-  updatedAt: Date;
+  updatedAt!: Date;
 }

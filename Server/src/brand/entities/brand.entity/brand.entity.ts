@@ -1,13 +1,19 @@
-import { Column, Entity, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  PrimaryGeneratedColumn,
+  ManyToOne,
+  JoinColumn,
+} from 'typeorm';
 import { Category } from '../../../category/entities/category.entity/category.entity';
 
 @Entity()
 export class Brand {
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
 
   @Column()
-  name: string;
+  name!: string;
 
   @Column({ nullable: true })
   description?: string;
@@ -17,8 +23,17 @@ export class Brand {
 
   @ManyToOne(() => Category)
   @JoinColumn({ name: 'categoryId' })
-  category: Category;
+  category?: Category;
 
   @Column({ nullable: true })
-  categoryId: number;
+  categoryId?: number;
+
+  @Column({ type: 'boolean', default: false })
+  isPremium = false;
+
+  @Column({ nullable: true })
+  logo?: string;
+
+  @Column({ type: 'boolean', default: false })
+  isApproved = false;
 }

@@ -14,7 +14,7 @@ export class DashboardController {
   constructor(private readonly dashboardService: DashboardService) {}
 
   @Get('stats')
-  @Permissions(Permission.ORDER_MANAGE) // Standard permission for analytics
+  @Permissions(Permission.ORDER_MANAGE)
   @ApiOperation({ summary: 'Get dashboard statistics' })
   async getStats() {
     return this.dashboardService.getStats();

@@ -9,6 +9,8 @@ import { NzSpinModule } from 'ng-zorro-antd/spin';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 
 import { DashboardService } from '../../../core/services/dashboard.service';
+import { OrderService } from '../../../core/services/order.service';
+import { UserService } from '../../../core/services/user.service';
 import { VndCurrencyPipe } from '../../../shared/pipes/vnd-currency.pipe';
 
 @Component({
@@ -29,6 +31,8 @@ import { VndCurrencyPipe } from '../../../shared/pipes/vnd-currency.pipe';
 })
 export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   private dashboardService = inject(DashboardService);
+  private orderService = inject(OrderService);
+  private userService = inject(UserService);
   private cdr = inject(ChangeDetectorRef);
   private platformId = inject(PLATFORM_ID);
   private sanitizer = inject(DomSanitizer);
@@ -52,9 +56,10 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
   topProducts = signal<any[]>([]);
   recentUsers = signal<any[]>([]);
   lowStockProducts = signal<any[]>([]);
+  sellersList = signal<any[]>([]);
 
   // Chart data — loaded then used in AfterViewInit/re-render
-  private salesData: { labels: string[]; values: number[] } = { labels: [], values: [] };
+  public salesData: { labels: string[]; adminValues: number[]; sellerValues: number[] } = { labels: [], adminValues: [], sellerValues: [] };
   private statusData: { labels: string[]; values: number[]; colors: string[] } = {
     labels: [], values: [], colors: [],
   };
@@ -123,7 +128,10 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
     RETURNED: { color: '#64748b', label: 'Hoàn trả' },
   };
 
-  ngOnInit() { this.loadAll(); }
+  ngOnInit() {
+    this.loadAll();
+    this.loadSellers();
+  }
 
   ngAfterViewInit() {
     this.chartsReady = true;
@@ -144,7 +152,7 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
         this.loading.set(false);
         this.cdr.detectChanges();
         if (this.dataLoaded && this.chartsReady) {
-          setTimeout(() => this.renderCharts(), 100);
+           setTimeout(() => this.renderCharts(), 100);
         }
       },
       error: () => this.loading.set(false),
@@ -153,14 +161,17 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
     // Recent orders
     this.dashboardService.getRecentOrders().subscribe({
       next: (orders) => {
-        this.recentOrders.set(orders.map((o: any) => ({
-          id: o.id,
-          orderCode: `#${String(o.id).padStart(6, '0')}`,
-          customer: `${o.user?.firstname || ''} ${o.user?.lastname || ''}`.trim() || o.user?.email || 'Khách',
-          total: Number(o.totalAmount || 0),
-          status: o.status,
-          date: new Date(o.createdAt).toLocaleDateString('vi-VN'),
-        })));
+        this.recentOrders.set(orders.map((o: any) => {
+          return {
+            id: o.id,
+            orderCode: `#${String(o.id).padStart(6, '0')}`,
+            customer: `${o.user?.firstname || ''} ${o.user?.lastname || ''}`.trim() || o.user?.email || 'Khách',
+            total: Number(o.totalAmount || 0),
+            status: o.status,
+            date: new Date(o.createdAt).toLocaleDateString('vi-VN'),
+            items: o.items || []
+          };
+        }));
         this.cdr.detectChanges();
       },
     });
@@ -188,7 +199,7 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
       }
     });
 
-    // Order chart data (status distribution)
+    // Order chart data (status distribution) & Sales Revenue
     this.dashboardService.getAllOrdersAdmin().subscribe({
       next: (orders: any[]) => {
         const statusCount: Record<string, number> = {};
@@ -205,13 +216,36 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
         };
 
         // Monthly revenue from ALL DELIVERED orders (to match revenue stat cards)
-        const monthly: Record<string, number> = {};
+        const adminMonthly: Record<string, number> = {};
+        const sellerMonthly: Record<string, number> = {};
+
         (orders || [])
           .filter((o: any) => o.status === 'DELIVERED')
           .forEach((o: any) => {
-            const d = new Date(o.createdAt); // Group by creation month but only delivered ones
+            const d = new Date(o.createdAt);
             const key = `Th.${d.getMonth() + 1}`;
-            monthly[key] = (monthly[key] || 0) + Number(o.totalAmount || 0);
+            
+            const orderTotal = Number(o.totalAmount || 0);
+            const itemsSubtotal = (o.items || []).reduce((sum: number, item: any) => 
+               sum + (Number(item.price || 0) * Number(item.quantity || 0)), 0);
+
+            if (itemsSubtotal > 0) {
+               (o.items || []).forEach((item: any) => {
+                  const itemPriceTotal = Number(item.price || 0) * Number(item.quantity || 0);
+                  const distributedRevenue = (itemPriceTotal / itemsSubtotal) * orderTotal;
+                  const isSeller = (item.shopId && item.shopId > 0) || 
+                                   (item.product?.shop?.id && item.product.shop.id > 0) || 
+                                   (item.product?.shopId && item.product.shopId > 0) || 
+                                   (item.product?.userId && this.sellersList().some(s => s.userId === item.product.userId && s.isSellerRole));
+                  if (isSeller) {
+                     sellerMonthly[key] = (sellerMonthly[key] || 0) + distributedRevenue;
+                  } else {
+                     adminMonthly[key] = (adminMonthly[key] || 0) + distributedRevenue;
+                  }
+               });
+            } else {
+               adminMonthly[key] = (adminMonthly[key] || 0) + orderTotal;
+            }
           });
 
         const last6Months = Array.from({ length: 6 }, (_, i) => {
@@ -219,9 +253,11 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
           d.setMonth(d.getMonth() - (5 - i));
           return `Th.${d.getMonth() + 1}`;
         });
+        
         this.salesData = {
           labels: last6Months,
-          values: last6Months.map(m => monthly[m] || 0),
+          adminValues: last6Months.map(m => adminMonthly[m] || 0),
+          sellerValues: last6Months.map(m => sellerMonthly[m] || 0),
         };
 
         this.dataLoaded = true;
@@ -230,7 +266,55 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
         }
         this.cdr.detectChanges();
       },
+      error: () => {
+         // handle error silently
+      }
     });
+  }
+
+  loadSellers() {
+    this.userService.getAllUsers().subscribe({
+      next: (data: any) => {
+        const sellers = (data || [])
+          .filter((u: any) => u.shop || u.roles?.some((r: any) => r.name?.toLowerCase() === 'seller'))
+          .map((u: any) => ({
+            id: u.shop?.id || u.id,
+            userId: u.id,
+            isSellerRole: u.roles?.some((r: any) => r.name?.toLowerCase() === 'seller') || false,
+            displayName: u.shop?.name || (u.firstname ? `${u.firstname} ${u.lastname}`.trim() : u.email || 'Seller')
+          }));
+        this.sellersList.set([
+          { id: 0, userId: 0, isSellerRole: false, displayName: 'Admin' },
+          ...sellers
+        ]);
+        
+        // Refresh charts since we now know sellers
+        if (this.dataLoaded) {
+           this.loadAll(); // Reload everything to apply correct seller logic to chart
+        }
+      }
+    });
+  }
+
+  getOrderShopNames(order: any): string {
+    const names = (order.items || []).map((i: any) => {
+      if (i.product?.shop?.name) return i.product.shop.name;
+      if (i.product?.userId) {
+        const seller = this.sellersList().find(s => s.userId === i.product.userId);
+        if (seller && seller.userId !== 0) return seller.displayName;
+      }
+      return 'Admin';
+    });
+    return Array.from(new Set(names)).join(', ');
+  }
+
+  getShopName(p: any) {
+    if (p.shop?.name) return p.shop.name;
+    if (p.userId) {
+       const seller = this.sellersList().find(s => s.userId === p.userId);
+       if (seller && seller.userId !== 0) return seller.displayName;
+    }
+    return 'Admin';
   }
 
   private async renderCharts() {
@@ -247,20 +331,36 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
         type: 'bar',
         data: {
           labels: this.salesData.labels,
-          datasets: [{
-            label: 'Doanh thu (VNĐ)',
-            data: this.salesData.values,
-            backgroundColor: 'rgba(99,102,241,0.8)',
-            borderRadius: 8,
-            borderSkipped: false,
-            hoverBackgroundColor: '#6366f1',
-          }],
+          datasets: [
+            {
+              label: 'Doanh thu Admin (VNĐ)',
+              data: this.salesData.adminValues,
+              backgroundColor: 'rgba(99,102,241,0.8)',
+              borderRadius: 8,
+              borderSkipped: false,
+              hoverBackgroundColor: '#6366f1',
+              minBarLength: 4
+            },
+            {
+              label: 'Doanh thu Seller (VNĐ)',
+              data: this.salesData.sellerValues,
+              backgroundColor: 'rgba(245,158,11,0.8)',
+              borderRadius: 8,
+              borderSkipped: false,
+              hoverBackgroundColor: '#f59e0b',
+              minBarLength: 4
+            }
+          ],
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
           plugins: {
-            legend: { display: false },
+            legend: { 
+              display: true, 
+              position: 'bottom',
+              labels: { padding: 20, font: { size: 12, family: 'Inter' }, usePointStyle: true }
+            },
             tooltip: {
               callbacks: {
                 label: (ctx) => {
@@ -330,7 +430,17 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
   }
 
   getTrendValue(key: string): number {
-    return (this.stats().trends as any)[key] ?? 0;
+    if (!this.stats() || !this.stats().trends) return 0;
+    const map: Record<string, string> = {
+       'userCount': 'users',
+       'orderCount': 'orders',
+       'productCount': 'products',
+       'totalRevenue': 'revenue',
+       'adminRevenue': 'adminRevenue',
+       'sellerRevenue': 'sellerRevenue'
+    };
+    const tKey = map[key];
+    return tKey ? ((this.stats().trends as any)[tKey] ?? 0) : 0;
   }
 
   getStatusCfg(status: string) {

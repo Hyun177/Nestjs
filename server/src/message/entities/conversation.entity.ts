@@ -13,39 +13,39 @@ import { Message } from './message.entity';
 @Entity('conversations')
 export class Conversation {
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
 
   // Buyer
   @ManyToOne(() => User, { eager: false })
   @JoinColumn({ name: 'buyerId' })
-  buyer: User;
+  buyer!: User;
 
   @Column()
-  buyerId: number;
+  buyerId!: number;
 
   // Seller (owner of the shop)
   @ManyToOne(() => User, { eager: false })
   @JoinColumn({ name: 'sellerId' })
-  seller: User;
+  seller!: User;
 
   @Column()
-  sellerId: number;
+  sellerId!: number;
 
   @OneToMany(() => Message, (message) => message.conversation)
-  messages: Message[];
+  messages!: Message[];
 
   @Column({ nullable: true, type: 'text' })
-  lastMessage: string;
+  lastMessage!: string;
 
   @Column({ nullable: true })
-  lastMessageAt: Date;
+  lastMessageAt!: Date;
 
   @Column({ default: 0 })
-  unreadBuyer: number;   // unread count for buyer
+  unreadBuyer!: number; // unread count for buyer
 
   @Column({ default: 0 })
-  unreadSeller: number;  // unread count for seller
+  unreadSeller!: number; // unread count for seller
 
   @CreateDateColumn()
-  createdAt: Date;
+  createdAt!: Date;
 }

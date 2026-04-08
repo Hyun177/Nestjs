@@ -12,7 +12,7 @@ async function bootstrap() {
   console.log('Seeding roles and permissions:', roles);
 
   // ── Define Permission Groupings ──────────────────
-  
+
   const commonUserPerms = [
     Permission.PRODUCT_READ,
     Permission.CATEGORY_READ,
@@ -72,14 +72,19 @@ async function bootstrap() {
     try {
       await roleService.createRole(roleName);
       console.log(`- Role "${roleName}" ensured.`);
-      
+
       const perms = roleAssignments[roleName as RoleEnum];
       if (perms) {
         await roleService.assignPermissions(roleName, perms);
-        console.log(`  -> Assigned ${perms.length} permissions to "${roleName}".`);
+        console.log(
+          `  -> Assigned ${perms.length} permissions to "${roleName}".`,
+        );
       }
     } catch (e) {
-      console.error(`- Failed to seed role/perms for "${roleName}":`, e.message);
+      console.error(
+        `- Failed to seed role/perms for "${roleName}":`,
+        e instanceof Error ? e.message : e,
+      );
     }
   }
 
@@ -87,4 +92,7 @@ async function bootstrap() {
   await app.close();
 }
 
-bootstrap();
+bootstrap().catch((err) => {
+  console.error('Seed script failed:', err);
+  process.exit(1);
+});

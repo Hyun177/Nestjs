@@ -9,7 +9,6 @@ import {
   UseGuards,
   Req,
   ParseIntPipe,
-  BadRequestException,
 } from '@nestjs/common';
 import { VoucherService } from './voucher.service';
 import { CreateVoucherDto } from './dto/create-voucher.dto';
@@ -18,6 +17,7 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { PermissionGuard } from '../auth/permission/permission.guard';
 import { Permissions } from '../auth/permission/permissions.decorator';
 import { Permission } from '../auth/permission/permissions.enum';
+import type { RequestWithUser } from '../common/types/request-with-user';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 @ApiTags('voucher')
@@ -28,14 +28,14 @@ export class VoucherController {
 
   @Get('my')
   @UseGuards(JwtAuthGuard)
-  getMyVouchers(@Req() req: any) {
-    return this.voucherService.getUserVouchers(req.user.id);
+  getMyVouchers(@Req() req: RequestWithUser) {
+    return this.voucherService.getUserVouchers(req.user.userId);
   }
 
   @Get('public')
   @UseGuards(JwtAuthGuard)
-  getPublicVouchers(@Req() req: any) {
-    return this.voucherService.getPublicVouchers(req.user.id);
+  getPublicVouchers(@Req() req: RequestWithUser) {
+    return this.voucherService.getPublicVouchers(req.user.userId);
   }
 
   @Post()
@@ -81,17 +81,17 @@ export class VoucherController {
   apply(
     @Body('code') code: string,
     @Body('itemIds') itemIds: number[],
-    @Req() req: any,
+    @Req() req: RequestWithUser,
   ) {
-    return this.voucherService.applyVoucher(req.user.id, code, itemIds);
+    return this.voucherService.applyVoucher(req.user.userId, code, itemIds);
   }
 
   @Post('collect')
   @UseGuards(JwtAuthGuard)
-  collectVoucher(@Body('voucherId') voucherId: any, @Req() req: any) {
-    const id = parseInt(String(voucherId), 10);
-    if (isNaN(id))
-      throw new BadRequestException('voucherId must be a valid number');
-    return this.voucherService.collectVoucher(req.user.id, id);
+  collectVoucher(
+    @Body('voucherId', ParseIntPipe) voucherId: number,
+    @Req() req: RequestWithUser,
+  ) {
+    return this.voucherService.collectVoucher(req.user.userId, voucherId);
   }
 }

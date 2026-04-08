@@ -1,48 +1,56 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  OneToOne,
+  JoinColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 
 @Entity('shops')
 export class Shop {
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
 
   @OneToOne(() => User)
   @JoinColumn({ name: 'userId' })
-  user: User;
+  user!: User;
 
   @Column()
-  userId: number;
+  userId!: number;
 
   @Column()
-  name: string;
+  name!: string;
 
   @Column('text', { nullable: true })
-  description: string;
+  description!: string;
 
   @Column({ nullable: true })
-  logo: string;
+  logo!: string;
 
   @Column({ nullable: true })
-  coverImage: string;
+  coverImage!: string;
 
   @Column('json', { nullable: true })
-  banners: string[];
+  banners!: string[];
 
   @Column({ default: 0, type: 'decimal', precision: 3, scale: 2 })
-  rating: number;
+  rating!: number;
 
   @Column({ default: 0 })
-  followerCount: number;
+  followerCount!: number;
 
   @Column({ default: 100 })
-  responseRate: number;
+  responseRate!: number;
 
   @Column({ default: false })
-  isMall: boolean;
+  isMall!: boolean;
 
   @CreateDateColumn()
-  createdAt: Date;
+  createdAt!: Date;
 
   @UpdateDateColumn()
-  updatedAt: Date;
+  updatedAt!: Date;
 }

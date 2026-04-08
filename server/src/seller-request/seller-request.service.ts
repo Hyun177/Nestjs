@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { SellerRequest, RequestStatus } from './entities/seller-request.entity';
@@ -19,7 +23,7 @@ export class SellerRequestService {
     private shopRepository: Repository<Shop>,
   ) {}
 
-  async create(userId: number, createDto: any) {
+  async create(userId: number, createDto: Partial<SellerRequest>) {
     // Check if user already has a pending or approved request
     const existing = await this.sellerRequestRepository.findOne({
       where: [
@@ -29,7 +33,9 @@ export class SellerRequestService {
     });
 
     if (existing) {
-      throw new BadRequestException('You already have a pending or approved seller request.');
+      throw new BadRequestException(
+        'You already have a pending or approved seller request.',
+      );
     }
 
     const request = this.sellerRequestRepository.create({
@@ -64,16 +70,16 @@ export class SellerRequestService {
     await this.sellerRequestRepository.save(request);
 
     // 2. Add SELLER role to user
-    const sellerRole = await this.roleRepository.findOne({ 
-      where: { name: 'seller' } 
+    const sellerRole = await this.roleRepository.findOne({
+      where: { name: 'seller' },
     });
-    
+
     if (sellerRole) {
-      const user = await this.userRepository.findOne({ 
-        where: { id: request.userId }, 
-        relations: ['roles'] 
+      const user = await this.userRepository.findOne({
+        where: { id: request.userId },
+        relations: ['roles'],
       });
-      
+
       if (user && !user.roles.some((r) => r.name === 'seller')) {
         user.roles = [...user.roles, sellerRole];
         await this.userRepository.save(user);
@@ -95,7 +101,9 @@ export class SellerRequestService {
   }
 
   async reject(id: number, rejectionReason: string) {
-    const request = await this.sellerRequestRepository.findOne({ where: { id } });
+    const request = await this.sellerRequestRepository.findOne({
+      where: { id },
+    });
     if (!request) throw new NotFoundException('Request not found');
 
     request.status = RequestStatus.REJECTED;

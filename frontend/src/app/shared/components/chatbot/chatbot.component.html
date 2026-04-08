@@ -1,0 +1,78 @@
+<div class="chatbot-wrapper">
+  <!-- Nút mở chat -->
+  <button *ngIf="!isOpen()" class="chatbot-trigger" (click)="toggleChat()">
+    <span nz-icon nzType="robot" nzTheme="outline" style="font-size: 24px;"></span>
+  </button>
+
+  <!-- Hộp thoại chat -->
+  <div class="chatbot-window" [class.open]="isOpen()">
+    <div class="chat-header">
+      <div class="header-info">
+        <span nz-icon nzType="robot" class="header-icon"></span>
+        <div class="header-text">
+          <h3>Trợ lý AI</h3>
+          <p>Online</p>
+        </div>
+      </div>
+      <button class="close-btn" (click)="toggleChat()">
+        <span nz-icon nzType="close"></span>
+      </button>
+    </div>
+
+    <!-- Khung tin nhắn -->
+    <div class="chat-body" #chatBody>
+      <div *ngFor="let msg of messages()" class="message-row" [class.user]="msg.role === 'user'">
+        <div class="message-group">
+          <div class="message-bubble" [innerHTML]="parseMarkdown(msg.content)"></div>
+
+          <!-- Hiển thị danh sách sản phẩm nếu có -->
+          <div *ngIf="msg.products && msg.products.length > 0" class="product-cards">
+            <div *ngFor="let p of msg.products" class="p-card">
+              <div class="p-image" *ngIf="p.image">
+                <img [src]="getFullUrl(p.image)" [alt]="p.name" />
+              </div>
+              <div class="p-info">
+                <a [routerLink]="['/product', p.id]" class="p-name">{{ p.name }}</a>
+                <div class="p-stats" *ngIf="p.rating || p.sold">
+                  <span class="rating" *ngIf="p.rating">⭐ {{ p.rating }}</span>
+                  <span class="sold" *ngIf="p.sold">| Đã bán {{ p.sold }}</span>
+                </div>
+                <span class="p-price">{{ p.price | number }} VND</span>
+              </div>
+              <div class="p-actions">
+                <button class="buy-now-btn"
+                  (click)="inputText.set('Tôi muốn đặt hàng sản phẩm ' + p.name); sendMessage()">
+                  Mua
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div *ngIf="msg.quickReplies?.length" class="quick-replies">
+            <button class="quick-reply-btn" *ngFor="let reply of msg.quickReplies" (click)="sendQuickReply(reply)">
+              {{ reply }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Báo đang nhập -->
+      <div *ngIf="isLoading()" class="message-row model">
+        <div class="message-bubble loading">
+          <span class="dot"></span>
+          <span class="dot"></span>
+          <span class="dot"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Nhập nội dung -->
+    <div class="chat-footer">
+      <input type="text" [ngModel]="inputText()" (ngModelChange)="inputText.set($event)" (keyup.enter)="sendMessage()"
+        placeholder="Nhập tin nhắn..." [disabled]="isLoading()" />
+      <button class="send-btn" (click)="sendMessage()" [disabled]="!inputText().trim() || isLoading()">
+        <span nz-icon nzType="send"></span>
+      </button>
+    </div>
+  </div>
+</div>

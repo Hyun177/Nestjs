@@ -12,7 +12,6 @@ import { User } from '../users/entities/user.entity';
 import { UserAddress } from '../users/entities/user-address.entity';
 import { CheckoutDto } from './dto/checkout.dto';
 import { PaymentService } from '../payment/payment.service';
-import { PaymentMethod } from '../payment/enums/payment-method.enum';
 import * as nodemailer from 'nodemailer';
 import { Voucher } from '../voucher/entities/voucher.entity';
 
@@ -213,7 +212,8 @@ export class OrderService {
   }
 
   async getAllOrders(): Promise<Order[]> {
-    return this.orderRepository.createQueryBuilder('order')
+    return this.orderRepository
+      .createQueryBuilder('order')
       .leftJoinAndSelect('order.items', 'item')
       .leftJoinAndSelect('item.product', 'product')
       .leftJoinAndSelect('product.shop', 'shop')
@@ -224,14 +224,13 @@ export class OrderService {
   }
 
   async getSellerOrders(sellerId: number): Promise<Order[]> {
-    // We want orders that have at least one item belonging to this seller's shop
-    // Since we added shopId to OrderItem, we can join and filter
-    const query = this.orderRepository.createQueryBuilder('order')
+    const query = this.orderRepository
+      .createQueryBuilder('order')
       .leftJoinAndSelect('order.items', 'item')
       .leftJoinAndSelect('item.product', 'product')
       .leftJoinAndSelect('order.user', 'user')
       .leftJoinAndSelect('order.voucher', 'voucher')
-      .where('item.shopId IN (SELECT id FROM shops WHERE userId = :sellerId)', { sellerId })
+      .where('product.userId = :sellerId', { sellerId })
       .orderBy('order.createdAt', 'DESC');
 
     return query.getMany();

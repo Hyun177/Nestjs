@@ -51,4 +51,12 @@ export class CategoryService {
   deleteSellerCategory(id: number): Observable<any> {
     return this.http.delete(`${this.apiUrl}/seller/${id}`, { headers: this.getHeaders() });
   }
+
+  getAllCategoriesAdmin(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/admin/all`, { headers: this.getHeaders() });
+  }
+
+  approveCategory(id: number): Observable<any> {
+    return this.http.put(`${this.apiUrl}/approve/${id}`, {}, { headers: this.getHeaders() });
+  }
 }

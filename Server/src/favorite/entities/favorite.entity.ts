@@ -6,11 +6,11 @@ import { Product } from '../../product/entities/product.entity';
 @Unique(['user', 'product'])
 export class Favorite {
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
 
   @ManyToOne(() => User)
-  user: User;
+  user!: User;
 
   @ManyToOne(() => Product)
-  product: Product;
+  product!: Product;
 }

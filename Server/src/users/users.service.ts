@@ -51,8 +51,18 @@ export class UsersService {
     return user;
   }
   async deleteUser(id: number): Promise<User> {
-    const user = await this.getUserById(id);
-    await this.userRepo.delete(user);
+    const user = await this.userRepo.findOne({
+      where: { id },
+      relations: ['roles'],
+    });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    // Clear many-to-many relationships before deleting
+    user.roles = [];
+    await this.userRepo.save(user);
+    // Now delete the user
+    await this.userRepo.remove(user);
     return user;
   }
   async updateUser(id: number, data: Partial<CreateUserDto>): Promise<User> {
@@ -96,5 +106,12 @@ export class UsersService {
     }
     user.password = await bcrypt.hash(newPass, 10);
     return await this.userRepo.save(user);
+  }
+
+  async updateOnlineStatus(id: number, isOnline: boolean): Promise<void> {
+    await this.userRepo.update(id, {
+      isOnline,
+      lastActive: new Date(),
+    });
   }
 }

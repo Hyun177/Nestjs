@@ -4,12 +4,12 @@ import { Type } from 'class-transformer';
 export class CreateCartItemDto {
   @Type(() => Number)
   @IsNumber()
-  productId: number;
+  productId!: number;
 
   @Type(() => Number)
   @IsNumber()
   @Min(1)
-  quantity: number;
+  quantity!: number;
 
   @IsString()
   @IsOptional()

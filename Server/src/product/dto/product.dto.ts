@@ -4,18 +4,18 @@ import { IsNumber, IsOptional, MinLength } from 'class-validator';
 
 export class ProductDto {
   @MinLength(3)
-  name: string;
+  name!: string;
 
   @Type(() => Number)
   @IsNumber()
-  price: number;
+  price!: number;
 
   @Type(() => Number)
   @IsNumber()
   @IsOptional()
   originalPrice?: number;
 
-  description: string;
+  description!: string;
 
   @IsOptional()
   image?: string;
@@ -31,15 +31,15 @@ export class ProductDto {
 
   @Type(() => Number)
   @IsNumber()
-  categoryId: number;
+  categoryId!: number;
 
   @Type(() => Number)
   @IsNumber()
-  brandId: number;
+  brandId!: number;
 
   @Type(() => Number)
   @IsNumber()
-  stock: number;
+  stock!: number;
 
   @Type(() => Number)
   @IsNumber()
@@ -81,6 +81,12 @@ export class ProductDto {
 
   @IsOptional()
   images?: string[];
+
+  @IsOptional()
+  shopCategoryIds?: number[] | string;
+
+  @IsOptional()
+  shopCategories?: { id: number }[];
 
   @Type(() => Number)
   @IsNumber()

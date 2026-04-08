@@ -21,8 +21,8 @@
     </div>
 </ng-template>
 
-<div class="admin-container">
-    <div class="admin-header">
+<div class="seller-container">
+    <div class="seller-header">
         <div class="header-left">
             <h2>{{ isEditMode ? 'Chỉnh sửa Sản phẩm' : 'Kênh Quản Lý Sản Phẩm Người Bán' }}</h2>
             <p>{{ isEditMode ? 'Cập nhật thông tin chi tiết cho sản phẩm của bạn' : 'Thêm sản phẩm mới vào gian hàng của
@@ -219,7 +219,7 @@
                         </div>
                     </div>
 
-                    <div class="attributes-admin-section">
+                    <div class="attributes-seller-section">
                         <div class="section-header-row">
                             <label>Biến thể sản phẩm (Màu, Size, v.v...)</label>
                             <button class="seller-btn seller-btn-default"
@@ -232,7 +232,7 @@
 
                         <div formArrayName="attributes" class="attr-inputs">
                             <div *ngFor="let attr of attributes.controls; let i=index" [formGroupName]="i"
-                                class="attr-admin-row">
+                                class="attr-seller-row">
                                 <input nz-input formControlName="name" placeholder="Tên: Màu sắc"
                                     style="width: 140px;" />
                                 <input nz-input formControlName="options" placeholder="Đen, Trắng..." class="flex-1" />

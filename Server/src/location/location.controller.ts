@@ -16,7 +16,7 @@ export class LocationController {
 
   @Get('wards/:provinceCode')
   getWards(@Param('provinceCode') provinceCode: string) {
-    const result = Object.values(wards as any).filter(
+    const result = Object.values(wards).filter(
       (w: any) => w.parent_code === provinceCode,
     );
     return result.map((w: any) => ({

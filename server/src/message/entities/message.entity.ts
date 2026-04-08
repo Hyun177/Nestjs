@@ -13,37 +13,37 @@ import { User } from '../../users/entities/user.entity';
 @Entity('messages')
 export class Message {
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
 
   @ManyToOne(() => Conversation, (conversation) => conversation.messages)
   @JoinColumn({ name: 'conversationId' })
-  conversation: Conversation;
+  conversation!: Conversation;
 
   @Column()
-  conversationId: number;
+  conversationId!: number;
 
   @ManyToOne(() => User)
   @JoinColumn({ name: 'senderId' })
-  sender: User;
+  sender!: User;
 
   @Column()
-  senderId: number;
+  senderId!: number;
 
   @Column('text')
-  content: string;
+  content!: string;
 
   @Column({ default: 'TEXT' })
-  type: string; // TEXT, IMAGE, PRODUCT
+  type!: string; // TEXT, IMAGE, PRODUCT
 
   @Column({ type: 'json', nullable: true })
   metadata?: any; // For storing product info { productId, productName, productImage, price }
 
   @Column({ default: false })
-  isRead: boolean;
+  isRead!: boolean;
 
   @CreateDateColumn()
-  createdAt: Date;
+  createdAt!: Date;
 
   @UpdateDateColumn()
-  updatedAt: Date;
+  updatedAt!: Date;
 }

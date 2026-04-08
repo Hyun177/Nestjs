@@ -11,27 +11,27 @@ import { Product } from '../../product/entities/product.entity';
 @Entity('cart_items')
 export class CartItem {
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
 
   @Column()
-  cartId: number;
+  cartId!: number;
 
   @ManyToOne(() => Cart, (cart) => cart.items, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'cartId' })
-  cart: Cart;
+  cart!: Cart;
 
   @Column()
-  productId: number;
+  productId!: number;
 
   @ManyToOne(() => Product)
   @JoinColumn({ name: 'productId' })
-  product: Product;
+  product!: Product;
 
   @Column({ type: 'int' })
-  quantity: number;
+  quantity!: number;
 
   @Column({ type: 'decimal', precision: 10, scale: 2 })
-  price: number;
+  price!: number;
 
   @Column({ nullable: true })
   size?: string;
@@ -43,5 +43,5 @@ export class CartItem {
   variantSku?: string;
 
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
-  createdAt: Date;
+  createdAt!: Date;
 }

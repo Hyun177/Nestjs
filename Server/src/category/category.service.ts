@@ -10,15 +10,37 @@ export class CategoryService {
     @InjectRepository(Category)
     private categoryRepo: Repository<Category>,
   ) {}
-  async createCategory(data: CreateCategoryDto, userId?: number): Promise<Category> {
-    const newCategory = this.categoryRepo.create({ ...data, userId: userId });
+  async createCategory(
+    data: CreateCategoryDto,
+    userId?: number,
+  ): Promise<Category> {
+    const isApproved = !userId; // Auto-approve if no userId (admin)
+    const newCategory = this.categoryRepo.create({
+      ...data,
+      userId: userId,
+      isApproved,
+    });
     return await this.categoryRepo.save(newCategory);
   }
   async getCategories(): Promise<Category[]> {
-    return await this.categoryRepo.find({ where: { userId: IsNull() } });
+    return await this.categoryRepo.find({
+      where: [{ userId: IsNull() }, { isApproved: true }],
+    });
   }
   async getSellerCategories(userId: number): Promise<Category[]> {
     return await this.categoryRepo.find({ where: { userId } });
+  }
+  async approveCategory(id: number): Promise<Category> {
+    const category = await this.categoryRepo.findOne({ where: { id } });
+    if (!category) {
+      throw new Error('Category not found');
+    }
+    category.isApproved = true;
+    // If approved and from seller, make it a system category
+    if (category.userId) {
+      category.userId = undefined;
+    }
+    return await this.categoryRepo.save(category);
   }
   async getAllCategoriesAdmin(): Promise<Category[]> {
     return await this.categoryRepo.find();

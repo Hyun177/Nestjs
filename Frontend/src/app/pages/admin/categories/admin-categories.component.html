@@ -31,21 +31,30 @@
     <table class="custom-table">
       <thead>
         <tr>
-          <th style="width: 40%">Tên danh mục</th>
-          <th style="width: 40%">Mô tả</th>
+          <th style="width: 30%">Tên danh mục</th>
+          <th style="width: 30%">Nguồn</th>
+          <th style="width: 20%">Mô tả</th>
           <th style="width: 20%; text-align: right;">Thao tác</th>
         </tr>
       </thead>
       <tbody>
         <tr *ngFor="let data of filteredCategories">
           <td>
-
             <span class="cat-name">{{ data.name }}</span>
+          </td>
+          <td>
+            <nz-tag [nzColor]="!data.userId ? 'blue' : 'green'">
+              {{ !data.userId ? 'Hệ thống' : 'Seller' }}
+            </nz-tag>
           </td>
           <td>
             <span class="cat-desc">{{ data.description || 'Chưa có mô tả' }}</span>
           </td>
           <td class="actions-cell">
+            <button *ngIf="data.userId && !data.isApproved" class="icon-btn approve" (click)="approveCategory(data.id)"
+              title="Duyệt">
+              <span nz-icon nzType="check"></span>
+            </button>
             <button class="icon-btn edit" (click)="openEditModal(data)" title="Sửa">
               <span nz-icon nzType="edit"></span>
             </button>
@@ -56,7 +65,7 @@
           </td>
         </tr>
         <tr *ngIf="filteredCategories.length === 0">
-          <td colspan="3" style="text-align: center; padding: 40px; color: #94a3b8;">
+          <td colspan="4" style="text-align: center; padding: 40px; color: #94a3b8;">
             Không tìm thấy danh mục nào
           </td>
         </tr>

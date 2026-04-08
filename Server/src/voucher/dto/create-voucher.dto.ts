@@ -16,11 +16,11 @@ import { VoucherType } from '../entities/voucher.entity';
 export class CreateVoucherDto {
   @ApiProperty({ example: 'SALE10', description: 'Voucher code' })
   @IsString()
-  code: string;
+  code!: string;
 
   @ApiProperty({ enum: VoucherType, example: VoucherType.PERCENT })
   @IsEnum(VoucherType)
-  type: VoucherType;
+  type!: VoucherType;
 
   @ApiProperty({
     example: 10,
@@ -29,7 +29,7 @@ export class CreateVoucherDto {
   @Type(() => Number)
   @IsNumber()
   @Min(0)
-  value: number;
+  value!: number;
 
   @ApiPropertyOptional({
     example: 50000,
@@ -49,7 +49,7 @@ export class CreateVoucherDto {
   @Type(() => Number)
   @IsNumber()
   @Min(0)
-  minOrderAmount: number;
+  minOrderAmount!: number;
 
   @ApiProperty({
     example: 100,
@@ -58,7 +58,7 @@ export class CreateVoucherDto {
   @Type(() => Number)
   @IsNumber()
   @Min(0)
-  usageLimit: number;
+  usageLimit!: number;
 
   @ApiProperty({
     example: 1,
@@ -73,12 +73,12 @@ export class CreateVoucherDto {
   @ApiProperty({ example: '2024-03-24T00:00:00.000Z' })
   @Type(() => Date)
   @IsDate()
-  startDate: Date;
+  startDate!: Date;
 
   @ApiProperty({ example: '2024-12-24T00:00:00.000Z' })
   @Type(() => Date)
   @IsDate()
-  endDate: Date;
+  endDate!: Date;
 
   @ApiPropertyOptional({ default: true })
   @IsOptional()

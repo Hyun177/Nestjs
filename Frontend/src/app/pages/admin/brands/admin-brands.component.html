@@ -28,9 +28,11 @@
     <table class="custom-table">
       <thead>
         <tr>
-          <th style="width: 25%">Thương hiệu</th>
-          <th style="width: 20%">Danh mục</th>
-          <th style="width: 35%">Mô tả</th>
+          <th style="width: 20%">Thương hiệu</th>
+          <th style="width: 15%; text-align: center;">Hàng "Xịn"</th>
+          <th style="width: 15%">Nguồn</th>
+          <th style="width: 15%">Danh mục</th>
+          <th style="width: 15%">Mô tả</th>
           <th style="width: 20%; text-align: right;">Thao tác</th>
         </tr>
       </thead>
@@ -38,14 +40,24 @@
         <tr *ngFor="let data of filteredBrands">
           <td>
             <div class="brand-info">
-              <div class="brand-avatar">
+              <div class="brand-avatar" *ngIf="!data.logo">
                 {{ data.name.charAt(0).toUpperCase() }}
               </div>
+              <img *ngIf="data.logo" [src]="data.logo" class="brand-logo-img" />
               <div class="brand-details">
-                
                 <span class="brand-name">{{ data.name }}</span>
               </div>
             </div>
+          </td>
+          <td style="text-align: center;">
+             <button class="star-toggle" [class.active]="data.isPremium" (click)="togglePremium(data)" title="Đánh dấu Hàng Xịn">
+                <span nz-icon [nzType]="data.isPremium ? 'star' : 'star'" [nzTheme]="data.isPremium ? 'fill' : 'outline'"></span>
+             </button>
+          </td>
+          <td>
+            <nz-tag [nzColor]="!data.userId ? 'blue' : 'green'">
+               {{ !data.userId ? 'Hệ thống' : 'Seller' }}
+            </nz-tag>
           </td>
           <td>
             <span class="category-badge" *ngIf="data.category">
@@ -54,9 +66,13 @@
             <span class="text-gray-400" *ngIf="!data.category">N/A</span>
           </td>
           <td>
-            <span class="text-gray-500">{{ data.description || 'Chưa có mô tả' }}</span>
+            <span class="text-gray-500 description-text">{{ data.description || 'Chưa có mô tả' }}</span>
           </td>
           <td class="actions-cell">
+            <button *ngIf="data.userId && !data.isApproved" class="icon-btn approve" (click)="approveBrand(data.id)"
+              title="Duyệt">
+              <span nz-icon nzType="check"></span>
+            </button>
             <button class="icon-btn edit" (click)="openEditModal(data)" title="Sửa">
               <span nz-icon nzType="edit"></span>
             </button>
@@ -97,9 +113,28 @@
             </nz-select>
           </div>
 
+          <div class="form-group" [formGroup]="brandForm">
+            <label>Logo URL (Dành cho Trang chủ)</label>
+            <input formControlName="logo" placeholder="https://example.com/logo.png" />
+            <div class="logo-preview-wrap" *ngIf="brandForm.get('logo')?.value">
+              <p class="preview-label">Xem trước logo:</p>
+              <div class="preview-box">
+                <img [src]="brandForm.get('logo')?.value" alt="Logo preview" (error)="previewError = true" (load)="previewError = false" />
+                <div class="error-msg" *ngIf="previewError">Logo không hợp lệ</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group checkbox-group" [formGroup]="brandForm">
+            <label class="checkbox-label">
+              <input type="checkbox" formControlName="isPremium" />
+              <span>Gắn Star (Hiển thị hàng "Xịn" trên Trang chủ)</span>
+            </label>
+          </div>
+
           <div class="form-group">
             <label>Mô tả</label>
-            <textarea formControlName="description" rows="4" placeholder="Nhập mô tả thương hiệu..."></textarea>
+            <textarea formControlName="description" rows="3" placeholder="Nhập mô tả thương hiệu..."></textarea>
           </div>
         </form>
       </div>

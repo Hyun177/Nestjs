@@ -10,7 +10,7 @@ export class CheckoutDto {
   itemIds?: number[];
 
   @IsEnum(PaymentMethod)
-  paymentMethod: PaymentMethod;
+  paymentMethod!: PaymentMethod;
 
   @IsOptional()
   @IsNumber()

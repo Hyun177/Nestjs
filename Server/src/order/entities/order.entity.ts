@@ -8,7 +8,6 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
-import { Product } from '../../product/entities/product.entity';
 import { Voucher } from '../../voucher/entities/voucher.entity';
 import { OrderStatus } from '../enums/order-status.enum';
 export { OrderStatus };
@@ -18,55 +17,55 @@ import { OrderItem } from './order-item.entity';
 @Entity('orders')
 export class Order {
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
 
   @ManyToOne(() => User)
-  user: User;
+  user!: User;
 
   @Column()
-  userId: number;
+  userId!: number;
 
   @OneToMany(() => OrderItem, (item) => item.order, { cascade: true })
-  items: OrderItem[];
+  items!: OrderItem[];
 
   @Column({ type: 'decimal', precision: 12, scale: 2 })
-  totalAmount: number;
+  totalAmount!: number;
 
   @Column({ type: 'decimal', precision: 12, scale: 2, default: 0 })
-  discountAmount: number;
+  discountAmount!: number;
 
   @ManyToOne(() => Voucher, { nullable: true })
-  voucher: Voucher;
+  voucher!: Voucher;
 
   @Column({ nullable: true })
-  voucherId: number;
+  voucherId!: number;
 
   @Column({
     type: 'enum',
     enum: OrderStatus,
     default: OrderStatus.PENDING,
   })
-  status: OrderStatus;
+  status!: OrderStatus;
 
   @Column({
     type: 'enum',
     enum: PaymentMethod,
     default: PaymentMethod.COD,
   })
-  paymentMethod: PaymentMethod;
+  paymentMethod!: PaymentMethod;
 
   @Column({ nullable: true })
-  shippingAddress: string;
+  shippingAddress!: string;
 
   @Column({ nullable: true })
-  shippingPhone: string;
+  shippingPhone!: string;
 
   @Column({ type: 'decimal', precision: 12, scale: 2, default: 0 })
-  shippingFee: number;
+  shippingFee!: number;
 
   @CreateDateColumn()
-  createdAt: Date;
+  createdAt!: Date;
 
   @UpdateDateColumn()
-  updatedAt: Date;
+  updatedAt!: Date;
 }

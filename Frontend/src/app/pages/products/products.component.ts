@@ -1,4 +1,5 @@
-import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, ChangeDetectorRef, HostListener, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { ShopService } from '../../core/services/shop.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -37,7 +38,7 @@ import { FavoriteService } from '../../core/services/favorite.service';
   templateUrl: './products.component.html',
   styleUrls: ['./products.component.scss']
 })
-export class ProductsComponent implements OnInit {
+export class ProductsComponent implements OnInit, OnDestroy {
   private productService = inject(ProductService);
   private cartService = inject(CartService);
   private categoryService = inject(CategoryService);
@@ -48,6 +49,7 @@ export class ProductsComponent implements OnInit {
   private router = inject(Router);
   private favoriteService = inject(FavoriteService);
   private shopService = inject(ShopService);
+  private platformId = inject(PLATFORM_ID);
 
 
   products: Product[] = [];
@@ -55,10 +57,12 @@ export class ProductsComponent implements OnInit {
   brands: any[] = [];
   matchingShops: any[] = [];
   pageTitle = 'Tất cả sản phẩm';
+  isLoadingMore = false;
+  hasMore = true;
 
   query = {
     page: 1,
-    limit: 12,
+    limit: 8,
     search: '',
     categoryId: null as number | null,
     brandId: null as number | null,
@@ -100,6 +104,9 @@ export class ProductsComponent implements OnInit {
       if (params['maxPrice']) this.query.price[1] = Number(params['maxPrice']);
 
       this.updatePageTitle();
+      this.products = [];
+      this.query.page = 1;
+      this.hasMore = true;
       this.loadProducts();
     });
   }
@@ -218,18 +225,45 @@ export class ProductsComponent implements OnInit {
     );
 
     this.productService.getProductsPaginated(params).subscribe({
-      next: (res) => {
-        this.products = res.data;
-        this.totalProducts = res.total;
-        this.extractFiltersFromProducts(res.data);
-        this.cdr.markForCheck();
-      },
-      error: () => {
-        this.message.error('Lỗi khi tải dữ liệu sản phẩm');
-      }
-    });
+        next: (res) => {
+          if (this.query.page === 1) {
+            this.products = res.data;
+          } else {
+            this.products = [...this.products, ...res.data];
+          }
+          this.totalProducts = res.total;
+          this.hasMore = this.products.length < res.total;
+          this.isLoadingMore = false;
+          this.extractFiltersFromProducts(res.data);
+          this.cdr.markForCheck();
+        },
+        error: () => {
+          this.message.error('Lỗi khi tải dữ liệu sản phẩm');
+          this.isLoadingMore = false;
+        }
+      });
   }
 
+
+  ngOnDestroy() {}
+
+  @HostListener('window:scroll')
+  onScroll() {
+    if (!isPlatformBrowser(this.platformId)) return;
+    if (this.isLoadingMore || !this.hasMore) return;
+    const scrollY = window.scrollY + window.innerHeight;
+    const docHeight = document.documentElement.scrollHeight;
+    if (scrollY >= docHeight - 300) {
+      this.loadMore();
+    }
+  }
+
+  loadMore() {
+    if (this.isLoadingMore || !this.hasMore) return;
+    this.isLoadingMore = true;
+    this.query.page++;
+    this.loadProducts();
+  }
 
   onPageChange(page: number) {
     this.query.page = page;
@@ -239,23 +273,31 @@ export class ProductsComponent implements OnInit {
   onSortChange(value: string) {
     this.query.sort = value;
     this.query.page = 1;
+    this.products = [];
+    this.hasMore = true;
     this.updateRoute();
   }
   
   onSearch() {
     this.query.page = 1;
+    this.products = [];
+    this.hasMore = true;
     this.updateRoute();
   }
 
   onSelectCategory(id: number | null) {
     this.query.categoryId = id;
     this.query.page = 1;
+    this.products = [];
+    this.hasMore = true;
     this.updateRoute();
   }
 
   onSelectBrand(id: number | null) {
     this.query.brandId = id;
     this.query.page = 1;
+    this.products = [];
+    this.hasMore = true;
     this.updateRoute();
   }
 
@@ -266,23 +308,31 @@ export class ProductsComponent implements OnInit {
     this.query.price = [0, 100000000];
     this.query.color = '';
     this.query.size = '';
+    this.products = [];
+    this.hasMore = true;
     this.onSearch();
   }
 
   onSelectColor(color: string) {
     this.query.color = this.query.color === color ? '' : color;
     this.query.page = 1;
+    this.products = [];
+    this.hasMore = true;
     this.updateRoute();
   }
 
   onSelectSize(size: string) {
     this.query.size = this.query.size === size ? '' : size;
     this.query.page = 1;
+    this.products = [];
+    this.hasMore = true;
     this.updateRoute();
   }
 
   onPriceChange() {
     this.query.page = 1;
+    this.products = [];
+    this.hasMore = true;
     this.updateRoute();
   }
 

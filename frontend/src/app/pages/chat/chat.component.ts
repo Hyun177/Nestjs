@@ -34,9 +34,10 @@ import { Subscription } from 'rxjs';
               
               <div class="avatar-wrap">
                 <div class="convo-avatar">
-                  {{ getOtherPartyName(convo).charAt(0).toUpperCase() }}
+                   <img *ngIf="getOtherPartyAvatar(convo)" [src]="formatImageUrl(getOtherPartyAvatar(convo))" class="avatar-img" />
+                   <span *ngIf="!getOtherPartyAvatar(convo)">{{ getOtherPartyName(convo).charAt(0).toUpperCase() }}</span>
                 </div>
-                <div class="online-indicator" *ngIf="convo.isOnline"></div>
+                <div class="online-indicator" *ngIf="getOtherParty(convo)?.isOnline"></div>
               </div>
 
               <div class="convo-info">
@@ -62,12 +63,18 @@ import { Subscription } from 'rxjs';
         <!-- Header -->
         <div class="chat-area-header">
           <div class="header-user-info">
-            <div class="convo-avatar small">
-              {{ getOtherPartyName(selectedConversation).charAt(0).toUpperCase() }}
+            <div class="convo-avatar small" 
+                 [class.clickable]="getOtherPartyShopId(selectedConversation)"
+                 [routerLink]="getOtherPartyShopId(selectedConversation) ? ['/shop', getOtherPartyShopId(selectedConversation)] : []">
+               <img *ngIf="getOtherPartyAvatar(selectedConversation)" [src]="formatImageUrl(getOtherPartyAvatar(selectedConversation))" class="avatar-img" />
+               <span *ngIf="!getOtherPartyAvatar(selectedConversation)">{{ getOtherPartyName(selectedConversation).charAt(0).toUpperCase() }}</span>
             </div>
             <div>
-              <h3>{{ getOtherPartyName(selectedConversation) }}</h3>
-              <span class="status-text">{{ isTyping ? 'Đang soạn tin...' : (selectedConversation.isOnline ? 'Đang hoạt động' : 'Offline') }}</span>
+              <h3 [class.clickable]="getOtherPartyShopId(selectedConversation)"
+                  [routerLink]="getOtherPartyShopId(selectedConversation) ? ['/shop', getOtherPartyShopId(selectedConversation)] : []">
+                  {{ getOtherPartyName(selectedConversation) }}
+              </h3>
+              <span class="status-text" [class.offline]="!getOtherParty(selectedConversation)?.isOnline">{{ isTyping ? 'Đang soạn tin...' : getStatusText(selectedConversation) }}</span>
             </div>
           </div>
           <div class="header-actions">
@@ -239,8 +246,14 @@ import { Subscription } from 'rxjs';
       font-size: 18px;
       font-weight: 700;
       box-shadow: 0 4px 10px rgba(59, 130, 246, 0.2);
+      overflow: hidden;
       &.small { width: 40px; height: 40px; font-size: 16px; border-radius: 10px; }
+      &.clickable { cursor: pointer; transition: transform 0.2s; &:hover { transform: scale(1.05); } }
     }
+    .avatar-img { width: 100%; height: 100%; object-fit: cover; }
+    
+    h3.clickable { cursor: pointer; transition: color 0.2s; &:hover { color: #3b82f6; text-decoration: underline; } }
+
     .online-indicator {
       position: absolute; bottom: -2px; right: -2px; width: 14px; height: 14px; background: #22c55e;
       border: 2px solid #fff; border-radius: 50%;
@@ -609,6 +622,41 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
        return `${other.firstname || ''} ${other.lastname || ''}`.trim();
      }
      return other.name || other.email || 'User';
+  }
+
+  getOtherParty(convo: any): any {
+    if (!convo || !this.currentUserId) return null;
+    return convo.buyerId === this.currentUserId ? convo.seller : convo.buyer;
+  }
+
+  getStatusText(convo: any): string {
+    const other = this.getOtherParty(convo);
+    if (!other) return 'Offline';
+    if (other.isOnline) return 'Đang hoạt động';
+    if (!other.lastActive) return 'Offline';
+
+    const lastActive = new Date(other.lastActive);
+    const now = new Date();
+    const diffMs = now.getTime() - lastActive.getTime();
+    const diffMinutes = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+
+    if (diffMinutes < 1) return 'Vừa mới truy cập';
+    if (diffMinutes < 60) return `${diffMinutes} phút trước`;
+    if (diffHours < 24) return `${diffHours} giờ trước`;
+    
+    return 'Offline';
+  }
+
+  getOtherPartyAvatar(convo: any): string | undefined {
+    const other = this.getOtherParty(convo);
+    if (!other) return undefined;
+    return other.shop?.logo || other.avatar || undefined;
+  }
+
+  getOtherPartyShopId(convo: any): number | undefined {
+    const other = this.getOtherParty(convo);
+    return other?.shop ? other.id : undefined;
   }
 
   getUnreadCount(convo: any): number {

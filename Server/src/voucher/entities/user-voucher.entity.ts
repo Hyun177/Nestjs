@@ -12,25 +12,25 @@ import { Voucher } from './voucher.entity';
 @Entity('user_vouchers')
 export class UserVoucher {
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
 
   @Column()
-  userId: number;
+  userId!: number;
 
   @ManyToOne(() => User, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'userId' })
-  user: User;
+  user!: User;
 
   @Column()
-  voucherId: number;
+  voucherId!: number;
 
   @ManyToOne(() => Voucher, { onDelete: 'CASCADE', eager: true })
   @JoinColumn({ name: 'voucherId' })
-  voucher: Voucher;
+  voucher!: Voucher;
 
   @Column({ default: 0 })
-  usedCount: number;
+  usedCount!: number;
 
   @CreateDateColumn()
-  createdAt: Date;
+  createdAt!: Date;
 }

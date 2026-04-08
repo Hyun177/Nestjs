@@ -31,7 +31,7 @@ import { NzMenuModule } from 'ng-zorro-antd/menu';
                 <h1>{{ shop.name }}</h1>
                 <p class="description">{{ shop.description }}</p>
                 <div class="stats-pills">
-                  <span class="pill"><i nz-icon nzType="star" nzTheme="fill"></i> {{ shopStats.avgRating }} / 5.0</span>
+                  <span class="pill"><i nz-icon nzType="star" nzTheme="fill"></i> {{ shopStats.avgRating.toFixed(1) }} / 5.0</span>
                   <span class="pill"><i nz-icon nzType="user"></i> {{ shop.followerCount }} Follower</span>
                   <span class="pill"><i nz-icon nzType="appstore"></i> {{ shopStats.totalProducts }} Sản phẩm</span>
                 </div>
@@ -52,7 +52,7 @@ import { NzMenuModule } from 'ng-zorro-antd/menu';
           <div class="header-stats-bar">
              <div class="stat-item">
                 <span class="label">Đánh giá shop</span>
-                <span class="value">{{ shopStats.avgRating }} ({{ shopStats.totalReviews }} đánh giá)</span>
+                <span class="value"><i nz-icon nzType="star" nzTheme="fill"></i> {{ shopStats.avgRating.toFixed(1) }} / 5.0 ({{ shopStats.totalReviews }} đánh giá)</span>
              </div>
              <div class="stat-divider"></div>
              <div class="stat-item">
@@ -197,10 +197,13 @@ import { NzMenuModule } from 'ng-zorro-antd/menu';
       margin-top: 10px; 
       display: flex; 
       gap: 40px; 
+      padding-left: 30px;
+    padding-bottom: 20px;
     }
     .stat-item { display: flex; flex-direction: column; }
     .stat-item .label { color: rgba(255,255,255,0.6); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; }
     .stat-item .value { color: white; font-weight: 700; font-size: 1.1rem; }
+    .stat-item .value i { color: #f59e0b; }
     .stat-divider { width: 1px; height: 30px; background: rgba(255,255,255,0.1); }
 
     .shop-content-with-sidebar { display: flex; gap: 30px; }
@@ -289,9 +292,9 @@ export class ShopComponent implements OnInit {
 
         // Load custom shop categories
         this.shopCategoryService.findAllByShop(this.shop.id).subscribe({
-          next: (cats: any[]) => { 
-             this.shopCategories = cats; 
-             this.cdr.markForCheck();
+          next: (cats: any[]) => {
+            this.shopCategories = cats;
+            this.cdr.markForCheck();
           }
         });
 
@@ -301,20 +304,20 @@ export class ShopComponent implements OnInit {
             // Note: getProducts usually returns {data, total, page...} in this backend based on our check
             this.products = prods.data || prods;
             this.filteredProducts = [...this.products];
-            
+
             // Extract standard categories automatically from products
             const catMap = new Map();
             for (const p of this.products) {
-               if (p.category) {
-                  catMap.set(p.category.id, p.category);
-               }
+              if (p.category) {
+                catMap.set(p.category.id, p.category);
+              }
             }
             this.standardCategories = Array.from(catMap.values());
             this.cdr.detectChanges(); // Ensure products render
           },
-          error: () => { 
-             this.products = []; this.filteredProducts = []; this.standardCategories = []; 
-             this.cdr.detectChanges();
+          error: () => {
+            this.products = []; this.filteredProducts = []; this.standardCategories = [];
+            this.cdr.detectChanges();
           }
         });
       },
@@ -378,16 +381,16 @@ export class ShopComponent implements OnInit {
       this.selectedStdCatId = null;
       const cat = this.shopCategories.find(c => c.id === id);
       this.selectedCatName = cat ? `- Danh mục: ${cat.name}` : '';
-      this.filteredProducts = this.products.filter((p: any) => 
-         p.shopCategories && p.shopCategories.some((sc: any) => sc.id === id)
+      this.filteredProducts = this.products.filter((p: any) =>
+        p.shopCategories && p.shopCategories.some((sc: any) => sc.id === id)
       );
     } else if (type === 'standard') {
       this.selectedStdCatId = id;
       this.selectedCatId = null;
       const cat = this.standardCategories.find(c => c.id === id);
       this.selectedCatName = cat ? `- Loại: ${cat.name}` : '';
-      this.filteredProducts = this.products.filter((p: any) => 
-         p.categoryId === id
+      this.filteredProducts = this.products.filter((p: any) =>
+        p.categoryId === id
       );
     }
   }

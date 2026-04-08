@@ -116,12 +116,6 @@ export class PaymentService {
     const responseCode = vnpParams['vnp_ResponseCode'];
     const orderId = Number(vnpParams['vnp_TxnRef']);
 
-    // Step 1: Verify signature using the vnpay library
-    // The library's verifyReturnUrl returns isSuccess=true ONLY when signature is
-    // valid AND responseCode==='00'. For cancelled payments (responseCode='24'),
-    // isSuccess will be false but signature may still be valid.
-    // We use a try/catch to differentiate between invalid signatures (throws) and
-    // valid-but-not-successful payments (returns {isSuccess: false}).
     try {
       this.vnpayClient.verifyReturnUrl(vnpParams);
     } catch {
@@ -150,8 +144,6 @@ export class PaymentService {
       }
       return { success: true, message: 'Thanh toán thành công' };
     } else {
-      // ❌ Payment CANCELLED (code=24) or FAILED (any other code)
-      // Only update if order is still in PENDING state (not already confirmed)
       if (order.status === OrderStatus.PENDING) {
         order.status = OrderStatus.CANCELLED;
         await this.orderRepo.save(order);

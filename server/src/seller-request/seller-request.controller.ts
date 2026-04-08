@@ -12,7 +12,7 @@ import { SellerRequestService } from './seller-request.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RoleGuard } from '../auth/role.guard';
 import { Roles } from '../decorators/roles.decorator';
-import { RoleEnum } from '../role/role.enum';
+import type { RequestWithUser } from 'src/users/types/user-payload.type';
 
 @Controller('seller-request')
 @UseGuards(JwtAuthGuard, RoleGuard)
@@ -20,13 +20,16 @@ export class SellerRequestController {
   constructor(private readonly sellerRequestService: SellerRequestService) {}
 
   @Post()
-  create(@Request() req, @Body() createDto: any) {
-    return this.sellerRequestService.create(req.user.id, createDto);
+  create(
+    @Request() req: RequestWithUser,
+    @Body() createDto: Record<string, any>,
+  ) {
+    return this.sellerRequestService.create(req.user.userId, createDto);
   }
 
   @Get('me')
-  findMyRequests(@Request() req) {
-    return this.sellerRequestService.findMyRequest(req.user.id);
+  findMyRequests(@Request() req: RequestWithUser) {
+    return this.sellerRequestService.findMyRequest(req.user.userId);
   }
 
   @Get('admin')

@@ -53,6 +53,7 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
   shop: any = null;
 
   reviews: any[] = [];
+  recommendedProducts: Product[] = [];
   canUserReview: boolean = false;
   isLoggedIn: boolean = false;
   currentUser: any = null;
@@ -160,6 +161,7 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
         this.cdr.detectChanges();
         this.loadReviews();
         this.checkCanReview();
+        this.loadRecommended(prod);
         if (prod.userId) {
           this.loadShop(prod.userId);
         }
@@ -170,6 +172,43 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
         this.hasError = true;
         this.cdr.detectChanges();
         this.message.error('Lỗi khi tải thông tin sản phẩm');
+      }
+    });
+  }
+
+  loadRecommended(prod: Product) {
+    this.productService.getRecommended(prod.id, prod.brandId, prod.categoryId).subscribe({
+      next: (items) => {
+        if (items.length >= 4) {
+          this.recommendedProducts = items;
+          this.cdr.markForCheck();
+          return;
+        }
+        // Fallback: same category
+        this.productService.getByCategory(prod.categoryId, prod.id).subscribe({
+          next: (catItems) => {
+            if (catItems.length >= 2) {
+              this.recommendedProducts = catItems;
+              this.cdr.markForCheck();
+              return;
+            }
+            // Fallback: top selling
+            this.productService.getTopSelling().subscribe({
+              next: (top) => {
+                this.recommendedProducts = top.filter(p => p.id !== prod.id).slice(0, 8);
+                this.cdr.markForCheck();
+              }
+            });
+          }
+        });
+      },
+      error: () => {
+        this.productService.getTopSelling().subscribe({
+          next: (top) => {
+            this.recommendedProducts = top.filter(p => p.id !== prod.id).slice(0, 8);
+            this.cdr.markForCheck();
+          }
+        });
       }
     });
   }

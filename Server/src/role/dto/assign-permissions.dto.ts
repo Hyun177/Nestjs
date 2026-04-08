@@ -10,5 +10,5 @@ export class AssignPermissionsDto {
   })
   @IsArray()
   @IsEnum(Permission, { each: true })
-  permissions: Permission[];
+  permissions!: Permission[];
 }

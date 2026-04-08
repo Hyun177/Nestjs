@@ -33,7 +33,7 @@ export class SellerOrdersComponent implements OnInit {
   loading = signal(false);
   detailModalVisible = signal(false);
   updatingStatus = signal<number | null>(null);
-  
+
   searchValue = signal('');
   statusFilter = signal('all');
   pageIndex = signal(1);
@@ -97,9 +97,15 @@ export class SellerOrdersComponent implements OnInit {
     this.orderService.getSellerOrders().subscribe({
       next: (res: any) => {
         const mapped = (res || []).map((o: any) => {
-          const sellerItems = o.items?.filter((item: any) => item.shopId === this.sellerShop?.id) || [];
+          const sellerItems = o.items?.filter((item: any) => {
+             if (this.sellerShop?.id && item.shopId === this.sellerShop.id) return true;
+             if (this.sellerShop?.id && item.product?.shopId === this.sellerShop.id) return true;
+             if (this.sellerShop?.id && item.product?.shop?.id === this.sellerShop.id) return true;
+             if (this.sellerUserId && item.product?.userId === this.sellerUserId) return true;
+             return false;
+          }) || [];
           const sellerTotal = sellerItems.reduce((acc: number, curr: any) => acc + (parseFloat(curr.price) * curr.quantity), 0);
-          
+
           return {
             ...o,
             orderCode: `#${String(o.id).padStart(6, '0')}`,
@@ -135,9 +141,9 @@ export class SellerOrdersComponent implements OnInit {
     this.pageIndex.set(1);
   }
 
-  onStatusFilter(value: string) { 
-    this.statusFilter.set(value); 
-    this.pageIndex.set(1); 
+  onStatusFilter(value: string) {
+    this.statusFilter.set(value);
+    this.pageIndex.set(1);
   }
 
   openDetail(order: any) {
@@ -145,9 +151,13 @@ export class SellerOrdersComponent implements OnInit {
       this.message.warning('Đang tải dữ liệu Shop, vui lòng thử lại sau');
       return;
     }
-    const sellerItems = order.items?.filter((item: any) =>
-      item.shopId === this.sellerShop.id
-    ) ?? [];
+    const sellerItems = order.items?.filter((item: any) => {
+       if (this.sellerShop?.id && item.shopId === this.sellerShop.id) return true;
+       if (this.sellerShop?.id && item.product?.shopId === this.sellerShop.id) return true;
+       if (this.sellerShop?.id && item.product?.shop?.id === this.sellerShop.id) return true;
+       if (this.sellerUserId && item.product?.userId === this.sellerUserId) return true;
+       return false;
+    }) ?? [];
     this.selectedOrder.set({ ...order, sellerItems });
     this.detailModalVisible.set(true);
   }

@@ -17,40 +17,40 @@ import { ShopCategory } from '../../shop-category/entities/shop-category.entity'
 @Entity()
 export class Product {
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
   @Column()
-  name: string;
+  name!: string;
   @Column()
-  price: number;
+  price!: number;
 
   @Column({ nullable: true })
   originalPrice?: number;
 
-  @Column()
-  description: string;
+  @Column({ type: 'longtext', nullable: true })
+  description!: string;
   @Column({ nullable: true })
   image?: string;
   @ManyToOne(() => Category)
   @JoinColumn({ name: 'categoryId' })
-  category: Category;
+  category!: Category;
   @Column()
-  categoryId: number;
+  categoryId!: number;
   @ManyToOne(() => Brand)
   @JoinColumn({ name: 'brandId' })
-  brand: Brand;
+  brand!: Brand;
   @Column()
-  brandId: number;
+  brandId!: number;
   @Column({ default: 0 })
-  stock: number;
+  stock!: number;
   @Column({ default: 0, type: 'decimal', precision: 3, scale: 2 })
-  rating: number;
+  rating!: number;
   @Column({ default: 0 })
-  numReviews: number;
+  numReviews!: number;
   @Column({ default: false })
-  isFeatured: boolean;
+  isFeatured!: boolean;
 
   @Column({ default: false })
-  isArchived: boolean;
+  isArchived!: boolean;
 
   @Column({ type: 'json', nullable: true })
   labels?: string[];
@@ -76,28 +76,28 @@ export class Product {
   promoNote?: string;
 
   @Column({ default: 0 })
-  soldCount: number;
+  soldCount!: number;
 
   @Column({ default: 0 })
-  viewCount: number;
+  viewCount!: number;
 
   @Column()
-  userId: number;
+  userId!: number;
 
   @ManyToOne(() => Shop)
   @JoinColumn({ name: 'shopId' })
-  shop: Shop;
+  shop!: Shop;
 
   @Column({ nullable: true })
-  shopId: number;
+  shopId!: number;
 
   @ManyToMany(() => ShopCategory, (shopCategory) => shopCategory.products)
   @JoinTable({ name: 'product_shop_categories' })
-  shopCategories: ShopCategory[];
+  shopCategories!: ShopCategory[];
 
   @CreateDateColumn()
-  createdAt: Date;
+  createdAt!: Date;
 
   @UpdateDateColumn()
-  updatedAt: Date;
+  updatedAt!: Date;
 }

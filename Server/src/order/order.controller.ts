@@ -20,6 +20,7 @@ import { CheckoutDto } from './dto/checkout.dto';
 import { PermissionGuard } from '../auth/permission/permission.guard';
 import { Permissions } from '../auth/permission/permissions.decorator';
 import { Permission } from '../auth/permission/permissions.enum';
+import type { RequestWithUser } from 'src/users/types/user-payload.type';
 
 @ApiTags('order')
 @ApiBearerAuth('accessToken')
@@ -29,17 +30,17 @@ export class OrderController {
   constructor(private readonly orderService: OrderService) {}
 
   @Post('checkout')
-  checkout(@Req() req: any, @Body() checkoutDto: CheckoutDto) {
+  checkout(@Req() req: RequestWithUser, @Body() checkoutDto: CheckoutDto) {
     return this.orderService.checkout(req.user.userId, checkoutDto);
   }
 
   @Get('history')
-  getHistory(@Req() req: any) {
+  getHistory(@Req() req: RequestWithUser) {
     return this.orderService.getHistory(req.user.userId);
   }
 
   @Get('seller/all')
-  getSellerOrders(@Req() req: any) {
+  getSellerOrders(@Req() req: RequestWithUser) {
     return this.orderService.getSellerOrders(req.user.userId);
   }
 
@@ -56,7 +57,10 @@ export class OrderController {
   }
 
   @Get(':id')
-  getOrderById(@Req() req: any, @Param('id', ParseIntPipe) id: number) {
+  getOrderById(
+    @Req() req: RequestWithUser,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
     return this.orderService.getOrderById(id, req.user.userId);
   }
 
@@ -71,7 +75,10 @@ export class OrderController {
 
   @Patch(':id/cancel')
   @Permissions(Permission.ORDER_CANCEL)
-  cancelOrder(@Req() req: any, @Param('id', ParseIntPipe) id: number) {
+  cancelOrder(
+    @Req() req: RequestWithUser,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
     return this.orderService.cancelOrder(id, req.user.userId);
   }
 

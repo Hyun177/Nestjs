@@ -18,56 +18,56 @@ export enum VoucherType {
 @Entity()
 export class Voucher {
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
 
   @Column({ unique: true })
-  code: string;
+  code!: string;
 
   @Column({
     type: 'enum',
     enum: VoucherType,
     default: VoucherType.FIXED,
   })
-  type: VoucherType;
+  type!: VoucherType;
 
   @Column({ type: 'decimal', precision: 10, scale: 2 })
-  value: number;
+  value!: number;
 
   @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
-  maxDiscountAmount: number;
+  maxDiscountAmount!: number;
 
   @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
-  minOrderAmount: number;
+  minOrderAmount!: number;
 
   @Column({ default: 0 })
-  usageLimit: number; // Total limit for all users
+  usageLimit!: number; // Total limit for all users
 
   @Column({ default: 1 })
-  userUsageLimit: number; // Limit per user (e.g., each account only uses it once)
+  userUsageLimit!: number; // Limit per user (e.g., each account only uses it once)
 
   @Column({ default: 0 })
-  usedCount: number;
+  usedCount!: number;
 
   @Column()
-  startDate: Date;
+  startDate!: Date;
 
   @Column()
-  endDate: Date;
+  endDate!: Date;
 
   @Column({ default: true })
-  isActive: boolean;
+  isActive!: boolean;
 
   @ManyToMany(() => Category)
   @JoinTable({ name: 'voucher_categories' })
-  applicableCategories: Category[];
+  applicableCategories!: Category[];
 
   @ManyToMany(() => Brand)
   @JoinTable({ name: 'voucher_brands' })
-  applicableBrands: Brand[];
+  applicableBrands!: Brand[];
 
   @CreateDateColumn()
-  createdAt: Date;
+  createdAt!: Date;
 
   @UpdateDateColumn()
-  updatedAt: Date;
+  updatedAt!: Date;
 }

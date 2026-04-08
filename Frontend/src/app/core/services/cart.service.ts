@@ -35,6 +35,11 @@ export class CartService {
   private cartCountSubject = new BehaviorSubject<number>(0);
   cartCount$ = this.cartCountSubject.asObservable();
 
+  // Get current cart items synchronously
+  getCurrentCartItems(): CartItem[] {
+    return this.cartItemsSubject.value;
+  }
+
   constructor() {
     this.isBrowser = isPlatformBrowser(this.platformId);
     if (this.isBrowser) {

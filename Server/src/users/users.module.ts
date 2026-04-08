@@ -12,6 +12,6 @@ import { AddressController } from './address.controller';
   controllers: [UsersController, AddressController],
   providers: [UsersService, AddressService],
   imports: [TypeOrmModule.forFeature([User, Role, UserAddress])],
-  exports: [AddressService],
+  exports: [AddressService, UsersService],
 })
 export class UsersModule {}

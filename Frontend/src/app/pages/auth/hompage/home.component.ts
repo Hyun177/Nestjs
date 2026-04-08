@@ -31,6 +31,7 @@ export class HomeComponent implements OnInit {
   products: Product[] = [];
   topSelling: Product[] = [];
   brands: any[] = [];
+  premiumBrands: any[] = [];
   favoriteProductIds = new Set<number>();
 
   heroData = {
@@ -79,11 +80,15 @@ export class HomeComponent implements OnInit {
   ];
 
   get newArrivalProducts() {
-    return this.products.slice(0, 4);
+    return this.products.slice(0, 8);
+  }
+
+  get hasMoreProducts() {
+    return this.products.length > 8;
   }
 
   get topSellingProducts() {
-    return this.topSelling;
+    return this.topSelling.slice(0, 4);
   }
 
   ngOnInit() {
@@ -110,29 +115,37 @@ export class HomeComponent implements OnInit {
 
     this.brandService.getBrands().subscribe({
       next: (res: any[]) => {
-        this.brands =
-          res.length > 0
-            ? res
-            : [
-                { name: 'VERSACE' },
-                { name: 'ZARA' },
-                { name: 'GUCCI' },
-                { name: 'PRADA' },
-                { name: 'Calvin Klein' },
-              ];
+        this.brands = res;
+        this.premiumBrands = res.filter(b => b.isPremium);
+
+        // If no premium, use defaults for display
+        if (this.premiumBrands.length === 0) {
+          this.premiumBrands = [
+            { name: 'Apple', logo: 'https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg' },
+            { name: 'Samsung', logo: 'https://upload.wikimedia.org/wikipedia/commons/2/24/Samsung_Logo.svg' },
+            { name: 'Sony', logo: 'https://upload.wikimedia.org/wikipedia/commons/c/ca/Sony_logo.svg' },
+            { name: 'DELL', logo: 'https://upload.wikimedia.org/wikipedia/commons/1/18/Dell_logo_2016.svg' },
+            { name: 'ASUS', logo: 'https://upload.wikimedia.org/wikipedia/commons/2/2e/ASUS_Logo.svg' },
+          ];
+        }
+
         this.cdr.markForCheck();
       },
       error: () => {
-        this.brands = [
-          { name: 'VERSACE' },
-          { name: 'ZARA' },
-          { name: 'GUCCI' },
-          { name: 'PRADA' },
-          { name: 'Calvin Klein' },
-        ];
         console.error('Failed to load brands');
         this.cdr.markForCheck();
       },
+    });
+  }
+
+  navigateToBrand(brand: any) {
+    if (!brand.id) return;
+    // Navigate to products filtered by brand AND the category of that brand (per user request)
+    this.router.navigate(['/products'], {
+      queryParams: {
+        brandId: brand.id,
+        categoryId: brand.categoryId
+      }
     });
   }
 
