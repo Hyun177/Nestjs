@@ -24,7 +24,7 @@ export interface Cart {
   providedIn: 'root',
 })
 export class CartService {
-  private apiUrl = 'http://127.0.0.1:3000/api/cart';
+  private apiUrl = 'http://localhost:3000/api/cart';
   private http = inject(HttpClient);
   private platformId = inject(PLATFORM_ID);
   private isBrowser: boolean;
@@ -50,14 +50,14 @@ export class CartService {
   private getHeaders(): HttpHeaders {
     let token = '';
     if (this.isBrowser) {
-        token = localStorage.getItem('accessToken') || '';
+      token = localStorage.getItem('accessToken') || '';
     }
     return new HttpHeaders().set('Authorization', `Bearer ${token}`);
   }
 
   refreshCart() {
     if (!this.isBrowser) return;
-    
+
     const token = localStorage.getItem('accessToken');
     if (!token) return;
 
@@ -71,30 +71,39 @@ export class CartService {
       },
       error: (err) => {
         console.error('Error fetching cart', err);
-      }
+      },
     });
   }
 
-  addToCart(productId: number, quantity: number, size: string = '', color: string = ''): Observable<any> {
+  addToCart(
+    productId: number,
+    quantity: number,
+    size: string = '',
+    color: string = '',
+  ): Observable<any> {
     const body: any = { productId, quantity };
     if (size) body.size = size;
     if (color) body.color = color;
-    return this.http.post<any>(`${this.apiUrl}/items`, body, { headers: this.getHeaders() })
+    return this.http
+      .post<any>(`${this.apiUrl}/items`, body, { headers: this.getHeaders() })
       .pipe(tap(() => this.refreshCart()));
   }
 
   updateItemQuantity(itemId: number, quantity: number): Observable<any> {
-    return this.http.put<any>(`${this.apiUrl}/items/${itemId}`, { quantity }, { headers: this.getHeaders() })
+    return this.http
+      .put<any>(`${this.apiUrl}/items/${itemId}`, { quantity }, { headers: this.getHeaders() })
       .pipe(tap(() => this.refreshCart()));
   }
 
   removeItem(itemId: number): Observable<any> {
-    return this.http.delete<any>(`${this.apiUrl}/items/${itemId}`, { headers: this.getHeaders() })
+    return this.http
+      .delete<any>(`${this.apiUrl}/items/${itemId}`, { headers: this.getHeaders() })
       .pipe(tap(() => this.refreshCart()));
   }
 
   clearCart(): Observable<any> {
-    return this.http.delete<any>(this.apiUrl, { headers: this.getHeaders() })
+    return this.http
+      .delete<any>(this.apiUrl, { headers: this.getHeaders() })
       .pipe(tap(() => this.refreshCart()));
   }
 

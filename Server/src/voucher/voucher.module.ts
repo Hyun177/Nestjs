@@ -8,12 +8,14 @@ import { Brand } from '../brand/entities/brand.entity/brand.entity';
 import { CartModule } from '../cart/cart.module';
 import { AuthModule } from '../auth/auth.module';
 import { UserVoucher } from './entities/user-voucher.entity';
+import { NewsletterModule } from '../newsletter/newsletter.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Voucher, UserVoucher, Category, Brand]),
     CartModule,
     forwardRef(() => AuthModule),
+    NewsletterModule,
   ],
   controllers: [VoucherController],
   providers: [VoucherService],

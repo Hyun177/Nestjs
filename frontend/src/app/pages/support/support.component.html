@@ -1,0 +1,305 @@
+<div class="support-page">
+    <div class="container">
+        <div class="support-layout">
+            <!-- Sidebar -->
+            <aside class="support-sidebar">
+                <div class="sidebar-header">
+                    <h2>Trung tâm Hỗ trợ</h2>
+                </div>
+                <nav class="sidebar-nav">
+                    @for (item of menuItems; track item.id) {
+                    <a [routerLink]="['/' + item.id]" class="nav-item" [class.active]="currentPage === item.id">
+                        <span nz-icon [nzType]="item.icon"></span>
+                        {{ item.label }}
+                    </a>
+                    }
+                </nav>
+            </aside>
+
+            <!-- Content Area -->
+            <main class="support-content">
+                <div class="content-card">
+                    <!-- About Section -->
+                    @if (currentPage === 'about') {
+                    <section class="page-section">
+                        <h1>Về Softbee</h1>
+                        <p class="intro-text">Softbee là nền tảng thương mại điện tử hàng đầu chuyên cung cấp các thiết
+                            bị điện tử và công nghệ cao cấp.</p>
+
+                        <div class="vision-mission">
+                            <div class="vm-card">
+                                <div class="icon-box"><span nz-icon nzType="rocket"></span></div>
+                                <h3>Tầm nhìn</h3>
+                                <p>Trở thành điểm đến tin cậy nhất cho khách hàng khi tìm kiếm các giải pháp công nghệ
+                                    hiện đại trong đời sống.</p>
+                            </div>
+                            <div class="vm-card">
+                                <div class="icon-box"><span nz-icon nzType="heart"></span></div>
+                                <h3>Sứ mệnh</h3>
+                                <p>Mang công nghệ đến gần hơn với mọi người thông qua trải nghiệm mua sắm thông minh, an
+                                    toàn và cá nhân hóa.</p>
+                            </div>
+                        </div>
+
+                        <h2>Tại sao chọn Softbee?</h2>
+                        <ul class="features-list">
+                            <li><span nz-icon nzType="check"></span> Sản phẩm chính hãng 100%</li>
+                            <li><span nz-icon nzType="check"></span> Bảo hành chính hãng nhanh chóng</li>
+                            <li><span nz-icon nzType="check"></span> Tư vấn kỹ thuật 24/7</li>
+                            <li><span nz-icon nzType="check"></span> Miễn phí giao hàng cho đơn từ 2 triệu đồng</li>
+                        </ul>
+                    </section>
+                    }
+
+                    <!-- Contact Section -->
+                    @if (currentPage === 'contact') {
+                    <section class="page-section">
+                        <h1>Liên hệ với chúng tôi</h1>
+                        <p class="intro-text">Đội ngũ hỗ trợ của chúng tôi luôn sẵn sàng giải đáp mọi thắc mắc của bạn 24/7.</p>
+
+                        <!-- History Toggle Button -->
+                        @if (isLoggedIn && myRequests.length > 0) {
+                        <div class="history-toggle-wrap">
+                            <button class="btn-history-toggle" (click)="showHistory = !showHistory">
+                                <span nz-icon [nzType]="showHistory ? 'eye-invisible' : 'history'"></span>
+                                {{ showHistory ? 'Ẩn lịch sử yêu cầu' : 'Xem lịch sử yêu cầu (' + myRequests.length + ')' }}
+                            </button>
+                        </div>
+                        }
+
+                        <!-- User History Section (Moved to top for visibility) -->
+                        @if (isLoggedIn && myRequests.length > 0 && showHistory) {
+                        <div class="user-history" style="margin-top: 20px; margin-bottom: 50px; border-top: none; padding-top: 0;">
+                            <h2 class="history-title" style="display: flex; align-items: center; gap: 10px;">
+                                <span nz-icon nzType="history"></span> Lịch sử yêu cầu & Phản hồi
+                            </h2>
+                            <div class="history-list">
+                                @for (req of myRequests; track req.id) {
+                                <div class="history-card" [class.replied]="req.status === 'replied'">
+                                    <div class="card-header">
+                                        <span class="date">{{ req.createdAt | date:'dd/MM/yyyy HH:mm' }}</span>
+                                        <nz-tag [nzColor]="req.status === 'replied' ? 'success' : 'processing'">
+                                            {{ req.status === 'replied' ? 'Đã phản hồi' : 'Đang chờ' }}
+                                        </nz-tag>
+                                    </div>
+                                    <div class="card-content">
+                                        <p class="user-msg"><strong>Bạn:</strong> {{ req.message }}</p>
+                                        @if (req.status === 'replied') {
+                                        <div class="admin-reply">
+                                            <p><strong>Softbee trả lời:</strong></p>
+                                            <div class="reply-content">{{ req.replyMessage }}</div>
+                                            <span class="reply-date">Lúc: {{ req.repliedAt | date:'dd/MM/yyyy HH:mm' }}</span>
+                                        </div>
+                                        }
+                                    </div>
+                                </div>
+                                }
+                            </div>
+                        </div>
+                        }
+
+                        <div class="contact-grid">
+                            <div class="contact-info">
+                                <div class="info-item">
+                                    <span nz-icon nzType="mail"></span>
+                                    <div>
+                                        <h4>Email</h4>
+                                        <p>support@softbee.vn</p>
+                                    </div>
+                                </div>
+                                <div class="info-item">
+                                    <span nz-icon nzType="phone"></span>
+                                    <div>
+                                        <h4>Hotline</h4>
+                                        <p>1900 1234 (8:00 - 22:00)</p>
+                                    </div>
+                                </div>
+                                <div class="info-item">
+                                    <span nz-icon nzType="environment"></span>
+                                    <div>
+                                        <h4>Địa chỉ</h4>
+                                        <p>TP. Hồ Chí Minh</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <form class="contact-form" (ngSubmit)="sendContact()">
+                                <div class="form-group">
+                                    <label>Họ và tên</label>
+                                    <input type="text" name="name" [(ngModel)]="contactForm.name" placeholder="Nhập tên của bạn" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Email</label>
+                                    <input type="email" name="email" [(ngModel)]="contactForm.email" placeholder="Nhập email" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Tin nhắn</label>
+                                    <textarea name="message" rows="4" [(ngModel)]="contactForm.message" placeholder="Chúng tôi có thể giúp gì cho bạn?" required></textarea>
+                                </div>
+                                <button type="submit" class="btn-send" [disabled]="isSubmitting">
+                                    {{ isSubmitting ? 'Đang gửi...' : 'Gửi yêu cầu' }}
+                                </button>
+                            </form>
+                        </div>
+                    </section>
+                    }
+
+                    <!-- FAQ Section -->
+                    @if (currentPage === 'faq') {
+                    <section class="page-section">
+                        <h1>Câu hỏi thường gặp (FAQ)</h1>
+                        <div class="faq-list">
+                            <div class="faq-item">
+                                <h3>Q: Làm thế nào để theo dõi đơn hàng?</h3>
+                                <p>A: Bạn có thể vào phần "Đơn hàng của tôi" trong trang Cá nhân để kiểm tra trạng thái
+                                    vận chuyển của đơn hàng.</p>
+                            </div>
+                            <div class="faq-item">
+                                <h3>Q: Chính sách đổi trả như thế nào?</h3>
+                                <p>A: Softbee hỗ trợ đổi trả trong vòng 7 ngày kể từ khi nhận hàng nếu có lỗi từ nhà sản
+                                    xuất hoặc sản phẩm không đúng mô tả.</p>
+                            </div>
+                            <div class="faq-item">
+                                <h3>Q: Thanh toán tại Softbee có an toàn không?</h3>
+                                <p>A: Chúng tôi sử dụng các cổng thanh toán hàng đầu (VNPay, PayPal) đảm bảo mọi giao
+                                    dịch đều được mã hóa bảo mật tuyệt đối.</p>
+                            </div>
+                            <div class="faq-item">
+                                <h3>Q: Thời gian giao hàng mất bao lâu?</h3>
+                                <p>A: Thông thường từ 2-4 ngày làm việc tùy vào khu vực địa lý của bạn.</p>
+                            </div>
+                        </div>
+                    </section>
+                    }
+
+                    <!-- Terms Section -->
+                    @if (currentPage === 'terms') {
+                    <section class="page-section">
+                        <h1>Điều khoản & Điều kiện</h1>
+                        <div class="legal-content">
+                            <h3>1. Chấp nhận các điều khoản</h3>
+                            <p>Bằng cách truy cập và sử dụng dịch vụ tại Softbee, bạn đồng ý tuân thủ các điều khoản và
+                                điều kiện được nêu tại đây.</p>
+
+                            <h3>2. Quyền sở hữu trí tuệ</h3>
+                            <p>Tất cả nội dung bao gồm logo, hình ảnh, văn bản đều thuộc bản quyền của Softbee hoặc các
+                                đối tác cung cấp.</p>
+
+                            <h3>3. Trách nhiệm của khách hàng</h3>
+                            <p>Khách hàng có trách nhiệm bảo mật thông tin tài khoản và chịu trách nhiệm cho các hoạt
+                                động diễn ra dưới tên đăng nhập của mình.</p>
+
+                            <h3>4. Thay đổi điều khoản</h3>
+                            <p>Softbee có quyền thay đổi các điều khoản này bất kỳ lúc nào mà không cần thông báo trước.
+                            </p>
+                        </div>
+                    </section>
+                    }
+
+                    <!-- Privacy Section -->
+                    @if (currentPage === 'privacy') {
+                    <section class="page-section">
+                        <h1>Chính sách Bảo mật</h1>
+                        <div class="legal-content">
+                            <h3>1. Thu thập thông tin</h3>
+                            <p>Chúng tôi chỉ thu thập thông tin cần thiết để xử lý đơn hàng và cải thiện trải nghiệm mua
+                                sắm của bạn.</p>
+
+                            <h3>2. Sử dụng thông tin</h3>
+                            <p>Thông tin của bạn được dùng để giao hàng, hỗ trợ khách hàng và gửi các ưu đãi đặc biệt
+                                (nếu bạn đăng ký).</p>
+
+                            <h3>3. Bảo vệ dữ liệu</h3>
+                            <p>Dữ liệu cá nhân được lưu trữ an toàn và chúng tôi cam kết không bán hoặc chia sẻ thông
+                                tin cho bên thứ ba cho mục đích tiếp thị.</p>
+
+                            <h3>4. Quyền của người dùng</h3>
+                            <p>Bạn có quyền yêu cầu truy cập, sửa đổi hoặc xóa dữ liệu cá nhân của mình bất kỳ lúc nào.
+                            </p>
+                        </div>
+                    </section>
+                    }
+
+                    <!-- Shipping Section -->
+                    @if (currentPage === 'shipping' || currentPage === 'deliveries') {
+                    <section class="page-section">
+                        <h1>Thông tin Giao hàng</h1>
+                        <div class="shipping-info">
+                            <div class="shipping-card">
+                                <h4>🚚 Giao hàng tiêu chuẩn</h4>
+                                <p>Thời gian: 3-5 ngày</p>
+                                <p>Phí: 30,000đ (Miễn phí đơn trên 2.000.000đ)</p>
+                            </div>
+                            <div class="shipping-card highlight">
+                                <h4>🚀 Giao hàng hỏa tốc</h4>
+                                <p>Thời gian: 2 giờ - 24 giờ</p>
+                                <p>Áp dụng tại: TP. Hồ Chí Minh & Hà Nội</p>
+                                <p>Phí: 50,000đ - 100,000đ</p>
+                            </div>
+                        </div>
+                    </section>
+                    }
+
+                    <!-- Account Section -->
+                    @if (currentPage === 'account-info') {
+                    <section class="page-section">
+                        <h1>Quản lý tài khoản</h1>
+                        <div class="legal-content">
+                            <h3>Làm sao để đổi mật khẩu?</h3>
+                            <p>Bạn có thể đổi mật khẩu tại trang Cá nhân -> Bảo mật. Chúng tôi khuyên bạn nên đổi mật
+                                khẩu định kỳ 3 tháng một lần.</p>
+                            <h3>Tôi quên mật khẩu thì phải làm sao?</h3>
+                            <p>Nhấn vào "Quên mật khẩu" tại trang đăng nhập, chúng tôi sẽ gửi hướng dẫn khôi phục qua
+                                email của bạn.</p>
+                        </div>
+                    </section>
+                    }
+
+                    <!-- Orders Section -->
+                    @if (currentPage === 'orders-info') {
+                    <section class="page-section">
+                        <h1>Tra cứu đơn hàng</h1>
+                        <div class="legal-content">
+                            <h3>Kiểm tra trạng thái đơn hàng</h3>
+                            <p>Bạn có thể theo dõi hành trình đơn hàng tại mục "Đơn hàng của tôi". Thông tin sẽ được cập
+                                nhật liên tục từ đối tác vận chuyển.</p>
+                            <h3>Hủy đơn hàng</h3>
+                            <p>Đơn hàng chỉ có thể hủy khi chưa chuyển sang trạng thái "Đang giao". Vui lòng liên hệ
+                                hotline nếu cần hỗ trợ gấp.</p>
+                        </div>
+                    </section>
+                    }
+
+                    <!-- Payments Section -->
+                    @if (currentPage === 'payments-info') {
+                    <section class="page-section">
+                        <h1>Phương thức thanh toán</h1>
+                        <div class="shipping-info">
+                            <div class="shipping-card">
+                                <h4>💳 Thẻ ngân hàng / Visa</h4>
+                                <p>Hỗ trợ tất cả ngân hàng nội địa và thẻ quốc tế.</p>
+                            </div>
+                            <div class="shipping-card highlight">
+                                <h4>📲 Ví điện tử</h4>
+                                <p>Momo, ZaloPay, VNPay (Giảm thêm 5% cho đơn đầu tiên).</p>
+                            </div>
+                        </div>
+                    </section>
+                    }
+                    <!-- Final Fallback -->
+                    @if (!['about', 'contact', 'faq', 'terms', 'privacy', 'shipping', 'deliveries', 'account-info',
+                    'orders-info', 'payments-info'].includes(currentPage)) {
+                    <section class="page-section content-center">
+                        <div class="coming-soon">
+                            <span nz-icon nzType="rocket" class="large-icon"></span>
+                            <h1>{{ currentPage | titlecase }}</h1>
+                            <p>Nội dung này đang được cập nhật. Vui lòng quay lại sau!</p>
+                            <button class="btn-send" routerLink="/home">Quay lại trang chủ</button>
+                        </div>
+                    </section>
+                    }
+                </div>
+            </main>
+        </div>
+    </div>
+</div>

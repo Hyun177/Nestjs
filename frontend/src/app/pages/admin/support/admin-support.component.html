@@ -1,0 +1,93 @@
+<div class="admin-support-container">
+    <div class="page-header">
+        <div class="title-wrap">
+            <h2>Quản lý Hỗ trợ & Liên hệ</h2>
+            <p>Phản hồi và chăm sóc khách hàng của Softbee</p>
+        </div>
+    </div>
+
+    <!-- Action Bar -->
+    <div class="action-bar">
+        <div class="search-box">
+            <span nz-icon nzType="search"></span>
+            <input type="text" [(ngModel)]="searchTerm" placeholder="Tìm kiếm theo tên khách hàng hoặc email...">
+        </div>
+        <button nz-button nzType="default" (click)="loadRequests()" class="refresh-btn">
+            <span nz-icon nzType="sync"></span> Làm mới
+        </button>
+    </div>
+
+    <div class="custom-table-wrap">
+        <nz-table #basicTable [nzData]="filteredRequests" [nzLoading]="loading">
+            <thead>
+                <tr>
+                    <th>Ngày gửi</th>
+                    <th>Khách hàng</th>
+                    <th>Email</th>
+                    <th>Nội dung</th>
+                    <th nzWidth="120px">Trạng thái</th>
+                    <th nzWidth="150px">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @for (data of basicTable.data; track data.id) {
+                <tr>
+                    <td>{{ data.createdAt | date:'dd/MM/yyyy HH:mm' }}</td>
+                    <td>
+                        <div class="name-info">
+                            <span class="user-name">{{ data.name }}</span>
+                        </div>
+                    </td>
+                    <td><span class="email-text">{{ data.email }}</span></td>
+                    <td>
+                        <div class="msg-preview" [title]="data.message">
+                            {{ data.message }}
+                        </div>
+                    </td>
+                    <td>
+                        @if (data.status === 'replied') {
+                            <nz-tag nzColor="success" class="status-tag">Đã phản hồi</nz-tag>
+                        } @else {
+                            <nz-tag nzColor="processing" class="status-tag">Đang chờ</nz-tag>
+                        }
+                    </td>
+                    <td>
+                        <div class="actions">
+                            <button class="icon-btn reply" (click)="openReply(data)" nz-tooltip nzTooltipTitle="Phản hồi">
+                                <span nz-icon nzType="mail"></span>
+                            </button>
+                            <button class="icon-btn delete" (click)="deleteRequest(data.id!)" nz-tooltip nzTooltipTitle="Xóa">
+                                <span nz-icon nzType="delete"></span>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                }
+            </tbody>
+        </nz-table>
+    </div>
+</div>
+
+<!-- Reply Modal -->
+<nz-modal
+  [(nzVisible)]="replyModalVisible"
+  nzTitle="Phản hồi yêu cầu hỗ trợ"
+  (nzOnCancel)="replyModalVisible = false"
+  (nzOnOk)="submitReply()"
+  [nzOkLoading]="isReplying"
+>
+  <ng-container *nzModalContent>
+    <div class="request-details">
+        <p><strong>Người gửi:</strong> {{ selectedRequest?.name }} ({{ selectedRequest?.email }})</p>
+        <p><strong>Nội dung:</strong></p>
+        <div class="original-msg">
+            {{ selectedRequest?.message }}
+        </div>
+    </div>
+    
+    <div class="reply-form">
+        <label>Nội dung phản hồi:</label>
+        <textarea nz-input rows="6" [(ngModel)]="replyText" placeholder="Nhập nội dung phản hồi cho khách hàng..."></textarea>
+    </div>
+  </ng-container>
+</nz-modal>

@@ -14,7 +14,7 @@ export interface VoucherApplyResult {
   providedIn: 'root',
 })
 export class VoucherService {
-  private apiUrl = 'http://127.0.0.1:3000/api/voucher';
+  private apiUrl = 'http://localhost:3000/api/voucher';
   private http = inject(HttpClient);
   private platformId = inject(PLATFORM_ID);
   private isBrowser: boolean;
@@ -32,7 +32,11 @@ export class VoucherService {
   }
 
   applyVoucher(code: string, itemIds?: number[]): Observable<VoucherApplyResult> {
-    return this.http.post<VoucherApplyResult>(`${this.apiUrl}/apply`, { code, itemIds }, { headers: this.getHeaders() });
+    return this.http.post<VoucherApplyResult>(
+      `${this.apiUrl}/apply`,
+      { code, itemIds },
+      { headers: this.getHeaders() },
+    );
   }
 
   getMyVouchers(): Observable<any[]> {
@@ -44,7 +48,11 @@ export class VoucherService {
   }
 
   collectVoucher(voucherId: number): Observable<void> {
-    return this.http.post<void>(`${this.apiUrl}/collect`, { voucherId }, { headers: this.getHeaders() });
+    return this.http.post<void>(
+      `${this.apiUrl}/collect`,
+      { voucherId },
+      { headers: this.getHeaders() },
+    );
   }
 
   getVouchers(): Observable<any[]> {

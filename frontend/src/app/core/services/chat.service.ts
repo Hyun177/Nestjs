@@ -5,13 +5,13 @@ import { Observable, Subject, BehaviorSubject } from 'rxjs';
 import { io, Socket } from 'socket.io-client';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class ChatService {
   private http = inject(HttpClient);
   private platformId = inject(PLATFORM_ID);
-  private apiUrl = 'http://127.0.0.1:3000/api/chat';
-  
+  private apiUrl = 'http://localhost:3000/api/chat';
+
   private socket: Socket | null = null;
   public onMessage$ = new Subject<any>();
   public onConversationUpdate$ = new Subject<any>();
@@ -20,10 +20,10 @@ export class ChatService {
 
   connect() {
     if (!isPlatformBrowser(this.platformId)) return;
-    
+
     if (this.socket) {
       if (!this.socket.connected) {
-         this.socket.connect();
+        this.socket.connect();
       }
       return;
     }
@@ -33,7 +33,7 @@ export class ChatService {
 
     this.socket = io('http://127.0.0.1:3000', {
       auth: { token },
-      transports: ['websocket', 'polling']
+      transports: ['websocket', 'polling'],
     });
 
     this.socket.on('connect', () => {
@@ -100,15 +100,23 @@ export class ChatService {
     return this.http.get<any[]>(`${this.apiUrl}/messages/${conversationId}`);
   }
 
-  sendMessage(conversationId: number, content: string, type: string = 'TEXT', metadata: any = null): Observable<any> {
+  sendMessage(
+    conversationId: number,
+    content: string,
+    type: string = 'TEXT',
+    metadata: any = null,
+  ): Observable<any> {
     if (this.socket?.connected) {
-       // Send via socket
-       this.socket.emit('send_message', { conversationId, content, type, metadata });
-       // Return empty observable since socket listener will handle the response
-       return new Observable(sub => { sub.next(null); sub.complete(); });
+      // Send via socket
+      this.socket.emit('send_message', { conversationId, content, type, metadata });
+      // Return empty observable since socket listener will handle the response
+      return new Observable((sub) => {
+        sub.next(null);
+        sub.complete();
+      });
     } else {
-       // Fallback to REST
-       return this.http.post(`${this.apiUrl}/messages`, { conversationId, content, type, metadata });
+      // Fallback to REST
+      return this.http.post(`${this.apiUrl}/messages`, { conversationId, content, type, metadata });
     }
   }
 }

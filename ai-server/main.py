@@ -13,8 +13,8 @@ import os
 import requests
 import json
 import re
+import unicodedata
 from dotenv import load_dotenv
-import google.generativeai as genai
 
 load_dotenv()
 
@@ -30,10 +30,6 @@ app.add_middleware(
 )
 
 # Cấu hình Gemini
-api_key = os.getenv("GEMINI_API_KEY")
-if api_key:
-    genai.configure(api_key=api_key)
-
 NESTJS_API_URL = "http://localhost:3000/api"
 
 
@@ -45,6 +41,49 @@ class ChatMessage(BaseModel):
 
 
 # --- TOOL FUNCTIONS FOR NESTJS ---
+
+def _normalize_text(value: str) -> str:
+    if not value or not isinstance(value, str):
+        return ""
+    s = value.strip().lower()
+    # Vietnamese special letter: normalize đ/Đ -> d/D so "điện thoại" matches "dien thoai"
+    s = s.replace("đ", "d").replace("Đ", "D")
+    s = "".join(
+        ch for ch in unicodedata.normalize("NFD", s) if unicodedata.category(ch) != "Mn"
+    )
+    return " ".join(s.split())
+
+def _extract_search_intent_keyword(text: str) -> dict:
+    """Map user text to a search strategy backed by DB inventory."""
+    t = _normalize_text(text)
+    if not t:
+        return {"mode": "text", "query": ""}
+    # Category-like intents
+    if re.search(r"\b(dien thoai|smartphone|phone)\b", t):
+        return {
+            "mode": "any",
+            "keywords": ["iphone", "samsung", "xiaomi", "oppo", "vivo", "realme"],
+            "label": "điện thoại",
+        }
+    if re.search(r"\b(laptop|notebook|macbook)\b", t):
+        return {
+            "mode": "any",
+            "keywords": ["laptop", "macbook", "dell", "asus", "hp", "lenovo", "acer"],
+            "label": "laptop",
+        }
+    if re.search(r"\b(tai nghe|earphone|headphone|airpods)\b", t):
+        return {
+            "mode": "any",
+            "keywords": ["tai nghe", "airpods", "headphone", "earphone"],
+            "label": "tai nghe",
+        }
+    if re.search(r"\b(ao|quan|giay)\b", t):
+        # Keep the clothing keyword itself; backend search will match product names.
+        return {"mode": "text", "query": t}
+    # Brand -> category mapping (treat as phone)
+    if re.search(r"\b(iphone|samsung|xiaomi|oppo|vivo|realme)\b", t):
+        return {"mode": "text", "query": t}
+    return {"mode": "text", "query": t}
 
 
 def search_products_from_inventory(query: str):
@@ -410,7 +449,7 @@ def search_products_from_inventory(query: str):
             "travel backpack",
         ],
     }
-    q_clean = query.lower().strip()
+    q_clean = _normalize_text(query)
     q_words = [w for w in q_clean.split() if len(w) >= 2]  # Skip short words
     matches = []
 
@@ -424,18 +463,16 @@ def search_products_from_inventory(query: str):
         if not p or not isinstance(p, dict):
             continue
 
-        p_name = (p.get("name") or "").lower()
-        p_cat = (p.get("category") or "").lower()
-        p_brand = (p.get("brand") or "").lower()
+        p_name = _normalize_text(p.get("name") or "")
+        p_cat = _normalize_text(p.get("category") or "")
+        p_brand = _normalize_text(p.get("brand") or "")
 
         score = 0
 
-        # Tier 1: Match category group keywords (like "điện thoại" → "iphone")
         if matched_group_keywords:
             if p_cat in matched_group_keywords or p_brand in matched_group_keywords:
                 score += 10
 
-        # Tier 2: Direct name/category/brand match
         for w in q_words:
             if w in p_name:
                 score += 3
@@ -458,8 +495,11 @@ def search_products(query: str):
     """Tìm kiếm sản phẩm thông minh theo tên, từ khóa hoặc danh mục."""
     try:
         print(f"Tool calling: search_products - {query}")
-        params = "pageSize=12"
-        q_clean = query.strip().lower()
+        # NestJS ProductController expects `limit` (not `pageSize`)
+        params = "limit=12"
+        q_clean = _normalize_text(query)
+        q_words = [w for w in q_clean.split() if len(w) >= 2]
+        primary_word = q_words[0] if q_words else ""
 
         # Xử lý các từ khóa chung chung
         generic_keywords = ["tất cả", "sản phẩm", "hàng", "có gì", "đồ", "mới"]
@@ -493,21 +533,34 @@ def search_products(query: str):
             )
             if all_data and isinstance(all_data, list):
                 q_words = q_clean.split()
+                strong_words = [w for w in q_words if len(w) >= 4]
 
                 def score_product(p):
                     """Tính điểm match cho sản phẩm dựa trên tên, danh mục, thương hiệu"""
                     score = 0
-                    p_name = (p.get("name") or "").lower()
-                    p_category = (p.get("category") or "").lower()
-                    p_brand = (p.get("brand") or "").lower()
+                    p_name = _normalize_text(p.get("name") or "")
+                    p_category = _normalize_text(p.get("category") or "")
+                    p_brand = _normalize_text(p.get("brand") or "")
 
+                    strong_matched = False
                     for word in q_words:
                         if word in p_name:
                             score += 3  # Tên sản phẩm ưu tiên cao nhất
+                            if len(word) >= 4:
+                                strong_matched = True
                         if word in p_category:
                             score += 2  # Danh mục thứ hai
+                            if len(word) >= 4:
+                                strong_matched = True
                         if word in p_brand:
                             score += 2  # Thương hiệu bằng danh mục
+                            if len(word) >= 4:
+                                strong_matched = True
+
+                    # If the query contains any strong word (len>=4), require at least
+                    # one strong-word match; otherwise we get too many category matches.
+                    if strong_words and not strong_matched:
+                        return 0
                     return score
 
                 # Lọc sản phẩm có ít nhất 1 từ khóa match
@@ -516,6 +569,17 @@ def search_products(query: str):
                     # Sắp xếp theo điểm cao nhất
                     items = sorted(matched, key=score_product, reverse=True)
                 else:
+                    # Relax matching: if no strong-word results, allow category matches
+                    # by dropping the strong-word constraint and re-scoring.
+                    if strong_words:
+                        strong_words = []
+                        matched = [p for p in all_data if score_product(p) > 0]
+                        if matched:
+                            items = sorted(matched, key=score_product, reverse=True)
+                            # continue to output mapping below
+                        else:
+                            matched = []
+
                     # Nếu không match từ nào, thử fuzzy match đơn giản
                     import difflib
 
@@ -526,7 +590,7 @@ def search_products(query: str):
                             if p
                             and isinstance(p, dict)
                             and difflib.SequenceMatcher(
-                                None, word, (p.get("name") or "").lower()
+                                None, word, _normalize_text(p.get("name") or "")
                             ).ratio()
                             > 0.6
                         ]
@@ -535,6 +599,17 @@ def search_products(query: str):
                             break
 
         if isinstance(items, list) and len(items) > 0:
+            # Reduce noise: prefer items whose *name* matches the primary keyword.
+            if primary_word:
+                name_matched = [
+                    p
+                    for p in items
+                    if p
+                    and isinstance(p, dict)
+                    and primary_word in _normalize_text(p.get("name") or "")
+                ]
+                if name_matched:
+                    items = name_matched
             return [
                 {
                     "id": p.get("id"),
@@ -543,7 +618,7 @@ def search_products(query: str):
                     "image": p.get("image"),
                     "rating": p.get("rating", 4.8),
                     "sold": p.get("sold", p.get("soldCount", 0)),
-                    "description": p.get("description", "")[:100] + "...",
+                    "description": (p.get("description") or "")[:100] + "...",
                 }
                 for p in items[:12]
                 if p and isinstance(p, dict)
@@ -586,7 +661,8 @@ def list_inventory():
     try:
         print("Tool calling: list_inventory")
         try:
-            res = requests.get(f"{NESTJS_API_URL}/product?pageSize=100", timeout=5)
+            # NestJS ProductController expects `limit` (not `pageSize`)
+            res = requests.get(f"{NESTJS_API_URL}/product?limit=100", timeout=5)
             if res.status_code != 200:
                 print(
                     f"API returned {res.status_code} for inventory. Returning empty list."
@@ -841,12 +917,12 @@ def place_order_for_user(
         try:
             cart_get_res = requests.get(
                 f"{NESTJS_API_URL}/cart",
-                headers={"Authorization": f"Bearer {actual_token}"}
+                headers={"Authorization": f"Bearer {actual_token}"},
             )
             if cart_get_res.status_code == 200:
                 current_cart = cart_get_res.json()
                 existing_items = current_cart.get("items", [])
-                
+
                 # Tìm và xóa item trùng (cùng product + variant)
                 duplicate_removed = False
                 for item in existing_items:
@@ -858,25 +934,38 @@ def place_order_for_user(
                     item_size = None if item_size == "" else item_size
                     context_color = None if color == "" else color
                     context_size = None if size == "" else size
-                    
-                    if (item.get("productId") == product_id and
-                        (not context_size or (item_size or "").lower() == context_size.lower()) and
-                        (not context_color or (item_color or "").lower() == context_color.lower())):
+
+                    if (
+                        item.get("productId") == product_id
+                        and (
+                            not context_size
+                            or (item_size or "").lower() == context_size.lower()
+                        )
+                        and (
+                            not context_color
+                            or (item_color or "").lower() == context_color.lower()
+                        )
+                    ):
                         # Xóa item cũ để tránh duplicate
                         print(f"Removing duplicate item {item.get('id')} from cart")
                         delete_res = requests.delete(
                             f"{NESTJS_API_URL}/cart/items/{item.get('id')}",
-                            headers={"Authorization": f"Bearer {actual_token}"}
+                            headers={"Authorization": f"Bearer {actual_token}"},
                         )
                         if delete_res.status_code in [200, 204]:
                             duplicate_removed = True
-                            print(f"Successfully removed duplicate item {item.get('id')}")
+                            print(
+                                f"Successfully removed duplicate item {item.get('id')}"
+                            )
                         else:
-                            print(f"Failed to remove duplicate item: {delete_res.status_code}")
-                
+                            print(
+                                f"Failed to remove duplicate item: {delete_res.status_code}"
+                            )
+
                 # Chờ một chút để đảm bảo xóa hoàn tất
                 if duplicate_removed:
                     import time
+
                     time.sleep(0.5)
         except Exception as e:
             print(f"Warning: Could not check/clean cart: {e}")
@@ -976,6 +1065,22 @@ Bạn là trợ lý AI bán hàng chuyên nghiệp của một sàn thương m�
 
 ---
 
+🛡️ PHẠM VI HOẠT ĐỘNG (Marketplace-only)
+- Em chỉ hỗ trợ các tác vụ gắn với website (dựa trên các tools được cung cấp):
+  - Tìm sản phẩm / xem danh sách trong kho
+  - Xem chi tiết sản phẩm (kèm options/attributes)
+  - Hướng dẫn chọn variant (màu/size)
+  - Lấy thông tin địa chỉ/SĐT từ profile và hỗ trợ cập nhật
+  - Chốt đơn (COD hoặc VNPAY) sau khi user xác nhận đầy đủ
+- Nếu câu hỏi “strange nhưng liên quan website” không thể xử lý theo đúng các tác vụ/flow trên (ví dụ: câu hỏi về đăng ký người bán, quản trị/admin, chính sách chung, pháp lý/hoàn tiền, tài khoản/bảo mật, hoặc bất kỳ nội dung nào không dẫn đến các tools/flow đặt hàng), em PHẢI từ chối và chuyển hướng về các lựa chọn trong phạm vi hỗ trợ.
+- Khi từ chối, em không cố “best-effort” đoán ý để đặt hàng và không xuất các context tag đặt đơn.
+
+💭 TƯ VẤN / GỢI Ý LỰA CHỌN (Advice detection)
+- Nếu user có dấu hiệu cần được tư vấn chọn sản phẩm (ví dụ: “em nên mua gì”, “nên chọn loại nào”, “phù hợp với”, “giúp em chọn”, “có nên…”, “so sánh…”) thì:
+  - Hỏi tối đa 2 câu làm rõ về nhu cầu (ngân sách/giá, mục đích/sử dụng, ràng buộc như size/dung lượng nếu có).
+  - Sau khi có đủ thông tin, dùng tools để gợi ý 2-3 lựa chọn phù hợp kèm lý do ngắn gọn.
+  - Tránh tự khẳng định nếu thiếu dữ liệu; luôn hướng user tới việc chọn variant/đặt hàng trong phạm vi website.
+
 🧠 NGUYÊN TẮC HOẠT ĐỘNG:
 
 1. PHÂN LOẠI Ý ĐỊNH (INTENT)
@@ -1036,6 +1141,10 @@ Bước 6: Khi user xác nhận "Có" → gọi place_order_for_user
 5. KHI XÁC NHẬN ĐƠN
 Luôn trả về dạng:
 
+Lưu ý:
+- Chỉ xuất context tag `_(product_id:...,color:...,size:...,payment:...)_` khi đã có đủ `product_id` và `payment`.
+- Nếu sản phẩm không yêu cầu variant, `color/size` có thể để rỗng trong tag.
+
 🛒 Xác nhận đặt đơn:
 📦 Tên sản phẩm: [Tên] - [Màu] / [Size]
 📍 Địa chỉ: [Địa chỉ giao hàng]
@@ -1082,8 +1191,8 @@ Luôn đề xuất các lựa chọn nhanh:
 ---
 
 9. RULE QUAN TRỌNG
-❌ KHÔNG nói "không có" ngay lập tức
-✔ Luôn đề xuất sản phẩm gần giống
+❌ KHÔNG nói "không có" ngay lập tức trong phạm vi tìm kiếm/tư vấn sản phẩm.
+✔ Nếu chưa tìm được kết quả phù hợp, hãy gợi ý lựa chọn gần giống hoặc hướng dẫn cách đặt câu hỏi để tìm đúng sản phẩm.
 
 ❌ KHÔNG trả lời trống
 ✔ Luôn có gợi ý tiếp theo
@@ -1109,10 +1218,12 @@ Luôn đề xuất các lựa chọn nhanh:
 ---
 
 11. CONTEXT TRACKING
-- Luôn lưu product_id trong reply: _(product_id:[ID])_
-- Lưu variant đã chọn: _(product_id:[ID],color:[màu],size:[size])_
-- Lưu payment: _(product_id:[ID],color:[màu],size:[size],payment:[COD/VNPAY])_
-- Dùng context này để track trạng thái đơn hàng
+- Chỉ xuất context tag khi đang ở đúng bước của flow đặt hàng hợp lệ:
+  - Khi đã đủ để tiến sang bước tiếp theo (ví dụ: đã có product_id; và nếu cần variant/thanh toán thì cũng phải đủ).
+- KHÔNG xuất context tag trong trường hợp:
+  - đang tư vấn/gợi ý trước khi user chọn rõ sản phẩm/variant/payment
+  - hoặc khi em từ chối yêu cầu ngoài phạm vi
+- Dùng context tag này để track trạng thái đơn hàng.
 
 ---
 
@@ -1155,12 +1266,322 @@ async def chat(req: ChatMessage):
             "reply": "Chưa có API Key Gemini trong file .env. Bạn hãy kiểm tra lại nhé."
         }
 
-    print(f"Loaded API Key: {api_key[:8]}***")
+    # Deterministic search fallback: if user is clearly searching (e.g. "iphone",
+    # "tìm iphone"), answer using real product data to avoid hallucinations and
+    # keep the experience working even when Gemini is rate-limited.
+    try:
+        msg_raw = (req.message or "").strip()
+        msg_lower = msg_raw.lower()
+        is_greeting = any(
+            k in msg_lower
+            for k in [
+                "alo",
+                "a lô",
+                "hello",
+                "hi",
+                "hey",
+                "chào",
+                "chao",
+                "xin chào",
+                "xin chao",
+                "bạn ơi",
+                "ban oi",
+            ]
+        )
+        is_questionish = any(
+            k in msg_lower
+            for k in [
+                "?",
+                "là ai",
+                "la ai",
+                "ai v",
+                "ai vậy",
+                "ai vay",
+                "là gì",
+                "la gi",
+                "gì vậy",
+                "gi vay",
+                "who",
+                "what",
+                "mày là ai",
+                "may la ai",
+                "bạn là ai",
+                "ban la ai",
+            ]
+        )
+        is_search_intent = (
+            msg_lower.startswith("tìm ")
+            or msg_lower.startswith("tim ")
+            or msg_lower.startswith("tìm kiếm")
+            or msg_lower.startswith("tim kiem")
+            or msg_lower.startswith("search ")
+            or msg_lower.startswith("xem ")
+            or msg_lower.startswith("mua ")
+            or msg_lower.startswith("đặt ")
+            or msg_lower.startswith("dat ")
+            or msg_lower.startswith("t muốn tìm")
+            or msg_lower.startswith("toi muon tim")
+        )
+
+        # If the message contains a clear product keyword/brand, treat it as search intent
+        # even when the sentence is conversational ("t muốn điện thoại iphone", etc.).
+        has_product_keyword = re.search(
+            r"\b(iphone|samsung|xiaomi|oppo|vivo|realme|laptop|macbook|dell|asus|acer|lenovo|hp|tai\s*nghe|airpods|sac|charger|loa|tv|tivi|áo|ao|quần|quan|giày|giay)\b",
+            msg_lower,
+            flags=re.IGNORECASE,
+        )
+        if has_product_keyword:
+            is_search_intent = True
+
+        # Allow single/short keyword queries like "iphone", but avoid treating
+        # general chat questions as search.
+        allow_keyword_query = (
+            (has_product_keyword or re.search(r"\d", msg_lower))
+            and not is_questionish
+            and not is_greeting
+            and len(msg_raw) <= 30
+            and len(msg_raw.split()) <= 5
+        )
+
+        # Do NOT treat greetings/general chat as product search.
+        if is_greeting and not is_search_intent and not has_product_keyword:
+            reply = (
+                "Dạ em đây ạ. Em có thể giúp bạn **tìm sản phẩm** và **đặt hàng**.\n\n"
+                "Bạn muốn tìm gì ạ? Ví dụ: **tìm iphone**, **tìm samsung**, **laptop dell**."
+            )
+            return {
+                "reply": reply,
+                "products": None,
+                "history": req.history + [{"role": "model", "content": reply}],
+            }
+
+        if msg_raw and (is_search_intent or allow_keyword_query):
+            q = (
+                msg_lower.replace("tìm kiếm", "")
+                .replace("tim kiem", "")
+                .replace("tìm", "")
+                .replace("tim", "")
+                .strip()
+            )
+            q = q or msg_raw
+
+            # Normalize user query to the core keyword(s) to avoid sending
+            # full conversational text into the DB search.
+            q_norm = q
+            q_norm = re.sub(
+                r"^(t\s*muốn|t\s*muon|toi\s*muon|mình\s*muốn|minh\s*muon|cho\s*tôi|cho\s*toi)\s+",
+                "",
+                q_norm,
+                flags=re.IGNORECASE,
+            )
+            q_norm = re.sub(
+                r"\b(điện\s*thoại|dien\s*thoai|sản\s*phẩm|san\s*pham|hàng|hang|loại|loai)\b",
+                " ",
+                q_norm,
+                flags=re.IGNORECASE,
+            )
+            q_norm = " ".join(q_norm.split()).strip()
+            q_norm = q_norm or q
+            intent = _extract_search_intent_keyword(q_norm)
+            if intent.get("mode") == "any":
+                inv = list_inventory()
+                kws = intent.get("keywords") or []
+                label = intent.get("label") or q_norm
+                if inv and kws:
+                    matched = []
+                    for p in inv:
+                        if not p or not isinstance(p, dict):
+                            continue
+                        blob = " ".join(
+                            [
+                                _normalize_text(p.get("name") or ""),
+                                _normalize_text(p.get("category") or ""),
+                                _normalize_text(p.get("brand") or ""),
+                            ]
+                        )
+                        if any(_normalize_text(k) in blob for k in kws):
+                            matched.append(p)
+                    # Prefer items where name matches a keyword, then sold desc
+                    def _rank(pp):
+                        name_norm = _normalize_text(pp.get("name") or "")
+                        name_hit = 1 if any(_normalize_text(k) in name_norm for k in kws) else 0
+                        sold = pp.get("sold") or 0
+                        return (name_hit, sold)
+
+                    matched.sort(key=_rank, reverse=True)
+                    top = matched[:5]
+                    if top:
+                        lines = [f"🔥 Mình tìm thấy một vài sản phẩm thuộc nhóm **{label}** nè:"]
+                        for p in top:
+                            name = p.get("name") or "Sản phẩm"
+                            price = p.get("price")
+                            price_str = (
+                                f"{price:,} VNĐ" if isinstance(price, (int, float)) else ""
+                            )
+                            p_id = p.get("id")
+                            id_str = f" (Mã: P{p_id})" if p_id else ""
+                            lines.append(
+                                f"- **{name}**{id_str}"
+                                + (f" — {price_str}" if price_str else "")
+                            )
+                        lines.append("")
+                        lines.append("Bạn muốn xem chi tiết sản phẩm nào? (gửi **ID** hoặc tên sản phẩm)")
+                        reply = "\n".join(lines)
+                        return {
+                            "reply": reply,
+                            "products": top,
+                            "history": req.history + [{"role": "model", "content": reply}],
+                        }
+
+                reply = (
+                    f"Hiện tại mình chưa thấy sản phẩm thuộc nhóm **{label}** trong kho. "
+                    "Bạn thử tìm theo hãng/model cụ thể nhé (ví dụ: **iphone**, **samsung s2**)."
+                )
+                return {
+                    "reply": reply,
+                    "products": None,
+                    "history": req.history + [{"role": "model", "content": reply}],
+                }
+
+            q_norm = intent.get("query") or q_norm
+
+            # If the normalized query is too short, ask for a clearer keyword.
+            if len(q_norm) < 2:
+                reply = "Bạn muốn tìm sản phẩm gì ạ? Bạn gõ giúp em 1-2 từ khoá rõ hơn nhé (ví dụ: **iphone**, **samsung**, **laptop**)."
+                return {
+                    "reply": reply,
+                    "products": None,
+                    "history": req.history + [{"role": "model", "content": reply}],
+                }
+
+            # If user sent a numeric id, treat as product detail request.
+            if q_norm.isdigit():
+                details = get_product_details(int(q_norm))
+                if isinstance(details, dict) and details.get("error"):
+                    reply = f"Không tìm thấy sản phẩm ID **{q_norm}**. Bạn thử ID khác hoặc gõ tên sản phẩm nhé."
+                    return {
+                        "reply": reply,
+                        "products": None,
+                        "history": req.history + [{"role": "model", "content": reply}],
+                    }
+                name = details.get("name") or f"ID {q}"
+                price = details.get("price")
+                price_str = (
+                    f"{price:,} VNĐ" if isinstance(price, (int, float)) else ""
+                )
+                desc = (details.get("description") or "").strip()
+                desc = desc[:250] + ("..." if len(desc) > 250 else "")
+                reply = (
+                    f"📦 **{name}**\n"
+                    + (f"💰 Giá: {price_str}\n" if price_str else "")
+                    + (f"📝 Mô tả: {desc}\n" if desc else "")
+                    + "\nBạn muốn **mua** sản phẩm này hay xem sản phẩm khác?"
+                )
+                return {
+                    "reply": reply,
+                    "products": None,
+                    "history": req.history + [{"role": "model", "content": reply}],
+                }
+
+            products = search_products(q_norm)
+            if products:
+                # Filter out items that don't match query words in the *product name*.
+                # This avoids noisy category matches (e.g. "áo thun" pulling unrelated items).
+                q_words = [w for w in _normalize_text(q_norm).split() if len(w) >= 2]
+                if q_words:
+                    filtered = []
+                    for p in products:
+                        if not p or not isinstance(p, dict):
+                            continue
+                        name_norm = _normalize_text(p.get("name") or "")
+                        if any(w in name_norm for w in q_words):
+                            filtered.append(p)
+                    if filtered:
+                        products = filtered
+
+                # If user typed a product name and we have a clear exact match,
+                # return product details from DB instead of a generic list.
+                exact = next(
+                    (
+                        p
+                        for p in products
+                        if isinstance(p, dict)
+                        and (p.get("name") or "").strip().lower() == q.strip().lower()
+                    ),
+                    None,
+                )
+                if exact and exact.get("id"):
+                    details = get_product_details(int(exact["id"]))
+                    if isinstance(details, dict) and not details.get("error"):
+                        name = details.get("name") or exact.get("name") or "Sản phẩm"
+                        price = details.get("price")
+                        price_str = (
+                            f"{price:,} VNĐ" if isinstance(price, (int, float)) else ""
+                        )
+                        desc = (details.get("description") or "").strip()
+                        desc = desc[:250] + ("..." if len(desc) > 250 else "")
+                        reply = (
+                            f"📦 **{name}**\n"
+                            + (f"💰 Giá: {price_str}\n" if price_str else "")
+                            + (f"📝 Mô tả: {desc}\n" if desc else "")
+                            + "\nBạn muốn **mua** sản phẩm này hay xem sản phẩm khác?"
+                        )
+                        return {
+                            "reply": reply,
+                            "products": None,
+                            "history": req.history + [{"role": "model", "content": reply}],
+                        }
+
+                lines = [
+                    f"🔥 Mình tìm thấy một vài sản phẩm phù hợp với **{q_norm}** nè:",
+                ]
+                for p in products[:5]:
+                    name = p.get("name") or "Sản phẩm"
+                    price = p.get("price")
+                    price_str = f"{price:,} VNĐ" if isinstance(price, (int, float)) else ""
+                    p_id = p.get("id")
+                    id_str = f" (Mã: P{p_id})" if p_id else ""
+                    lines.append(
+                        f"- **{name}**{id_str}" + (f" — {price_str}" if price_str else "")
+                    )
+                lines.append("")
+                lines.append("Bạn muốn xem chi tiết sản phẩm nào? (gửi **ID** hoặc tên sản phẩm)")
+                reply = "\n".join(lines)
+                return {
+                    "reply": reply,
+                    "products": products,
+                    "history": req.history + [{"role": "model", "content": reply}],
+                }
+
+            # No direct match → ask user to refine keywords (avoid dumping whole inventory).
+            reply = (
+                f"Hiện tại mình chưa tìm thấy sản phẩm khớp **{q_norm}**. "
+                "Bạn thử gõ từ khoá ngắn hơn (tên hãng / model) nhé, ví dụ: **iphone 15**, **samsung s2**, **laptop dell**."
+            )
+            return {
+                "reply": reply,
+                "products": None,
+                "history": req.history + [{"role": "model", "content": reply}],
+            }
+    except Exception as _det_err:
+        # If deterministic path fails, continue to Gemini path.
+        pass
+
+    # Avoid slow/blocking Windows cert store access during imports by forcing
+    # a known CA bundle (requests' certifi location) before importing google SDK.
+    os.environ.setdefault("SSL_CERT_FILE", requests.certs.where())
+    os.environ.setdefault("REQUESTS_CA_BUNDLE", requests.certs.where())
+
+    import google.generativeai as genai
+
+    genai.configure(api_key=api_key)
 
     # Chuyển đổi history sang format Gemini SDK (parts)
     gemini_history = []
     for m in req.history:
-        role = "model" if m.get("role") == "assistant" else "user"
+        # Frontend stores roles as "user" and "model". Map both "model" and
+        # "assistant" to Gemini's "model" role for correct conversational context.
+        role = "model" if m.get("role") in ("assistant", "model") else "user"
         content = m.get("content") or ""
         if content:
             gemini_history.append({"role": role, "parts": [{"text": content}]})
@@ -1170,9 +1591,18 @@ async def chat(req: ChatMessage):
         last_error = None
         response = None
         for model_name in [
-            "gemini-2.0-flash-lite",
-            "gemini-2.0-flash",
-            "gemini-2.0-flash-001",
+            "gemini-3.0-flash",
+            "gemini-2.5-flash-lite",
+            "gemini-2.5-flash",
+            "gemini-2.5-pro",
+            "gemini-2.5-pro-preview-tts",
+            "gemini-2.5-flash-preview-tts",
+            "gemini-2.5-flash-image",
+            "gemini-2.5-flash-lite",
+            "gemini-2.5-flash-lite-preview",
+            "gemini-2.5-flash-lite-preview-tts",
+            "gemini-2.5-flash-lite-preview-image",
+            "gemini-2.5-flash-lite-preview-tts-image",
         ]:
             try:
                 model = genai.GenerativeModel(
@@ -1195,6 +1625,29 @@ async def chat(req: ChatMessage):
                 break
             except Exception as model_err:
                 last_error = model_err
+                err_text = str(model_err) or ""
+                err_lower = err_text.lower()
+
+                # If the API key is expired/invalid, do not try other models.
+                # This avoids wasting requests/quota and gives a clearer signal.
+                if (
+                    "api_key_invalid" in err_text
+                    or "api key expired" in err_lower
+                    or "api key is invalid" in err_lower
+                    or "invalid api key" in err_lower
+                ):
+                    reply = (
+                        "Xin lỗi, hệ thống AI đang lỗi cấu hình Gemini "
+                        "(API key đã hết hạn/không hợp lệ). "
+                        "Bạn vui lòng kiểm tra `GEMINI_API_KEY` trong "
+                        "`ai-server/.env` và khởi động lại server."
+                    )
+                    return {
+                        "reply": reply,
+                        "products": None,
+                        "history": req.history + [{"role": "model", "content": reply}],
+                    }
+
                 print(
                     f"Model {model_name} failed: {str(model_err)[:80]}, trying next..."
                 )
@@ -1211,618 +1664,37 @@ async def chat(req: ChatMessage):
         }
 
     except Exception as e:
-        error_msg = str(e)
-        print(f"Gemini Error (Falling back): {error_msg}")
-
-        token = req.token or req.accessToken
-        msg_lower = req.message.lower()
-
-        # --- CHẾ ĐỘ DỰ PHÒNG THÔNG MINH (STATEFUL FALLBACK) ---
-        # Tìm message bot cuối cùng (không phải user)
-        last_bot_reply = ""
-        for h in reversed(req.history):
-            if h.get("role") in ("model", "assistant"):
-                last_bot_reply = h.get("content", "").lower()
-                break
-
-        reply = ""
-        products = None  # Khởi tạo mặc định để tránh UnboundLocalError
-
-        # A. Xử lý XÁC NHẬN đơn hàng
+        # Do not run hardcoded parsing fallbacks; Gemini is the single source
+        # of intent/relevance. When it fails, return a safe marketplace-only message.
+        print(f"Gemini Error: {type(e).__name__}")
+        err_text = str(e) or ""
+        err_lower = err_text.lower()
         if (
-            any(
-                kw in msg_lower
-                for kw in ["có", "xác nhận", "đúng", "đồng ý", "ok", "chốt", "yes"]
+            "api_key_invalid" in err_text
+            or "api key expired" in err_lower
+            or "api key is invalid" in err_lower
+            or "invalid api key" in err_lower
+        ):
+            reply = (
+                "Xin lỗi, hệ thống AI đang lỗi cấu hình Gemini "
+                "(API key đã hết hạn/không hợp lệ). "
+                "Bạn vui lòng kiểm tra `GEMINI_API_KEY` trong "
+                "`ai-server/.env` và khởi động lại server."
             )
-            and "bạn xác nhận đặt" in last_bot_reply
-        ):
-            p_id = resolve_product_id_from_history(req)
-            pay_match = re.search(r"payment:([A-Z]+)", last_bot_reply, re.IGNORECASE)
-            color_match = re.search(r"color:([^,)\n_]+)", last_bot_reply)
-            size_match = re.search(r"size:([^,)\n_]+)", last_bot_reply)
-            if p_id:
-                payment = pay_match.group(1).strip().upper() if pay_match else "COD"
-                color = (
-                    color_match.group(1).strip()
-                    if color_match and color_match.group(1).strip()
-                    else None
-                )
-                size = (
-                    size_match.group(1).strip()
-                    if size_match and size_match.group(1).strip()
-                    else None
-                )
-                res = place_order_for_user(
-                    token, p_id, 1, color=color, size=size, paymentMethod=payment
-                )
-                if isinstance(res, dict) and res.get("success"):
-                    reply = f"✅ Đặt hàng thành công! Mã đơn **#{res['order'].get('id')}**. Cảm ơn bạn! 🎉"
-                else:
-                    reply = f"❌ Lỗi khi chốt đơn: {res.get('error', 'Server bận')}."
-                return {
-                    "reply": reply,
-                    "products": None,
-                    "history": req.history + [{"role": "assistant", "content": reply}],
-                }
-
-        # B. Xử lý đặt hàng — lấy chi tiết SP, hỏi variant + thanh toán
-        elif any(kw in msg_lower for kw in ["đặt", "mua", "order", "múc"]):
-            print(f"FALLBACK: Processing order request: {msg_lower}")
-            # Thử tìm product ID trước - chỉ match khi có từ khóa rõ ràng
-            match = re.search(r"(?:id|sản phẩm|mã)\s*(\d+)", msg_lower, re.IGNORECASE)
-            p_id = None
-
-            if match:
-                p_id = int(match.group(1))
-                print(f"FALLBACK: Found ID in message: {p_id}")
-            else:
-                # Không có ID, thử tìm theo tên sản phẩm
-                product_name = re.sub(
-                    r"(?:đặt|mua|order|múc|tôi muốn|cho tôi)",
-                    "",
-                    msg_lower,
-                    flags=re.IGNORECASE,
-                ).strip()
-                print(f"FALLBACK: Searching by name: '{product_name}'")
-                if product_name:
-                    found_product = search_product_by_name(product_name)
-                    if found_product and isinstance(found_product, dict):
-                        p_id = found_product.get("id")
-                        print(
-                            f"FALLBACK: Found product by name: {found_product.get('name')} (ID: {p_id})"
-                        )
-                    else:
-                        print("FALLBACK: Product not found by name")
-
-            if p_id:
-                # Lấy chi tiết sản phẩm
-                details = get_product_details(p_id)
-                p_name = (
-                    details.get("name", f"ID {p_id}")
-                    if isinstance(details, dict)
-                    else f"ID {p_id}"
-                )
-                attributes = (
-                    details.get("attributes", []) if isinstance(details, dict) else []
-                )
-
-                # Lấy địa chỉ giao hàng đúng
-                profile = check_user_profile(token) if token else {}
-                addr = (
-                    profile.get("address", "Chưa cập nhật")
-                    if isinstance(profile, dict)
-                    else "Chưa cập nhật"
-                )
-                phone = profile.get("phone", "") if isinstance(profile, dict) else ""
-
-                if attributes:
-                    # Còn variant chưa chọn — hỏi trước
-                    attr_lines = ""
-                    for attr in attributes:
-                        opts = ", ".join(attr.get("options", []))
-                        attr_lines += f"\n• {attr['name']}: {opts}"
-                    reply = (
-                        f"🛍️ Sản phẩm **{p_name}** có các lựa chọn:{attr_lines}\n\n"
-                        f"Bạn muốn chọn loại nào? Và thanh toán bằng:\n"
-                        f"1️⃣ Tiền mặt (COD)\n2️⃣ Chuyển khoản (VNPAY)\n\n"
-                        f"Ví dụ: *Màu Đen, Size XL, COD*\n"
-                        f"_(product_id:{p_id})_"
-                    )
-                else:
-                    # Không có variant — hỏi thanh toán
-                    reply = (
-                        f"🛒 Bạn muốn đặt mua **{p_name}**\n"
-                        f"📍 Địa chỉ: {addr}\n"
-                        f"📞 SĐT: {phone}\n\n"
-                        f"Chọn phương thức thanh toán:\n"
-                        f"1️⃣ Tiền mặt (COD)\n2️⃣ Chuyển khoản (VNPAY)\n\n"
-                        f"Gõ **COD** hoặc **VNPAY** để xác nhận đặt đơn."
-                    )
-                    # Lưu context vào reply để fallback A có thể đọc
-                    reply += f"\n_(product_id:{p_id})_"
-            else:
-                reply = "Không tìm thấy sản phẩm trong ngữ cảnh. Bạn thử gõ lại 'Mua sản phẩm [tên sản phẩm]' nhé!"
-
-        # B2. Người dùng chọn variant (khi bot vừa hỏi lựa chọn)
-        elif (
-            "có các lựa chọn" in last_bot_reply
-            or "bạn muốn chọn loại nào" in last_bot_reply
-            or "_(product_id:" in last_bot_reply
-        ):
-            p_id = resolve_product_id_from_history(req)
-            if not p_id:
-                # Nếu không tìm được ID, cố gắng đọc tên sản phẩm từ ngữ cảnh và map về ID
-                name_guess = find_product_name_in_history(req.history)
-                if name_guess:
-                    found = search_product_by_name(name_guess)
-                    if found and isinstance(found, dict):
-                        p_id = found.get("id")
-
-            if not p_id:
-                reply = "Không tìm thấy sản phẩm trong ngữ cảnh. Vui lòng chọn lại sản phẩm bằng nút Mua hoặc gõ lại tên sản phẩm chính xác."
-                return {
-                    "reply": reply,
-                    "products": None,
-                    "history": req.history + [{"role": "assistant", "content": reply}],
-                }
-
-            previous = resolve_selected_variants_from_history(req.history)
-            color = previous.get("color")
-            size = previous.get("size")
-            payment = previous.get("payment")
-
-            if any(kw in msg_lower for kw in ["vnpay", "chuyển khoản"]):
-                payment = "VNPAY"
-            elif any(kw in msg_lower for kw in ["cod", "tiền mặt", "tiền", "mặt"]):
-                payment = "COD"
-
-            if p_id:
-                details = get_product_details(p_id)
-                p_name = (
-                    details.get("name", f"ID {p_id}")
-                    if isinstance(details, dict)
-                    else f"ID {p_id}"
-                )
-                attributes = (
-                    details.get("attributes", []) if isinstance(details, dict) else []
-                )
-
-                invalid_attrs = []
-                for attr in attributes:
-                    attr_name_raw = attr.get("name", "")
-                    attr_name = attr_name_raw.lower()
-                    valid_options = attr.get("options", [])
-                    matched_opt = next(
-                        (opt for opt in valid_options if opt.lower() in msg_lower), None
-                    )
-                    if matched_opt:
-                        if any(k in attr_name for k in ["màu", "color"]):
-                            color = matched_opt
-                        elif any(
-                            k in attr_name
-                            for k in ["size", "kích", "bộ nhớ", "dung lượng"]
-                        ):
-                            size = matched_opt
-                        continue
-
-                    attr_keywords = []
-                    if any(k in attr_name for k in ["màu", "color"]):
-                        attr_keywords = ["màu", "color", "màu sắc"]
-                    elif any(
-                        k in attr_name for k in ["size", "kích", "bộ nhớ", "dung lượng"]
-                    ):
-                        attr_keywords = [
-                            "size",
-                            "kích",
-                            "bộ nhớ",
-                            "dung lượng",
-                            "dung lượng",
-                            "gb",
-                            "tb",
-                        ]
-
-                    referenced_attr = any(
-                        keyword in msg_lower for keyword in attr_keywords
-                    )
-                    if not referenced_attr:
-                        continue
-
-                    invalid_tokens = [
-                        w
-                        for w in re.split(r"[,\s]+", req.message.strip())
-                        if len(w) > 1
-                    ]
-                    invalid_tokens = [
-                        w
-                        for w in invalid_tokens
-                        if w.lower()
-                        not in {
-                            "và",
-                            "với",
-                            "cod",
-                            "vnpay",
-                            "tiền",
-                            "mặt",
-                            "chuyển",
-                            "khoản",
-                            "mua",
-                            "đặt",
-                            "ok",
-                            "nhé",
-                            "xin",
-                            "cho",
-                            "tôi",
-                            "muốn",
-                        }
-                    ]
-                    invalid_tokens = [
-                        w
-                        for w in invalid_tokens
-                        if not any(w.lower() == opt.lower() for opt in valid_options)
-                    ]
-                    if invalid_tokens:
-                        opts_str = ", ".join(f"**{o}**" for o in valid_options)
-                        invalid_attrs.append(f"• {attr_name_raw}: {opts_str}")
-
-                selected_parts = []
-                if color:
-                    selected_parts.append(f"Màu: {color}")
-                if size:
-                    selected_parts.append(f"Bộ nhớ/Size: {size}")
-                current_selection = (
-                    ", ".join(selected_parts) if selected_parts else None
-                )
-
-                missing_attrs = []
-                for attr in attributes:
-                    attr_name_raw = attr.get("name", "")
-                    if (
-                        any(k in attr_name_raw.lower() for k in ["màu", "color"])
-                        and not color
-                    ):
-                        missing_attrs.append((attr_name_raw, attr.get("options", [])))
-                    if (
-                        any(
-                            k in attr_name_raw.lower()
-                            for k in ["size", "kích", "bộ nhớ", "dung lượng"]
-                        )
-                        and not size
-                    ):
-                        missing_attrs.append((attr_name_raw, attr.get("options", [])))
-
-                if invalid_attrs:
-                    reply = (
-                        f"❌ Lựa chọn không hợp lệ! Sản phẩm **{p_name}** chỉ có:\n"
-                        + "\n".join(invalid_attrs)
-                        + f"\n\nVui lòng chọn lại nhé! \n_(product_id:{p_id},color:{color or ''},size:{size or ''})_"
-                    )
-                elif missing_attrs:
-                    prompt_lines = ""
-                    for attr_name_raw, opts in missing_attrs:
-                        opts_str = ", ".join(opts)
-                        prompt_lines += f"\n• {attr_name_raw}: {opts_str}"
-
-                    if current_selection:
-                        reply = (
-                            f"✅ Đã chọn: **{current_selection}**\n\n"
-                            f"Còn thiếu lựa chọn sau đây cho sản phẩm **{p_name}**:{prompt_lines}\n\n"
-                            f"Bạn tiếp tục chọn nhé. Ví dụ: *{missing_attrs[0][0]} {missing_attrs[0][1][0]}*\n"
-                            f"_(product_id:{p_id},color:{color or ''},size:{size or ''},payment:{payment or ''})_"
-                        )
-                    else:
-                        reply = (
-                            f"Bạn cần chọn thêm tùy chọn cho sản phẩm **{p_name}**:{prompt_lines}\n\n"
-                            f"Ví dụ: *Màu Đen* hoặc *{missing_attrs[0][0]} {missing_attrs[0][1][0]}*\n"
-                            f"_(product_id:{p_id},color:{color or ''},size:{size or ''},payment:{payment or ''})_"
-                        )
-                elif not payment:
-                    reply = (
-                        f"✅ Đã chọn: **{current_selection or 'Mặc định'}**\n\n"
-                        f"Chọn phương thức thanh toán:\n"
-                        f"1️⃣ Tiền mặt (COD)\n2️⃣ Chuyển khoản (VNPAY)\n"
-                        f"_(product_id:{p_id},color:{color or ''},size:{size or ''})_"
-                    )
-                else:
-                    profile = check_user_profile(token) if token else {}
-                    reply = (
-                        f"🛒 Xác nhận đặt đơn:\n"
-                        f"📦 **{p_name}** — {current_selection or 'Mặc định'}\n"
-                        f"📍 Địa chỉ: {profile.get('address', 'Chưa cập nhật')}\n"
-                        f"📞 SĐT: {profile.get('phone', '')}\n"
-                        f"💳 Thanh toán: {'Tiền mặt (COD)' if payment == 'COD' else 'VNPAY'}\n\n"
-                        f"⚠️ **Bạn xác nhận đặt đơn hàng này chứ?**\n"
-                        f"1️⃣ Có\n2️⃣ Không\n"
-                        f"_(product_id:{p_id},color:{color or ''},size:{size or ''},payment:{payment})_"
-                    )
-            else:
-                reply = "Không tìm thấy sản phẩm trong ngữ cảnh. Bạn thử gõ lại 'Mua sản phẩm ID X' nhé!"
-
-        # B3. Người dùng chọn thanh toán sau khi đã chọn variant
-        elif any(
-            kw in msg_lower for kw in ["cod", "vnpay", "tiền mặt", "chuyển khoản"]
-        ):
-            p_id = resolve_product_id_from_history(req)
-            p_id = int(p_id) if p_id else None
-
-            if p_id:
-                previous = resolve_selected_variants_from_history(req.history)
-                color = previous.get("color")
-                size = previous.get("size")
-                payment = previous.get("payment")
-
-                if any(kw in msg_lower for kw in ["vnpay", "chuyển khoản"]):
-                    payment = "VNPAY"
-                elif any(kw in msg_lower for kw in ["cod", "tiền mặt", "tiền", "mặt"]):
-                    payment = "COD"
-
-                details = get_product_details(p_id)
-                p_name = (
-                    details.get("name", f"ID {p_id}")
-                    if isinstance(details, dict)
-                    else f"ID {p_id}"
-                )
-                attributes = (
-                    details.get("attributes", []) if isinstance(details, dict) else []
-                )
-                missing_attrs = []
-                for attr in attributes:
-                    attr_name_raw = attr.get("name", "")
-                    if (
-                        any(k in attr_name_raw.lower() for k in ["màu", "color"])
-                        and not color
-                    ):
-                        missing_attrs.append((attr_name_raw, attr.get("options", [])))
-                    if (
-                        any(
-                            k in attr_name_raw.lower()
-                            for k in ["size", "kích", "bộ nhớ", "dung lượng"]
-                        )
-                        and not size
-                    ):
-                        missing_attrs.append((attr_name_raw, attr.get("options", [])))
-
-                profile = check_user_profile(token) if token else {}
-                addr = (
-                    profile.get("address", "Chưa cập nhật")
-                    if isinstance(profile, dict)
-                    else "Chưa cập nhật"
-                )
-                phone = profile.get("phone", "") if isinstance(profile, dict) else ""
-                variant_parts = [v for v in [color, size] if v]
-                variant_str = ", ".join(variant_parts) if variant_parts else "Mặc định"
-
-                if missing_attrs:
-                    prompt_lines = ""
-                    for attr_name_raw, opts in missing_attrs:
-                        opts_str = ", ".join(opts)
-                        prompt_lines += f"\n• {attr_name_raw}: {opts_str}"
-                    reply = (
-                        f"✅ Đã chọn: **{variant_str}**\n\n"
-                        f"Còn thiếu lựa chọn sau đây cho sản phẩm **{p_name}**:{prompt_lines}\n\n"
-                        f"Bạn tiếp tục chọn nhé. Ví dụ: *{missing_attrs[0][0]} {missing_attrs[0][1][0]}*\n"
-                        f"_(product_id:{p_id},color:{color or ''},size:{size or ''},payment:{payment or ''})_"
-                    )
-                else:
-                    reply = (
-                        f"🛒 Xác nhận đặt đơn:\n"
-                        f"📦 **{p_name}** — {variant_str}\n"
-                        f"📍 Địa chỉ: {addr}\n"
-                        f"📞 SĐT: {phone}\n"
-                        f"💳 Thanh toán: {'Tiền mặt (COD)' if payment == 'COD' else 'VNPAY'}\n\n"
-                        f"⚠️ **Bạn xác nhận đặt đơn hàng này chứ?**\n"
-                        f"1️⃣ Có\n2️⃣ Không\n"
-                        f"_(product_id:{p_id},color:{color or ''},size:{size or ''},payment:{payment})_"
-                    )
-            else:
-                reply = "Không tìm thấy sản phẩm. Bạn thử lại nhé!"
-
-        # C. Tìm kiếm sản phẩm
-        elif any(
-            kw in msg_lower
-            for kw in [
-                "tìm",
-                "tìm kiếm",
-                "sản phẩm",
-                "iphone",
-                "samsung",
-                "laptop",
-                "điện thoại",
-                "di động",
-                "áo",
-                "quần",
-                "hàng",
-                "loại",
-                "bán",
-                "xem",
-                "có gì",
-                "cần",
-                "đồ",
-            ]
-        ):
-            stop_words = [
-                "tìm",
-                "tìm kiếm",
-                "sản phẩm",
-                "cho tôi",
-                "tôi muốn",
-                "có",
-                "bán",
-                "không",
-                "giúp",
-                "xem",
-                "có gì",
-                "danh sách",
-                "hiển thị",
-                "liệt kê",
-                "cần",
-            ]
-            clean_query = msg_lower
-            for w in stop_words:
-                clean_query = clean_query.replace(w, " ")
-            clean_query = " ".join(clean_query.split()).strip()
-
-            # Smart category + brand mapping để nhận diện danh mục từ từ khóa
-            category_keywords = {
-                "điện thoại": [
-                    "điện thoại",
-                    "smartphone",
-                    "phone",
-                    "mobile",
-                    "iphone",
-                    "samsung",
-                    "xiaomi",
-                    "oppo",
-                    "vivo",
-                    "realme",
-                    "android",
-                    "ios",
-                ],
-                "laptop": [
-                    "laptop",
-                    "notebook",
-                    "ultrabook",
-                    "macbook",
-                    "dell",
-                    "asus",
-                    "hp",
-                    "lenovo",
-                    "acer",
-                    "msi",
-                    "gaming laptop",
-                ],
-                "áo": [
-                    "áo",
-                    "shirt",
-                    "t-shirt",
-                    "tshirt",
-                    "hoodie",
-                    "jacket",
-                    "sweater",
-                ],
-                "quần": ["quần", "pants", "jeans", "shorts", "jogger"],
-                "mũ": ["mũ", "nón", "hat", "cap"],
-                "apple": [
-                    "apple",
-                    "iphone",
-                    "ipad",
-                    "macbook",
-                    "airpods",
-                    "ios",
-                    "macos",
-                ],
+            return {
+                "reply": reply,
+                "products": None,
+                "history": req.history + [{"role": "model", "content": reply}],
             }
-            matched_categories = set()
-            for keyword, categories in category_keywords.items():
-                if keyword in clean_query.lower():
-                    matched_categories.update(categories)
 
-            search_key = clean_query
-            synonyms = {
-                "điện thoại": ["iphone", "smartphone", "mobile", "phone"],
-                "di động": ["iphone", "smartphone", "mobile"],
-                "máy tính": ["laptop", "pc", "desktop", "computer"],
-                "áo": ["áo thun", "shirt", "t-shirt", "hoodie", "jacket"],
-                "mũ": ["nón", "hat", "cap"],
-                "giày": ["shoes", "sneaker", "giày thể thao"],
-                "tai nghe": ["earphone", "headphone", "earbuds", "airpods"],
-                "sạc": ["charger", "củ sạc", "fast charge"],
-                "túi": ["bag", "backpack", "handbag", "balô"],
-                "đồng hồ": ["watch", "smartwatch", "apple watch"],
-                "tivi": ["tv", "smart tv"],
-                "loa": ["speaker", "bluetooth speaker"],
-                "máy lạnh": ["điều hòa", "air conditioner"],
-                "xe máy": ["motorbike", "bike"],
-                "ô tô": ["car", "auto"],
-                "đồ ăn": ["food", "snack"],
-                "cà phê": ["coffee"],
-            }
-            if search_key.lower() in synonyms:
-                search_key = synonyms[search_key.lower()]
-
-            # Nếu query quá ngắn hoặc chung chung, dùng query rỗng để search top products
-            if len(search_key) < 2:
-                search_key = ""
-
-            products = search_products(search_key) if search_key else []
-
-            # Nếu API search không ra kết quả nhưng có category match, dùng local filter by category
-            if (not products or len(products) == 0) and matched_categories:
-                print(
-                    f"Falling back to category-based search for: {matched_categories}"
-                )
-                all_items = list_inventory()
-                if isinstance(all_items, list) and len(all_items) > 0:
-                    # Filter by matched categories (case-insensitive)
-                    matched_cat_lower = set(c.lower() for c in matched_categories)
-                    products = [
-                        p
-                        for p in all_items
-                        if p
-                        and p.get("category")
-                        and p.get("category").lower() in matched_cat_lower
-                    ]
-
-            # Nếu vẫn không ra, thử keyword-based search như cũ
-            if not products or len(products) == 0:
-                all_items = list_inventory()
-                matches = []
-                if isinstance(all_items, list) and len(all_items) > 0:
-                    # Local fuzzy search với tính điểm
-                    q_words = clean_query.lower().split()
-                    for p in all_items:
-                        if not p:
-                            continue
-                        p_name = (p.get("name") or "").lower()
-                        p_cat = (p.get("category") or "").lower()
-                        p_brand = (p.get("brand") or "").lower()
-
-                        # Tính điểm match - tên > category > brand
-                        score = 0
-                        for w in q_words:
-                            if w in p_name:
-                                score += 3
-                            elif w in p_cat:
-                                score += 2
-                            elif w in p_brand:
-                                score += 1
-
-                        if score > 0:
-                            matches.append((p, score))
-
-                    if matches:
-                        matches.sort(key=lambda x: x[1], reverse=True)
-                        products = [m[0] for m in matches[:10]]
-
-            if isinstance(products, list) and len(products) >= 1:
-                top_names = [p.get("name", "N/A") for p in products[:3] if p]
-                names_str = " / ".join(f"**{n}**" for n in top_names)
-                if len(products) > 1:
-                    reply = f"Dạ, mình đã tìm thấy một số {clean_query or 'mặt hàng'} chất lượng như: {names_str}... 🎈\n\nBạn xem danh sách dưới này nhé!"
-                else:
-                    p_name = (
-                        products[0].get("name", "Sản phẩm")
-                        if products[0]
-                        else "Sản phẩm"
-                    )
-                    reply = f"Dạ, mình có mẫu **{p_name}** rất ưng ý nè! Bạn xem thử nhé? 😊"
-            else:
-                reply = f"Dạ, hiện tại kho mình chưa có '{clean_query}'. Nhưng bên em có nhiều mẫu khác rất đẹp, bạn cứ thử tìm theo tên thương hiệu xem sao nhé! 🎁"
-                products = None
-
-        # D. Cập nhật profile
-        elif any(kw in msg_lower for kw in ["địa chỉ", "sdt", "số điện thoại"]):
-            if not token:
-                reply = "Bạn vui lòng đăng nhập để cập nhật thông tin nhé!"
-            else:
-                reply = "Tôi đã ghi nhận thông tin của bạn! Hệ thống đang cập nhật địa chỉ và số điện thoại mới cho tài khoản của bạn."
-
-        # E. Fallback mặc định
-        else:
-            reply = "Chào khách! Bạn hãy thử gõ: **'Tìm sản phẩm'** hoặc **'Mua sản phẩm'** để tôi phục vụ ngay nhé! 😊"
-
+        reply = (
+            "Xin lỗi, hiện hệ thống AI chưa thể xử lý yêu cầu của bạn lúc này. "
+            "Bạn thử lại theo dạng: "
+            "'tìm sản phẩm: iphone', 'xem chi tiết sản phẩm: 123', hoặc 'mua sản phẩm ...' nhé."
+        )
         return {
             "reply": reply,
-            "products": products,
+            "products": None,
             "history": req.history + [{"role": "model", "content": reply}],
         }
 

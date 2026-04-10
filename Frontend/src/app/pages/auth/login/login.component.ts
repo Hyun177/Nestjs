@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, ChangeDetectorRef, NgZone } from '@angular/core';
 import { RouterLink, Router } from '@angular/router';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import {
@@ -24,6 +24,7 @@ export class LoginComponent implements OnInit, OnDestroy {
   private router = inject(Router);
   private message = inject(NzMessageService);
   private cdr = inject(ChangeDetectorRef);
+  private zone = inject(NgZone);
 
   loginForm: FormGroup;
   loading = false;
@@ -77,9 +78,15 @@ export class LoginComponent implements OnInit, OnDestroy {
   slideInterval: any;
 
   ngOnInit() {
+    // Avoid NG0100 by updating state inside Angular zone and marking for check.
     this.slideInterval = setInterval(() => {
-      this.nextSlide();
+      this.zone.run(() => {
+        this.nextSlide();
+        this.cdr.detectChanges();
+      });
     }, 5000);
+
+    this.initGoogleSignIn();
   }
 
   ngOnDestroy() {
@@ -94,5 +101,57 @@ export class LoginComponent implements OnInit, OnDestroy {
 
   nextSlide() {
     this.currentIndex = (this.currentIndex + 1) % this.images.length;
+  }
+
+  private initGoogleSignIn() {
+    // Requires adding GOOGLE_CLIENT_ID to index.html or environment;
+    // we keep it simple here: read from window global if present.
+    const w = window as any;
+    const clientId = w.GOOGLE_CLIENT_ID as string | undefined;
+    if (!clientId) return;
+
+    // Wait for Google Identity script to be available
+    const waitForGsi = (tries = 0) => {
+      if (w.google?.accounts?.id) return true;
+      if (tries > 40) return false; // ~4s
+      setTimeout(() => waitForGsi(tries + 1), 100);
+      return false;
+    };
+    if (!waitForGsi()) return;
+
+    w.google.accounts.id.initialize({
+      client_id: clientId,
+      callback: (response: any) => {
+        const credential = response?.credential;
+        if (!credential) return;
+        this.loading = true;
+        this.cdr.detectChanges();
+        this.authService.loginWithGoogle(credential).subscribe({
+          next: () => {
+            this.message.success('Đăng nhập Google thành công!');
+            this.loading = false;
+            this.cdr.detectChanges();
+            this.router.navigate(['/home']);
+          },
+          error: (err) => {
+            this.loading = false;
+            this.cdr.detectChanges();
+            this.message.error(err.error?.message || 'Đăng nhập Google thất bại!');
+          },
+        });
+      },
+    });
+
+    // Render the official button into a container if it exists
+    setTimeout(() => {
+      const el = document.getElementById('googleSignInButton');
+      if (el) {
+        w.google.accounts.id.renderButton(el, {
+          theme: 'outline',
+          size: 'large',
+          width: 320,
+        });
+      }
+    }, 0);
   }
 }

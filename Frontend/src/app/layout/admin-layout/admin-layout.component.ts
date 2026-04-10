@@ -10,6 +10,7 @@ import { NzAvatarModule } from 'ng-zorro-antd/avatar';
 import { NzTooltipModule } from 'ng-zorro-antd/tooltip';
 import { AuthService } from '../../core/services/auth.service';
 import { Router } from '@angular/router';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 
 @Component({
   selector: 'app-admin-layout',
@@ -32,9 +33,14 @@ import { Router } from '@angular/router';
 export class AdminLayoutComponent {
   private authService = inject(AuthService);
   private router = inject(Router);
+  private sanitizer = inject(DomSanitizer);
 
   isCollapsed = signal(false);
   currentUser = signal<any>(null);
+
+  getSafeIcon(svg: string): SafeHtml {
+    return this.sanitizer.bypassSecurityTrustHtml(svg);
+  }
 
   ngOnInit() {
     this.loadUserInfo();
@@ -116,6 +122,11 @@ export class AdminLayoutComponent {
       label: 'Duyệt Người bán',
       path: '/admin/seller-requests',
       svgIcon: `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg>`,
+    },
+    {
+      label: 'Liên hệ & Hỗ trợ',
+      path: '/admin/support',
+      svgIcon: `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>`,
     }
   ];
 }
