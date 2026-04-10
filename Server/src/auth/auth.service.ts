@@ -13,8 +13,10 @@ import { JwtService } from '@nestjs/jwt';
 import { LoginDto } from './dto/login.dto';
 import { Role } from '../users/entities/role.entity';
 import { VoucherService } from '../voucher/voucher.service';
+import { OAuth2Client } from 'google-auth-library';
 @Injectable()
 export class AuthService {
+  private googleClient: OAuth2Client;
   constructor(
     @InjectRepository(User)
     private userRepo: Repository<User>,
@@ -22,7 +24,10 @@ export class AuthService {
     private roleRepo: Repository<Role>,
     private jwtService: JwtService,
     private voucherService: VoucherService,
-  ) {}
+  ) {
+    const clientId = process.env.GOOGLE_CLIENT_ID;
+    this.googleClient = new OAuth2Client(clientId);
+  }
   async register(data: RegisterDto): Promise<User> {
     const user = await this.userRepo.findOne({ where: { email: data.email } });
     if (user) {
@@ -115,5 +120,88 @@ export class AuthService {
     }
     console.log('DB user:', user);
     return user;
+  }
+
+  async loginWithGoogle(credential: string): Promise<LoginDto> {
+    if (!process.env.GOOGLE_CLIENT_ID) {
+      throw new UnauthorizedException('Google login is not configured');
+    }
+    if (!credential) {
+      throw new UnauthorizedException('Missing Google credential');
+    }
+
+    const ticket = await this.googleClient.verifyIdToken({
+      idToken: credential,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+    const payload = ticket.getPayload();
+    if (!payload?.email) {
+      throw new UnauthorizedException('Invalid Google token');
+    }
+
+    let user = await this.userRepo.findOne({
+      where: { email: payload.email },
+      relations: ['roles'],
+    });
+
+    // Ensure default role exists
+    let defaultRole = await this.roleRepo.findOne({ where: { name: 'user' } });
+    if (!defaultRole) {
+      defaultRole = this.roleRepo.create({ name: 'user' });
+      await this.roleRepo.save(defaultRole);
+    }
+
+    if (!user) {
+      // Create user with a random password (not used for Google login)
+      const randomPassword = await bcrypt.hash(
+        `${payload.sub || payload.email}-${Date.now()}`,
+        10,
+      );
+      user = this.userRepo.create({
+        email: payload.email,
+        password: randomPassword,
+        firstname: payload.given_name || '',
+        lastname: payload.family_name || '',
+        name: payload.name || '',
+        avatar: payload.picture || '',
+        roles: [defaultRole],
+      });
+      user = await this.userRepo.save(user);
+      await this.voucherService.assignWelcomeVoucher(user.id).catch(() => {});
+      user.roles = [defaultRole];
+    } else if (!user.roles || user.roles.length === 0) {
+      user.roles = [defaultRole];
+      await this.userRepo.save(user);
+    }
+
+    const jwtPayload = {
+      sub: user.id,
+      email: user.email,
+      roles: user.roles?.map((r) => r.name) || ['user'],
+    };
+    const access_token = this.jwtService.sign(
+      { ...jwtPayload, type: 'access' },
+      { expiresIn: '30d' },
+    );
+    const refresh_token = this.jwtService.sign(
+      { ...jwtPayload, type: 'refresh' },
+      { expiresIn: '90d' },
+    );
+    const hashedRt = await bcrypt.hash(refresh_token, 10);
+    user.refreshToken = hashedRt;
+    await this.userRepo.save(user);
+
+    return {
+      access_token,
+      refresh_token,
+      user: {
+        id: user.id,
+        name: user.name,
+        firstname: user.firstname,
+        lastname: user.lastname,
+        email: user.email,
+        roles: user.roles?.map((r) => r.name) || ['user'],
+      },
+    };
   }
 }

@@ -9,6 +9,20 @@
     <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="icon" type="image/x-icon" href="favicon.ico" />
+
+    <!-- Google Identity Services (for Google login) -->
+    <meta
+      name="google-client-id"
+      content="941522957785-3n7dvml7bakrkuu4rvt747187i758e50.apps.googleusercontent.com"
+    />
+    <script>
+      // Expose client id for Angular Google Sign-In init
+      window.GOOGLE_CLIENT_ID =
+        document
+          .querySelector('meta[name=\"google-client-id\"]')
+          ?.getAttribute('content') || '';
+    </script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
   </head>
   <body>
     <app-root></app-root>

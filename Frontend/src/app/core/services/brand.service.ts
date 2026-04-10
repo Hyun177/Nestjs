@@ -7,7 +7,7 @@ import { isPlatformBrowser } from '@angular/common';
   providedIn: 'root',
 })
 export class BrandService {
-  private apiUrl = 'http://127.0.0.1:3000/api/brand';
+  private apiUrl = 'http://localhost:3000/api/brand';
   private http = inject(HttpClient);
   private platformId = inject(PLATFORM_ID);
   private isBrowser = isPlatformBrowser(this.platformId);
@@ -28,7 +28,7 @@ export class BrandService {
 
   getAdminBrands(): Observable<any[]> {
     return this.http.get<any[]>(`${this.apiUrl}/admin/all`, {
-      headers: this.getHeaders()
+      headers: this.getHeaders(),
     });
   }
 
@@ -37,7 +37,7 @@ export class BrandService {
     if (categoryId) params.categoryId = categoryId;
     return this.http.get<any[]>(`${this.apiUrl}/seller/me`, {
       headers: this.getHeaders(),
-      params
+      params,
     });
   }
 

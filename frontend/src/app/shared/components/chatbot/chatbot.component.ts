@@ -224,6 +224,11 @@ export class ChatbotComponent implements AfterViewChecked {
 
       // Các danh sách bullet đơn giản nếu chứa dấu phẩy
       if ((line.startsWith('•') || line.startsWith('-')) && line.includes(',')) {
+        // Avoid turning price formatting (e.g. "599,000 VNĐ") into quick replies.
+        // These lines are typically product list items, not selectable options.
+        if (/(vnd|vnđ)/i.test(line) && /\d{1,3},\d{3}/.test(line)) {
+          continue;
+        }
         const values = line
           .replace(/^[•\-]\s*/, '')
           .split(',')

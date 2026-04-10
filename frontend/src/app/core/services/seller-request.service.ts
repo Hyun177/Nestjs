@@ -3,11 +3,11 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class SellerRequestService {
   private http = inject(HttpClient);
-  private apiUrl = 'http://127.0.0.1:3000/api/seller-request';
+  private apiUrl = 'http://localhost:3000/api/seller-request';
 
   submitRequest(data: any): Observable<any> {
     return this.http.post(this.apiUrl, data);

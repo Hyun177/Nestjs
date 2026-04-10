@@ -75,6 +75,58 @@ export const routes: Routes = [
         path: 'chat',
         loadComponent: () =>
           import('./pages/chat/chat.component').then((m) => m.ChatComponent),
+      },
+      {
+        path: 'about',
+        loadComponent: () => import('./pages/support/support.component').then(m => m.SupportComponent)
+      },
+      {
+        path: 'contact',
+        loadComponent: () => import('./pages/support/support.component').then(m => m.SupportComponent)
+      },
+      {
+        path: 'faq',
+        loadComponent: () => import('./pages/support/support.component').then(m => m.SupportComponent)
+      },
+      {
+        path: 'terms',
+        loadComponent: () => import('./pages/support/support.component').then(m => m.SupportComponent)
+      },
+      {
+        path: 'privacy',
+        loadComponent: () => import('./pages/support/support.component').then(m => m.SupportComponent)
+      },
+      {
+        path: 'shipping',
+        loadComponent: () => import('./pages/support/support.component').then(m => m.SupportComponent)
+      },
+      {
+        path: 'features',
+        loadComponent: () => import('./pages/support/support.component').then(m => m.SupportComponent)
+      },
+      {
+        path: 'works',
+        loadComponent: () => import('./pages/support/support.component').then(m => m.SupportComponent)
+      },
+      {
+        path: 'career',
+        loadComponent: () => import('./pages/support/support.component').then(m => m.SupportComponent)
+      },
+      {
+        path: 'account-info',
+        loadComponent: () => import('./pages/support/support.component').then(m => m.SupportComponent)
+      },
+      {
+        path: 'deliveries',
+        loadComponent: () => import('./pages/support/support.component').then(m => m.SupportComponent)
+      },
+      {
+        path: 'orders-info',
+        loadComponent: () => import('./pages/support/support.component').then(m => m.SupportComponent)
+      },
+      {
+        path: 'payments-info',
+        loadComponent: () => import('./pages/support/support.component').then(m => m.SupportComponent)
       }
     ],
   },
@@ -151,6 +203,11 @@ export const routes: Routes = [
         path: 'seller-requests',
         loadComponent: () =>
           import('./pages/admin/seller-requests/admin-seller-requests.component').then((m) => m.AdminSellerRequestsComponent),
+      },
+      {
+        path: 'support',
+        loadComponent: () =>
+          import('./pages/admin/support/admin-support.component').then((m) => m.AdminSupportComponent),
       }
     ],
   },

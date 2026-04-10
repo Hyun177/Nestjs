@@ -16,6 +16,7 @@ import { JwtAuthGuard } from './jwt-auth.guard';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import type { RequestWithUser } from '../common/types/request-with-user';
 import { RoleGuard } from './role.guard';
+import { GoogleLoginDto } from './dto/google-login.dto';
 @Controller('auth')
 @ApiBearerAuth('accessToken')
 export class AuthController {
@@ -37,6 +38,12 @@ export class AuthController {
   @Post('login')
   async login(@Body() body: LoginInputDto): Promise<LoginDto> {
     return await this.authService.login(body);
+  }
+
+  // SPA Google sign-in: frontend sends Google ID token (credential)
+  @Post('google')
+  async googleLogin(@Body() body: GoogleLoginDto): Promise<LoginDto> {
+    return await this.authService.loginWithGoogle(body.credential);
   }
   @UseGuards(RoleGuard)
   @Put('change-password')

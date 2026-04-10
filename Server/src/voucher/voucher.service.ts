@@ -12,6 +12,8 @@ import { UpdateVoucherDto } from './dto/update-voucher.dto';
 import { Category } from '../category/entities/category.entity/category.entity';
 import { Brand } from '../brand/entities/brand.entity/brand.entity';
 import { CartService } from '../cart/cart.service';
+import { NewsletterService } from '../newsletter/newsletter.service';
+import { MailService } from '../mail/mail.service';
 
 @Injectable()
 export class VoucherService {
@@ -25,6 +27,8 @@ export class VoucherService {
     @InjectRepository(Brand)
     private readonly brandRepository: Repository<Brand>,
     private readonly cartService: CartService,
+    private readonly newsletterService: NewsletterService,
+    private readonly mailService: MailService,
   ) {}
 
   async create(createVoucherDto: CreateVoucherDto): Promise<Voucher> {
@@ -45,7 +49,34 @@ export class VoucherService {
       });
     }
 
-    return this.voucherRepository.save(voucher);
+    const saved = await this.voucherRepository.save(voucher);
+
+    // Notify newsletter subscribers about new voucher (best-effort)
+    this.newsletterService
+      .listSubscriberEmails()
+      .then((emails) => {
+        const valueText =
+          saved.type === VoucherType.PERCENT
+            ? `${saved.value}%`
+            : `${saved.value} VNĐ`;
+        for (const email of emails) {
+          this.mailService
+            .sendNewVoucher(email, saved.code, valueText, saved.endDate, {
+              minOrderAmount: Number(saved.minOrderAmount || 0),
+              maxDiscountAmount: saved.maxDiscountAmount
+                ? Number(saved.maxDiscountAmount)
+                : null,
+              usageLimit: Number(saved.usageLimit || 0),
+              userUsageLimit: Number(saved.userUsageLimit || 0),
+              startDate: saved.startDate,
+              isActive: saved.isActive,
+            })
+            .catch(() => {});
+        }
+      })
+      .catch(() => {});
+
+    return saved;
   }
 
   async findAll(): Promise<Voucher[]> {

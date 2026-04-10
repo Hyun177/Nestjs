@@ -19,7 +19,7 @@
     <ul nz-menu nzTheme="dark" nzMode="inline" class="admin-nav-menu">
       <li *ngFor="let item of menuItems" nz-menu-item [routerLink]="item.path" [routerLinkActive]="'active-menu-item'"
         [nz-tooltip]="isCollapsed() ? item.label : ''" nzTooltipPlacement="right">
-        <span class="menu-icon" [innerHTML]="item.svgIcon"></span>
+        <span class="menu-icon" [innerHTML]="getSafeIcon(item.svgIcon)"></span>
         <span *ngIf="!isCollapsed()" class="menu-label">{{ item.label }}</span>
       </li>
     </ul>

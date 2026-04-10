@@ -48,11 +48,6 @@
             </div>
           </div>
 
-          <div *ngIf="msg.quickReplies?.length" class="quick-replies">
-            <button class="quick-reply-btn" *ngFor="let reply of msg.quickReplies" (click)="sendQuickReply(reply)">
-              {{ reply }}
-            </button>
-          </div>
         </div>
       </div>
 

@@ -40,7 +40,13 @@
                 <div class="form-group">
                     <div class="flex justify-between items-center pr-2">
                         <label>Mật khẩu</label>
-                        <a href="#" class="text-[10px] font-black uppercase tracking-widest text-gray-900 hover:text-blue-600 transition-colors">Quên mật khẩu?</a>
+                        <button
+                          type="button"
+                          class="text-[10px] font-black uppercase tracking-widest text-gray-900 hover:text-blue-600 transition-colors"
+                          style="background: transparent; border: none; padding: 0; cursor: pointer;"
+                        >
+                          Quên mật khẩu?
+                        </button>
                     </div>
                     <div class="input-container">
                         <span nz-icon nzType="lock" class="icon"></span>
@@ -63,6 +69,10 @@
                         Đăng nhập ngay
                     }
                 </button>
+
+                <div style="margin-top: 14px; display: flex; justify-content: center;">
+                    <div id="googleSignInButton"></div>
+                </div>
 
                 <div class="auth-footer">
                     Chưa có tài khoản? <a routerLink="/register">Đăng ký ngay</a>

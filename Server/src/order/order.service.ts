@@ -12,8 +12,8 @@ import { User } from '../users/entities/user.entity';
 import { UserAddress } from '../users/entities/user-address.entity';
 import { CheckoutDto } from './dto/checkout.dto';
 import { PaymentService } from '../payment/payment.service';
-import * as nodemailer from 'nodemailer';
 import { Voucher } from '../voucher/entities/voucher.entity';
+import { MailService } from '../mail/mail.service';
 
 @Injectable()
 export class OrderService {
@@ -28,6 +28,7 @@ export class OrderService {
     private readonly cartService: CartService,
     private readonly dataSource: DataSource,
     private readonly paymentService: PaymentService,
+    private readonly mailService: MailService,
   ) {}
 
   async checkout(userId: number, checkoutDto: CheckoutDto) {
@@ -158,8 +159,36 @@ export class OrderService {
       await queryRunner.commitTransaction();
 
       const paymentResult = await this.paymentService.createPayment(savedOrder);
-      if (user && user.email)
-        this.sendOrderEmail(user.email, savedOrder.id).catch(console.error);
+      if (user && user.email) {
+        // Build rich email payload from real order data
+        const orderForEmail = await this.orderRepository.findOne({
+          where: { id: savedOrder.id },
+          relations: ['items', 'items.product', 'voucher'],
+        });
+        const items =
+          orderForEmail?.items?.map((it) => ({
+            name: it.product?.name || `Product #${it.productId}`,
+            quantity: it.quantity,
+            price: Number(it.price),
+            color: it.color || null,
+            size: it.size || null,
+          })) || [];
+
+        this.mailService
+          .sendOrderReceived(user.email, {
+            id: savedOrder.id,
+            paymentMethod: String(savedOrder.paymentMethod),
+            shippingAddress: savedOrder.shippingAddress,
+            shippingPhone: savedOrder.shippingPhone,
+            items,
+            shippingFee: Number(savedOrder.shippingFee || 0),
+            discountAmount: Number(savedOrder.discountAmount || 0),
+            totalAmount: Number(savedOrder.totalAmount || 0),
+            voucherCode: orderForEmail?.voucher?.code || null,
+            createdAt: savedOrder.createdAt,
+          })
+          .catch((e) => console.log('Email send failed:', e));
+      }
 
       return {
         ...savedOrder,
@@ -190,25 +219,8 @@ export class OrderService {
   }
 
   async sendOrderEmail(email: string, orderId: number) {
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: 'noreply.shop.tester@gmail.com',
-        pass: 'password',
-      },
-    });
-
-    try {
-      await transporter.sendMail({
-        from: '"Shop" <noreply@shop.com>',
-        to: email,
-        subject: `Xác nhận đơn hàng #${orderId}`,
-        text: `Đơn hàng #${orderId} của bạn đã được tiếp nhận.`,
-        html: `<b>Chào bạn, Đơn hàng #${orderId} của bạn đã được tiếp nhận. Chúng tôi sẽ sớm xử lý.</b>`,
-      });
-    } catch (e) {
-      console.log('Email sending skipped:', e);
-    }
+    // Backward compatible wrapper
+    await this.mailService.sendOrderReceived(email, { id: orderId });
   }
 
   async getAllOrders(): Promise<Order[]> {
@@ -239,9 +251,11 @@ export class OrderService {
   async updateStatus(orderId: number, status: OrderStatus): Promise<Order> {
     const order = await this.orderRepository.findOne({
       where: { id: orderId },
-      relations: ['items', 'items.product'],
+      relations: ['items', 'items.product', 'user'],
     });
     if (!order) throw new BadRequestException('Order not found');
+
+    const wasDelivered = order.status === OrderStatus.DELIVERED;
 
     if (
       order.status !== OrderStatus.DELIVERED &&
@@ -259,7 +273,37 @@ export class OrderService {
     }
 
     order.status = status;
-    return this.orderRepository.save(order);
+    const saved = await this.orderRepository.save(order);
+
+    if (
+      !wasDelivered &&
+      status === OrderStatus.DELIVERED &&
+      order.user &&
+      order.user.email
+    ) {
+      this.mailService
+        .sendOrderDelivered(order.user.email, {
+          id: order.id,
+          paymentMethod: String(order.paymentMethod),
+          shippingAddress: order.shippingAddress,
+          shippingPhone: order.shippingPhone,
+          items:
+            order.items?.map((it) => ({
+              name: it.product?.name || `Product #${it.productId}`,
+              quantity: it.quantity,
+              price: Number(it.price),
+              color: it.color || null,
+              size: it.size || null,
+            })) || [],
+          shippingFee: Number(order.shippingFee || 0),
+          discountAmount: Number(order.discountAmount || 0),
+          totalAmount: Number(order.totalAmount || 0),
+          createdAt: order.createdAt,
+        })
+        .catch((e) => console.log('Email send failed:', e));
+    }
+
+    return saved;
   }
 
   async cancelOrder(orderId: number, userId: number): Promise<Order> {

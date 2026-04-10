@@ -107,7 +107,10 @@ import {
   SendOutline,
   RobotOutline,
   RobotFill,
-
+  FileTextOutline,
+  QuestionCircleOutline,
+  DeploymentUnitOutline,
+  HistoryOutline,
 } from '@ant-design/icons-angular/icons';
 import { routes } from './app.routes';
 import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
@@ -217,6 +220,10 @@ export const appConfig: ApplicationConfig = {
       SendOutline,
       RobotOutline,
       RobotFill,
+      FileTextOutline,
+      QuestionCircleOutline,
+      DeploymentUnitOutline,
+      HistoryOutline
     ]),
     provideRouter(routes),
     provideHttpClient(withFetch(), withInterceptors([authInterceptor])),

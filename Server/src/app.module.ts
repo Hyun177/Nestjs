@@ -24,6 +24,9 @@ import { LocationModule } from './location/location.module';
 import { SellerRequestModule } from './seller-request/seller-request.module';
 import { ShopModule } from './shop/shop.module';
 import { ShopCategoryModule } from './shop-category/shop-category.module';
+import { NewsletterModule } from './newsletter/newsletter.module';
+import { MailModule } from './mail/mail.module';
+import { ContactModule } from './contact/contact.module';
 
 @Module({
   imports: [
@@ -67,6 +70,9 @@ import { ShopCategoryModule } from './shop-category/shop-category.module';
     SellerRequestModule,
     ShopModule,
     ShopCategoryModule,
+    NewsletterModule,
+    MailModule,
+    ContactModule,
   ],
   controllers: [MessageController],
   providers: [],

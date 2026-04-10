@@ -3,13 +3,29 @@
         <!-- Newsletter Section -->
         <div class="newsletter-card">
             <h2 class="newsletter-title">STAY UPTO DATE ABOUT OUR LATEST OFFERS</h2>
+            @if (subscribed) {
+            <div class="newsletter-form">
+                <div class="success-wrapper">
+                    <span nz-icon nzType="check-circle" class="success-icon"></span>
+                    <div class="success-content">
+                        <span class="success-title">Đã đăng ký nhận voucher</span>
+                        @if (subscribedEmail) {
+                        <span class="success-email">{{ subscribedEmail }}</span>
+                        }
+                    </div>
+                </div>
+            </div>
+            } @else {
             <div class="newsletter-form">
                 <div class="input-wrapper">
                     <span nz-icon nzType="mail"></span>
-                    <input type="email" placeholder="Enter your email address">
+                    <input type="email" placeholder="Enter your email address" [(ngModel)]="email" [disabled]="loading">
                 </div>
-                <button class="btn-subscribe">Subscribe to Newsletter</button>
+                <button class="btn-subscribe" (click)="subscribe()" [disabled]="loading">
+                    {{ loading ? 'Subscribing...' : 'Subscribe to Newsletter' }}
+                </button>
             </div>
+            }
         </div>
 
         <div class="footer-main">
@@ -28,40 +44,40 @@
             <div class="footer-col">
                 <h3>COMPANY</h3>
                 <ul>
-                    <li><a href="#">About</a></li>
-                    <li><a href="#">Features</a></li>
-                    <li><a href="#">Works</a></li>
-                    <li><a href="#">Career</a></li>
+                    <li><a routerLink="/about">About</a></li>
+                    <li><a routerLink="/features">Features</a></li>
+                    <li><a routerLink="/works">Works</a></li>
+                    <li><a routerLink="/career">Career</a></li>
                 </ul>
             </div>
 
             <div class="footer-col">
                 <h3>HELP</h3>
                 <ul>
-                    <li><a href="#">Customer Support</a></li>
-                    <li><a href="#">Delivery Details</a></li>
-                    <li><a href="#">Terms & Conditions</a></li>
-                    <li><a href="#">Privacy Policy</a></li>
+                    <li><a routerLink="/contact">Customer Support</a></li>
+                    <li><a routerLink="/deliveries">Delivery Details</a></li>
+                    <li><a routerLink="/terms">Terms & Conditions</a></li>
+                    <li><a routerLink="/privacy">Privacy Policy</a></li>
                 </ul>
             </div>
 
             <div class="footer-col">
                 <h3>FAQ</h3>
                 <ul>
-                    <li><a href="#">Account</a></li>
-                    <li><a href="#">Manage Deliveries</a></li>
-                    <li><a href="#">Orders</a></li>
-                    <li><a href="#">Payments</a></li>
+                    <li><a routerLink="/account-info">Account</a></li>
+                    <li><a routerLink="/deliveries">Manage Deliveries</a></li>
+                    <li><a routerLink="/orders-info">Orders</a></li>
+                    <li><a routerLink="/payments-info">Payments</a></li>
                 </ul>
             </div>
 
             <div class="footer-col">
                 <h3>RESOURCES</h3>
                 <ul>
-                    <li><a href="#">Free eBooks</a></li>
-                    <li><a href="#">Development Tutorial</a></li>
-                    <li><a href="#">How to - Blog</a></li>
-                    <li><a href="#">Youtube Playlist</a></li>
+                    <li><a routerLink="/about">Free eBooks</a></li>
+                    <li><a routerLink="/works">Development Tutorial</a></li>
+                    <li><a routerLink="/faq">How to - Blog</a></li>
+                    <li><a routerLink="/contact">Youtube Playlist</a></li>
                 </ul>
             </div>
         </div>

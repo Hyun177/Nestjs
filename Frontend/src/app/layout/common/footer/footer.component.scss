@@ -64,9 +64,50 @@
             cursor: pointer;
             width: 100%;
         }
+                .success-wrapper {
+                    background: #fff;
+                    border-radius: 99px;
+                    padding: 0.75rem 1.25rem;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 0.75rem;
+        
+                    .success-icon {
+                        color: #52c41a;
+                        /* Đổi màu icon sang xanh lá chuẩn Ant Design */
+                        font-size: 1.5rem;
+                    }
+        
+                    .success-content {
+                        display: flex;
+                        flex-direction: column;
+                        justify-content: center;
+        
+                        .success-title {
+                            font-weight: 600;
+                            font-size: 0.875rem;
+                            color: #000;
+                            line-height: 1.2;
+                        }
+        
+                        .success-email {
+                            font-size: 0.75rem;
+                            color: #00000099;
+                            max-width: 240px;
+                            /* Chiều rộng tối đa của email */
+                            white-space: nowrap;
+                            /* Không cho rớt dòng */
+                            overflow: hidden;
+                            /* Cắt phần chữ thừa */
+                            text-overflow: ellipsis;
+                            /* Hiển thị ... khi bị cắt */
+                            margin-top: 2px;
+                        }
+                    }
     }
 }
-
+}
 .footer-main {
     display: grid;
     grid-template-columns: 1.5fr 1fr 1fr 1fr 1fr;

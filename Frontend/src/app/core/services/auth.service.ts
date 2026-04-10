@@ -30,7 +30,7 @@ export interface LoginResponse {
   providedIn: 'root',
 })
 export class AuthService {
-  private apiUrl = 'http://127.0.0.1:3000/api/auth';
+  private apiUrl = 'http://localhost:3000/api/auth';
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
   private isBrowser: boolean;
@@ -44,7 +44,7 @@ export class AuthService {
     if (this.isBrowser) {
       const savedUser = localStorage.getItem('user');
       const token = localStorage.getItem('accessToken');
-      
+
       if (savedUser && token) {
         if (this.isTokenExpired(token)) {
           this.logout();
@@ -68,7 +68,7 @@ export class AuthService {
       if (parts.length !== 3) return true;
       const payload = JSON.parse(atob(parts[1]));
       if (!payload.exp) return false; // If no exp, assume valid
-      return (payload.exp * 1000) < Date.now();
+      return payload.exp * 1000 < Date.now();
     } catch (e) {
       return true;
     }
@@ -85,6 +85,20 @@ export class AuthService {
 
   login(data: any): Observable<LoginResponse> {
     return this.http.post<LoginResponse>(`${this.apiUrl}/login`, data).pipe(
+      tap((res) => {
+        this.currentUserSubject.next(res.user);
+        if (this.isBrowser) {
+          localStorage.setItem('user', JSON.stringify(res.user));
+          localStorage.setItem('accessToken', res.access_token);
+          localStorage.setItem('refreshToken', res.refresh_token);
+          this.cartService.refreshCart();
+        }
+      }),
+    );
+  }
+
+  loginWithGoogle(credential: string): Observable<LoginResponse> {
+    return this.http.post<LoginResponse>(`${this.apiUrl}/google`, { credential }).pipe(
       tap((res) => {
         this.currentUserSubject.next(res.user);
         if (this.isBrowser) {

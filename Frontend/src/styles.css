@@ -172,10 +172,12 @@ body {
     box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
     border: none;
 }
+
 .seller-btn-primary:active {
     background: linear-gradient(135deg, #4f46e5, #7c3aed);
     transform: scale(0.98);
 }
+
 .seller-btn-primary:hover:not(:disabled) {
     transform: translateY(-2px);
     box-shadow: 0 8px 24px rgba(99, 102, 241, 0.45);
@@ -187,6 +189,7 @@ body {
     color: #ffffff !important;
     box-shadow: 0 4px 12px rgba(245, 158, 11, 0.25);
 }
+
 .seller-btn-warning:hover:not(:disabled) {
     transform: translateY(-2px);
     box-shadow: 0 8px 20px rgba(245, 158, 11, 0.4);
@@ -197,6 +200,7 @@ body {
     color: #ffffff !important;
     box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
 }
+
 .seller-btn-danger:hover:not(:disabled) {
     transform: translateY(-2px);
     box-shadow: 0 8px 20px rgba(239, 68, 68, 0.4);
@@ -206,13 +210,15 @@ body {
     background: #ffffff;
     color: #475569 !important;
     border: 1.5px solid #e2e8f0;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
 }
+
 .seller-btn-default:hover:not(:disabled) {
     border-color: #6366f1;
     color: #6366f1 !important;
     background: #f5f3ff;
 }
+
 .seller-btn-icon-only {
     padding: 10px;
 }
