@@ -59,7 +59,7 @@
                     </div>
 
                     <div class="product-img-wrapper" [routerLink]="['/product', product.id]">
-                        <img [src]="'https://nestjs-zvmg.onrender.com' + product.image" [alt]="product.name">
+                        <img [src]="product.image?.startsWith('http') ? product.image : 'https://nestjs-zvmg.onrender.com' + product.image" [alt]="product.name">
                     </div>
 
                     <div class="product-info">
@@ -142,7 +142,7 @@
                     </div>
 
                     <div class="product-img-wrapper" [routerLink]="['/product', product.id]">
-                        <img [src]="'https://nestjs-zvmg.onrender.com' + product.image" [alt]="product.name">
+                        <img [src]="product.image?.startsWith('http') ? product.image : 'https://nestjs-zvmg.onrender.com' + product.image" [alt]="product.name">
                     </div>
 
                     <div class="product-info">

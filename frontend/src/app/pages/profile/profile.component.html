@@ -314,7 +314,7 @@
               <div class="flex -space-x-3 group-hover:space-x-1 transition-all duration-300">
                 <div *ngFor="let item of order.items.slice(0, 3)"
                   class="w-10 h-10 rounded-full border-2 border-white bg-white overflow-hidden shadow-sm shadow-black/5">
-                  <img [src]="'https://nestjs-zvmg.onrender.com' + item.product?.image" class="w-full h-full object-cover">
+                  <img [src]="item.product?.image?.startsWith('http') ? item.product?.image : 'https://nestjs-zvmg.onrender.com' + item.product?.image" class="w-full h-full object-cover">
                 </div>
                 <div *ngIf="order.items.length > 3"
                   class="w-10 h-10 rounded-full border-2 border-white bg-gray-100 flex items-center justify-center text-[10px] font-black text-gray-600">
@@ -445,7 +445,7 @@
           <div class="space-y-4">
             <div *ngFor="let item of selectedOrder.items" class="flex gap-4 items-center p-3 border border-gray-100 rounded-2xl relative">
               <div class="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 bg-gray-50">
-                <img [src]="'https://nestjs-zvmg.onrender.com' + item.product?.image" class="w-full h-full object-cover">
+                <img [src]="item.product?.image?.startsWith('http') ? item.product?.image : 'https://nestjs-zvmg.onrender.com' + item.product?.image" class="w-full h-full object-cover">
               </div>
               <div class="flex-grow">
                 <h5 class="font-bold text-gray-900 leading-tight">{{ item.product?.name }}</h5>
@@ -661,7 +661,7 @@
         <div *ngFor="let fav of favoriteProducts" class="fav-card" (click)="goToProduct(fav.product?.id)">
           
           <div class="fav-img-wrap">
-            <img [src]="'https://nestjs-zvmg.onrender.com' + fav.product?.image" [alt]="fav.product?.name">
+            <img [src]="fav.product?.image?.startsWith('http') ? fav.product?.image : 'https://nestjs-zvmg.onrender.com' + fav.product?.image" [alt]="fav.product?.name">
             <div class="fav-overlay"></div>
             <button class="fav-remove-btn" (click)="removeFavorite(fav.product?.id, $event)">
               <span nz-icon nzType="heart" nzTheme="fill"></span>

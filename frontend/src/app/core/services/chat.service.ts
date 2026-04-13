@@ -31,7 +31,7 @@ export class ChatService {
     const token = typeof localStorage !== 'undefined' ? localStorage.getItem('accessToken') : null;
     if (!token) return;
 
-    this.socket = io('http://127.0.0.1:3000', {
+    this.socket = io('https://nestjs-zvmg.onrender.com', {
       auth: { token },
       transports: ['websocket', 'polling'],
     });

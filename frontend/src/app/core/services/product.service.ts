@@ -41,7 +41,7 @@ export interface Product {
   providedIn: 'root',
 })
 export class ProductService {
-  private apiUrl = 'http://127.0.0.1:3000/api/product';
+  private apiUrl = 'https://nestjs-zvmg.onrender.com/api/product';
   private http = inject(HttpClient);
   private platformId = inject(PLATFORM_ID);
   private isBrowser = isPlatformBrowser(this.platformId);

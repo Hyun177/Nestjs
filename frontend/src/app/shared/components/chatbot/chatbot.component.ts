@@ -291,7 +291,7 @@ export class ChatbotComponent implements AfterViewChecked {
         }));
 
       this.http
-        .post('http://localhost:8000/api/chat', {
+        .post('https://python-ai-zvmg.onrender.com/api/chat', {
           message: text,
           token: token,
           history: history,

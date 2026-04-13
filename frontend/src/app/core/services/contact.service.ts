@@ -21,7 +21,7 @@ export interface ContactRequest {
 })
 export class ContactService {
   private http = inject(HttpClient);
-  private apiUrl = 'http://127.0.0.1:3000/api/contact';
+  private apiUrl = 'https://nestjs-zvmg.onrender.com/api/contact';
   private platformId = inject(PLATFORM_ID);
   private isBrowser = isPlatformBrowser(this.platformId);
 

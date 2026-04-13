@@ -76,7 +76,7 @@ export class PaymentService {
       vnp_TxnRef: order.id.toString(),
       vnp_OrderInfo: `Thanh toan don hang ${order.id}`,
       vnp_OrderType: ProductCode.Other,
-      vnp_ReturnUrl: 'http://127.0.0.1:3000/api/payments/vnpay-callback',
+      vnp_ReturnUrl: 'https://nestjs-zvmg.onrender.com/api/payments/vnpay-callback',
       vnp_Locale: VnpLocale.VN,
     });
 
