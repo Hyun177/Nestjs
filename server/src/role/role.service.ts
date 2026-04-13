@@ -5,10 +5,73 @@ import { Role } from '../users/entities/role.entity';
 import { Permission as PermissionEntity } from '../users/entities/permission.entity';
 import { User } from '../users/entities/user.entity';
 import { Permission } from '../auth/permission/permissions.enum';
+import { RoleEnum } from './role.enum';
 
 @Injectable()
 export class RoleService {
   constructor(private dataSource: DataSource) {}
+
+  async runSeeding() {
+    const roles = Object.values(RoleEnum);
+    
+    // Define Permission Groupings (Same as in seed-roles.ts)
+    const commonUserPerms = [
+      Permission.PRODUCT_READ, Permission.CATEGORY_READ, Permission.BRAND_READ,
+      Permission.POST_READ, Permission.CART_CREATE, Permission.CART_READ,
+      Permission.CART_UPDATE, Permission.CART_DELETE, Permission.ORDER_CREATE,
+      Permission.ORDER_READ, Permission.ORDER_CANCEL, Permission.REVIEW_CREATE,
+      Permission.REVIEW_READ, Permission.VOUCHER_READ, Permission.VOUCHER_APPLY,
+      Permission.SELLER_REQUEST_CREATE,
+    ];
+
+    const sellerPerms = [
+      ...commonUserPerms,
+      Permission.PRODUCT_CREATE, Permission.PRODUCT_UPDATE, Permission.PRODUCT_DELETE,
+      Permission.ORDER_UPDATE, Permission.ORDER_SHIP, Permission.ORDER_DELIVER, Permission.SHOP_READ,
+      Permission.SHOP_UPDATE, Permission.SHOP_MANAGE,
+    ];
+
+    const managerPerms = [
+      ...commonUserPerms,
+      // Quản lý sản phẩm và nội dung
+      Permission.PRODUCT_UPDATE,
+      Permission.CATEGORY_CREATE, Permission.CATEGORY_UPDATE, Permission.CATEGORY_DELETE,
+      Permission.BRAND_CREATE, Permission.BRAND_UPDATE, Permission.BRAND_DELETE,
+      Permission.POST_CREATE, Permission.POST_UPDATE, Permission.POST_DELETE,
+      // Quản lý đơn hàng và voucher
+      Permission.ORDER_READ, Permission.ORDER_UPDATE, Permission.ORDER_CANCEL,
+      Permission.ORDER_MANAGE, Permission.VOUCHER_CREATE, Permission.VOUCHER_UPDATE,
+      Permission.VOUCHER_DELETE,
+      // Quản lý người dùng và đối tác
+      Permission.USER_READ, Permission.USER_UPDATE,
+      Permission.SELLER_REQUEST_READ, Permission.SELLER_REQUEST_APPROVE,
+      Permission.SELLER_REQUEST_REJECT,
+      // Duyệt đánh giá
+      Permission.REVIEW_APPROVE, Permission.REVIEW_DELETE,
+    ];
+
+    const allPerms = Object.values(Permission);
+
+    const roleAssignments: Record<RoleEnum, Permission[]> = {
+      [RoleEnum.USER]: commonUserPerms,
+      [RoleEnum.SELLER]: sellerPerms,
+      [RoleEnum.MANAGER]: managerPerms,
+      [RoleEnum.ADMIN]: allPerms,
+    };
+
+    for (const roleName of roles) {
+      try {
+        await this.createRole(roleName);
+        const perms = roleAssignments[roleName as RoleEnum];
+        if (perms) {
+          await this.assignPermissions(roleName, perms);
+        }
+      } catch (e) {
+        console.error(`- Auto-seeding failed for "${roleName}":`, e.message);
+      }
+    }
+    console.log('✅ Auto-seeding of roles and permissions completed.');
+  }
 
   async createRole(name: string): Promise<Role> {
     const roleRepo = this.dataSource.getRepository(Role);
