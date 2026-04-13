@@ -178,7 +178,7 @@ export class SellerBrandsComponent implements OnInit {
   private message = inject(NzMessageService);
   private cdr = inject(ChangeDetectorRef);
 
-  private apiBase = 'http://localhost:3000/api/brand';
+  private apiBase = 'https://nestjs-zvmg.onrender.com/api/brand';
 
   loading = signal(true);
   saving = signal(false);

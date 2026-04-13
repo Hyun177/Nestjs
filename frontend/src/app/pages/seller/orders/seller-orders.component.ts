@@ -206,6 +206,6 @@ export class SellerOrdersComponent implements OnInit {
     if (!path) return '';
     if (path.startsWith('http')) return path;
     const cleanPath = path.startsWith('/') ? path : '/' + path;
-    return `http://localhost:3000${cleanPath}`;
+    return `https://nestjs-zvmg.onrender.com${cleanPath}`;
   }
 }

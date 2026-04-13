@@ -350,7 +350,7 @@ export class AdminShopsComponent implements OnInit {
     };
 
     // Load Orders (Fixed Endpoint)
-    this.http.get(`http://localhost:3000/api/order/seller/${sellerId}`, { headers: this.getHeaders() }).subscribe({
+    this.http.get(`https://nestjs-zvmg.onrender.com/api/order/seller/${sellerId}`, { headers: this.getHeaders() }).subscribe({
       next: (res: any) => {
         const orderList = Array.isArray(res) ? res : (res?.data || []);
         this.orders.set(orderList);
@@ -368,7 +368,7 @@ export class AdminShopsComponent implements OnInit {
     });
 
     // Load Products
-    this.http.get(`http://localhost:3000/api/product?userId=${sellerId}&showAll=true&limit=1000`, { headers: this.getHeaders() }).subscribe({
+    this.http.get(`https://nestjs-zvmg.onrender.com/api/product?userId=${sellerId}&showAll=true&limit=1000`, { headers: this.getHeaders() }).subscribe({
       next: (res: any) => {
         const prodList = Array.isArray(res) ? res : (res?.data || []);
         this.products.set(prodList);
@@ -378,7 +378,7 @@ export class AdminShopsComponent implements OnInit {
     });
 
     // Load Shop Info & Seller Details
-    this.http.get(`http://localhost:3000/api/shop/seller/${sellerId}`, { headers: this.getHeaders() }).subscribe({
+    this.http.get(`https://nestjs-zvmg.onrender.com/api/shop/seller/${sellerId}`, { headers: this.getHeaders() }).subscribe({
       next: (shop: any) => {
         this.shopInfo = shop || {};
         this.sellerDetails = this.sellers().find(s => s.id === sellerId) || {};
@@ -391,7 +391,7 @@ export class AdminShopsComponent implements OnInit {
   updateShop() {
     if (!this.shopInfo.id) return;
     this.updating.set(true);
-    this.http.patch(`http://localhost:3000/api/shop/${this.shopInfo.id}`, this.shopInfo, { headers: this.getHeaders() }).subscribe({
+    this.http.patch(`https://nestjs-zvmg.onrender.com/api/shop/${this.shopInfo.id}`, this.shopInfo, { headers: this.getHeaders() }).subscribe({
       next: () => {
         this.message.success('Cập nhật thông tin shop thành công (Quyền Admin)');
         this.updating.set(false);
@@ -407,7 +407,7 @@ export class AdminShopsComponent implements OnInit {
     if (!this.selectedSellerId) return;
     this.updating.set(true);
     // Assuming UserService has update method or using direct http
-    this.http.put(`http://localhost:3000/api/users/${this.selectedSellerId}`, {
+    this.http.put(`https://nestjs-zvmg.onrender.com/api/users/${this.selectedSellerId}`, {
       firstname: this.sellerDetails.firstname,
       lastname: this.sellerDetails.lastname
     }, { headers: this.getHeaders() }).subscribe({
@@ -435,7 +435,7 @@ export class AdminShopsComponent implements OnInit {
   getImg(p: any): string {
     if (!p?.image) return '';
     if (p.image.startsWith('http')) return p.image;
-    return `http://localhost:3000${p.image.startsWith('/') ? p.image : '/' + p.image}`;
+    return `https://nestjs-zvmg.onrender.com${p.image.startsWith('/') ? p.image : '/' + p.image}`;
   }
 
   getStatusColor(status: string) {
@@ -452,14 +452,14 @@ export class AdminShopsComponent implements OnInit {
   getFullUrl(path: string, fallback: string = ''): string {
     if (!path) return fallback;
     if (path.startsWith('http')) return path;
-    return `http://localhost:3000${path.startsWith('/') ? '' : '/'}${path}`;
+    return `https://nestjs-zvmg.onrender.com${path.startsWith('/') ? '' : '/'}${path}`;
   }
 
   handleUploadLogo = (item: any) => {
     if (!this.shopInfo.id) return new Subscription();
     const formData = new FormData();
     formData.append('logo', item.file);
-    return this.http.post(`http://localhost:3000/api/shop/${this.shopInfo.id}/logo`, formData, { headers: this.getHeaders() }).subscribe({
+    return this.http.post(`https://nestjs-zvmg.onrender.com/api/shop/${this.shopInfo.id}/logo`, formData, { headers: this.getHeaders() }).subscribe({
       next: (res: any) => {
         this.shopInfo.logo = res.logo;
         this.message.success('Tải logo lên thành công');
@@ -472,7 +472,7 @@ export class AdminShopsComponent implements OnInit {
     if (!this.shopInfo.id) return new Subscription();
     const formData = new FormData();
     formData.append('cover', item.file);
-    return this.http.post(`http://localhost:3000/api/shop/${this.shopInfo.id}/cover`, formData, { headers: this.getHeaders() }).subscribe({
+    return this.http.post(`https://nestjs-zvmg.onrender.com/api/shop/${this.shopInfo.id}/cover`, formData, { headers: this.getHeaders() }).subscribe({
       next: (res: any) => {
         this.shopInfo.coverImage = res.coverImage;
         this.message.success('Tải ảnh bìa lên thành công');

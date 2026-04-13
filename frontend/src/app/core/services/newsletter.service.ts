@@ -6,7 +6,7 @@ import { Observable } from 'rxjs';
   providedIn: 'root',
 })
 export class NewsletterService {
-  private apiUrl = 'http://localhost:3000/api/newsletter';
+  private apiUrl = 'https://nestjs-zvmg.onrender.com/api/newsletter';
 
   constructor(private http: HttpClient) {}
 

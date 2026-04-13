@@ -24,7 +24,7 @@ export interface Cart {
   providedIn: 'root',
 })
 export class CartService {
-  private apiUrl = 'http://localhost:3000/api/cart';
+  private apiUrl = 'https://nestjs-zvmg.onrender.com/api/cart';
   private http = inject(HttpClient);
   private platformId = inject(PLATFORM_ID);
   private isBrowser: boolean;

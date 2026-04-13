@@ -486,6 +486,6 @@ export class SellerDashboardComponent implements OnInit, AfterViewInit, OnDestro
   getProductImg(p: any): string {
     if (!p?.image) return '';
     if (p.image.startsWith('http')) return p.image;
-    return `http://localhost:3000${p.image.startsWith('/') ? p.image : '/' + p.image}`;
+    return `https://nestjs-zvmg.onrender.com${p.image.startsWith('/') ? p.image : '/' + p.image}`;
   }
 }

@@ -7,7 +7,7 @@ import { isPlatformBrowser } from '@angular/common';
   providedIn: 'root',
 })
 export class CategoryService {
-  private apiUrl = 'http://localhost:3000/api/category';
+  private apiUrl = 'https://nestjs-zvmg.onrender.com/api/category';
   private http = inject(HttpClient);
   private platformId = inject(PLATFORM_ID);
   private isBrowser = isPlatformBrowser(this.platformId);

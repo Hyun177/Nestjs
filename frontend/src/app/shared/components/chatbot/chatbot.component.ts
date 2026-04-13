@@ -260,7 +260,7 @@ export class ChatbotComponent implements AfterViewChecked {
   getFullUrl(path: string): string {
     if (!path) return '';
     if (path.startsWith('http')) return path;
-    return `http://localhost:3000${path.startsWith('/') ? '' : '/'}${path}`;
+    return `https://nestjs-zvmg.onrender.com${path.startsWith('/') ? '' : '/'}${path}`;
   }
 
   sendMessage() {

@@ -112,7 +112,7 @@ import { NzMenuModule } from 'ng-zorro-antd/menu';
             <div nz-col [nzXs]="24" [nzSm]="12" [nzMd]="8" [nzLg]="6" *ngFor="let product of filteredProducts">
               <div class="premium-product-card" [routerLink]="['/product', product.id]">
                 <div class="img-wrapper">
-                  <img [src]="product.image ? (product.image.startsWith('http') ? product.image : 'http://localhost:3000' + product.image) : 'assets/default-product.png'" />
+                  <img [src]="product.image ? (product.image.startsWith('http') ? product.image : 'https://nestjs-zvmg.onrender.com' + product.image) : 'assets/default-product.png'" />
                   <div class="rating-tag" *ngIf="product.rating > 0">
                     <span nz-icon nzType="star" nzTheme="fill"></span> {{ product.rating }}
                   </div>
@@ -283,7 +283,7 @@ export class ShopComponent implements OnInit {
         this.cdr.detectChanges(); // Trigger immediately for shop UI
 
         // Load Shop Stats (New)
-        this.http.get(`http://localhost:3000/api/shop/stats/${sellerId}`).subscribe({
+        this.http.get(`https://nestjs-zvmg.onrender.com/api/shop/stats/${sellerId}`).subscribe({
           next: stats => { this.shopStats = stats; this.cdr.markForCheck(); }
         });
 
@@ -332,7 +332,7 @@ export class ShopComponent implements OnInit {
   checkFollowStatus(sellerId: number) {
     const token = typeof localStorage !== 'undefined' ? localStorage.getItem('accessToken') : null;
     if (!token) return;
-    this.http.get(`http://localhost:3000/api/shop/is-following/${sellerId}`, {
+    this.http.get(`https://nestjs-zvmg.onrender.com/api/shop/is-following/${sellerId}`, {
       headers: { Authorization: `Bearer ${token}` }
     }).subscribe({
       next: (res: any) => { this.following = res.isFollowing; this.cdr.markForCheck(); }
@@ -348,7 +348,7 @@ export class ShopComponent implements OnInit {
     }
 
     this.followLoading = true;
-    this.http.post(`http://localhost:3000/api/shop/follow/${this.shop.userId}`, {}, {
+    this.http.post(`https://nestjs-zvmg.onrender.com/api/shop/follow/${this.shop.userId}`, {}, {
       headers: { Authorization: `Bearer ${token}` }
     }).subscribe({
       next: (res: any) => {
@@ -364,7 +364,7 @@ export class ShopComponent implements OnInit {
   getFullUrl(path: string, fallback: string = ''): string {
     if (!path) return fallback;
     if (path.startsWith('http')) return path;
-    return `http://localhost:3000${path.startsWith('/') ? '' : '/'}${path}`;
+    return `https://nestjs-zvmg.onrender.com${path.startsWith('/') ? '' : '/'}${path}`;
   }
 
   selectCategory(id: number | null, type: 'all' | 'shop' | 'standard' = 'all') {

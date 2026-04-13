@@ -209,7 +209,7 @@ export class SellerLayoutComponent implements OnInit {
     
     if (avatarUrl && !avatarUrl.startsWith('http')) {
         const cleanPath = avatarUrl.startsWith('/') ? avatarUrl : '/' + avatarUrl;
-        avatarUrl = `http://localhost:3000${cleanPath}`;
+        avatarUrl = `https://nestjs-zvmg.onrender.com${cleanPath}`;
     } else if (!avatarUrl) {
         avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=6366f1&color=fff&bold=true&size=128`;
     }

@@ -380,11 +380,11 @@ export class AdminProductsComponent implements OnInit {
 
     this.mainFileList = product.image ? [{
       uid: '-1', name: 'image.png', status: 'done',
-      url: 'http://localhost:3000' + product.image
+      url: 'https://nestjs-zvmg.onrender.com' + product.image
     }] : [];
     this.galleryFileList = (product.images || []).map((img: string, i: number) => ({
       uid: `-img-${i}`, name: `gallery-${i}.png`, status: 'done',
-      url: 'http://localhost:3000' + img
+      url: 'https://nestjs-zvmg.onrender.com' + img
     }));
 
     this.isModalVisible.set(true);
@@ -439,7 +439,7 @@ export class AdminProductsComponent implements OnInit {
         formData.append('image', rawFile);
       } else if (file.url) {
         // Keep existing image URL by sending its relative path
-        formData.append('image', file.url.replace('http://localhost:3000', ''));
+        formData.append('image', file.url.replace('https://nestjs-zvmg.onrender.com', ''));
       }
     }
 
@@ -450,7 +450,7 @@ export class AdminProductsComponent implements OnInit {
       if (rawFile instanceof File || rawFile instanceof Blob) {
         formData.append('images', rawFile);
       } else if (f.url) {
-        existingImages.push(f.url.replace('http://localhost:3000', ''));
+        existingImages.push(f.url.replace('https://nestjs-zvmg.onrender.com', ''));
       }
     });
     

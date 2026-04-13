@@ -7,7 +7,7 @@ export interface Ward { code: string; name: string; }
 
 @Injectable({ providedIn: 'root' })
 export class LocationService {
-  private apiUrl = 'http://localhost:3000/api/location';
+  private apiUrl = 'https://nestjs-zvmg.onrender.com/api/location';
   private http = inject(HttpClient);
 
   getProvinces(): Observable<Province[]> {

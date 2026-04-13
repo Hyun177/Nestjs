@@ -164,7 +164,7 @@ export class AdminOrdersComponent implements OnInit {
             customerName: `${o.user?.firstname || ''} ${o.user?.lastname || ''}`.trim() || o.user?.name || 'Khách vãng lai',
             customerPhone: o.user?.phone || '--',
             customerEmail: o.user?.email || '--',
-            customerAvatar: o.user?.avatar ? 'http://localhost:3000' + o.user.avatar : null,
+            customerAvatar: o.user?.avatar ? 'https://nestjs-zvmg.onrender.com' + o.user.avatar : null,
             shippingAddress: o.shippingAddress || o.user?.address || 'Chưa cập nhật',
             shippingPhone: o.shippingPhone || o.user?.phone || 'Chưa cập nhật',
             totalAmount: parseFloat(o.totalAmount || 0),

@@ -17,7 +17,7 @@ export interface UserAddress {
 
 @Injectable({ providedIn: 'root' })
 export class AddressService {
-  private apiUrl = 'http://localhost:3000/api/address';
+  private apiUrl = 'https://nestjs-zvmg.onrender.com/api/address';
   private http = inject(HttpClient);
   private platformId = inject(PLATFORM_ID);
 

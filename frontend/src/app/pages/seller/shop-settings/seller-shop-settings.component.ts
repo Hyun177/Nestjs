@@ -145,7 +145,7 @@ export class SellerShopSettingsComponent implements OnInit {
   }
 
   loadShopInfo() {
-    this.http.get('http://localhost:3000/api/shop/me', { headers: this.getHeaders() }).subscribe({
+    this.http.get('https://nestjs-zvmg.onrender.com/api/shop/me', { headers: this.getHeaders() }).subscribe({
       next: (res: any) => {
         this.shop = res || {};
         this.cdr.detectChanges();
@@ -161,7 +161,7 @@ export class SellerShopSettingsComponent implements OnInit {
     }
 
     this.loading = true;
-    this.http.patch('http://localhost:3000/api/shop/me', this.shop, { headers: this.getHeaders() }).subscribe({
+    this.http.patch('https://nestjs-zvmg.onrender.com/api/shop/me', this.shop, { headers: this.getHeaders() }).subscribe({
       next: () => {
         this.message.success('Đã cập nhật thông tin cửa hàng');
         this.loading = false;
@@ -179,7 +179,7 @@ export class SellerShopSettingsComponent implements OnInit {
     if (!this.shop.id) return new Subscription();
     const formData = new FormData();
     formData.append('logo', item.file);
-    return this.http.post(`http://localhost:3000/api/shop/${this.shop.id}/logo`, formData, { headers: this.getHeaders() }).subscribe({
+    return this.http.post(`https://nestjs-zvmg.onrender.com/api/shop/${this.shop.id}/logo`, formData, { headers: this.getHeaders() }).subscribe({
       next: (res: any) => {
         this.shop.logo = res.logo;
         this.message.success('Cập nhật logo thành công');
@@ -193,7 +193,7 @@ export class SellerShopSettingsComponent implements OnInit {
     if (!this.shop.id) return new Subscription();
     const formData = new FormData();
     formData.append('cover', item.file);
-    return this.http.post(`http://localhost:3000/api/shop/${this.shop.id}/cover`, formData, { headers: this.getHeaders() }).subscribe({
+    return this.http.post(`https://nestjs-zvmg.onrender.com/api/shop/${this.shop.id}/cover`, formData, { headers: this.getHeaders() }).subscribe({
       next: (res: any) => {
         this.shop.coverImage = res.coverImage;
         this.message.success('Cập nhật ảnh bìa thành công');
@@ -206,7 +206,7 @@ export class SellerShopSettingsComponent implements OnInit {
   getFullUrl(path: string, fallback: string = ''): string {
     if (!path) return fallback;
     if (path.startsWith('http')) return path;
-    return `http://localhost:3000${path.startsWith('/') ? '' : '/'}${path}`;
+    return `https://nestjs-zvmg.onrender.com${path.startsWith('/') ? '' : '/'}${path}`;
   }
 
   private getHeaders(): HttpHeaders {

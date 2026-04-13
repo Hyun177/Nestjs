@@ -223,7 +223,7 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
         this.reviewId = myReview.id;
         this.reviewForm.rating = myReview.rating;
         this.reviewForm.comment = myReview.comment;
-        this.reviewForm.imagePreview = myReview.image ? 'http://localhost:3000' + myReview.image : '';
+        this.reviewForm.imagePreview = myReview.image ? 'https://nestjs-zvmg.onrender.com' + myReview.image : '';
       } else {
         this.isEditingReview = false;
         this.reviewId = null;
@@ -451,7 +451,7 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
   getFullUrl(path: string, fallback: string = ''): string {
     if (!path) return fallback;
     if (path.startsWith('http')) return path;
-    return `http://localhost:3000${path.startsWith('/') ? '' : '/'}${path}`;
+    return `https://nestjs-zvmg.onrender.com${path.startsWith('/') ? '' : '/'}${path}`;
   }
 
   loadShop(sellerId: number) {

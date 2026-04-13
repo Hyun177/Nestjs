@@ -158,8 +158,8 @@ export class SellerProductsComponent implements OnInit {
     this.loading.set(true);
     const userId = this.getSellerId();
     const url = userId
-      ? `http://localhost:3000/api/product?userId=${userId}&showAll=true&limit=200`
-      : `http://localhost:3000/api/product?showAll=true&limit=200`;
+      ? `https://nestjs-zvmg.onrender.com/api/product?userId=${userId}&showAll=true&limit=200`
+      : `https://nestjs-zvmg.onrender.com/api/product?showAll=true&limit=200`;
 
     this.http.get<any>(url).subscribe({
       next: (res) => {
@@ -186,7 +186,7 @@ export class SellerProductsComponent implements OnInit {
   getImg(p: any): string {
     if (!p?.image) return '';
     if (p.image.startsWith('http')) return p.image;
-    return `http://localhost:3000${p.image.startsWith('/') ? p.image : '/' + p.image}`;
+    return `https://nestjs-zvmg.onrender.com${p.image.startsWith('/') ? p.image : '/' + p.image}`;
   }
 
   editProduct(p: any) {
@@ -194,7 +194,7 @@ export class SellerProductsComponent implements OnInit {
   }
 
   toggleArchive(p: any) {
-    this.http.put(`http://localhost:3000/api/product/seller/${p.id}/archive`,
+    this.http.put(`https://nestjs-zvmg.onrender.com/api/product/seller/${p.id}/archive`,
       { isArchived: !p.isArchived },
       { headers: this.getHeaders() }
     ).subscribe({
@@ -207,7 +207,7 @@ export class SellerProductsComponent implements OnInit {
   }
 
   deleteProduct(id: number) {
-    this.http.delete(`http://localhost:3000/api/product/${id}`, { headers: this.getHeaders() }).subscribe({
+    this.http.delete(`https://nestjs-zvmg.onrender.com/api/product/${id}`, { headers: this.getHeaders() }).subscribe({
       next: () => { this.message.success('Đã xóa sản phẩm'); this.loadProducts(); },
       error: () => this.message.error('Không thể xóa sản phẩm này')
     });

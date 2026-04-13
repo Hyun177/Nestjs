@@ -178,7 +178,7 @@
           <div *ngFor="let p of topProducts(); let i = index"
             class="prod-row-item border-b border-gray-50 last:border-0 py-3 flex items-center gap-4">
             <div class="prod-rank w-6 font-bold text-gray-400">{{ i + 1 }}</div>
-            <img *ngIf="p.image" [src]="'http://localhost:3000' + p.image" class="w-12 h-12 rounded object-cover"
+            <img *ngIf="p.image" [src]="'https://nestjs-zvmg.onrender.com' + p.image" class="w-12 h-12 rounded object-cover"
               alt="" />
             <div class="prod-main flex-1 min-w-0">
               <div class="prod-n font-bold truncate">{{ p.name }}</div>

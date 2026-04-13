@@ -671,7 +671,7 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
   formatImageUrl(url: string | undefined): string {
      if (!url) return 'assets/default-product.png';
      if (url.startsWith('http')) return url;
-     return 'http://localhost:3000' + url;
+     return 'https://nestjs-zvmg.onrender.com' + url;
   }
 
   formatTime(dateStr: string): string {

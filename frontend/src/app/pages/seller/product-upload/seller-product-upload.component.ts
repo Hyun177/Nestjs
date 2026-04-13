@@ -464,7 +464,7 @@ export class SellerProductUploadComponent implements OnInit {
   getFullUrl(path: string | null): string {
     if (!path) return '';
     if (path.startsWith('http')) return path;
-    return `http://localhost:3000${path.startsWith('/') ? '' : '/'}${path}`;
+    return `https://nestjs-zvmg.onrender.com${path.startsWith('/') ? '' : '/'}${path}`;
   }
 
   // --- Creation Methods ---

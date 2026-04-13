@@ -191,7 +191,7 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
           this.recentUsers.set((users || []).map(u => ({
               name: `${u.firstname || ''} ${u.lastname || ''}`.trim() || u.email,
               email: u.email,
-              avatar: u.avatar ? 'http://localhost:3000' + u.avatar : 'https://api.realworld.io/images/demo-avatar.jpg',
+              avatar: u.avatar ? 'https://nestjs-zvmg.onrender.com' + u.avatar : 'https://api.realworld.io/images/demo-avatar.jpg',
               totalSpent: u.orders ? u.orders.reduce((sum: number, o: any) => sum + Number(o.totalAmount || 0), 0) : 0,
               date: new Date(u.createdAt).toLocaleDateString('vi-VN')
           })).sort((a,b) => b.totalSpent - a.totalSpent).slice(0, 6));

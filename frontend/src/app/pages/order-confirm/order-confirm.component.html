@@ -80,7 +80,7 @@
           <div class="product-list">
             <div class="product-row" *ngFor="let item of selectedItems">
               <div class="product-img">
-                <img [src]="'http://localhost:3000' + item.product.image" [alt]="item.product.name">
+                <img [src]="'https://nestjs-zvmg.onrender.com' + item.product.image" [alt]="item.product.name">
                 <span class="qty-badge">{{ item.quantity }}</span>
               </div>
               <div class="product-info">

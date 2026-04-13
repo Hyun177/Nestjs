@@ -10,7 +10,7 @@ import { io, Socket } from 'socket.io-client';
 export class ChatService {
   private http = inject(HttpClient);
   private platformId = inject(PLATFORM_ID);
-  private apiUrl = 'http://localhost:3000/api/chat';
+  private apiUrl = 'https://nestjs-zvmg.onrender.com/api/chat';
 
   private socket: Socket | null = null;
   public onMessage$ = new Subject<any>();

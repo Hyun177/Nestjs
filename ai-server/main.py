@@ -30,7 +30,7 @@ app.add_middleware(
 )
 
 # Cấu hình Gemini
-NESTJS_API_URL = "http://localhost:3000/api"
+NESTJS_API_URL = "https://nestjs-zvmg.onrender.com/api"
 
 
 class ChatMessage(BaseModel):

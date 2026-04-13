@@ -60,7 +60,7 @@ import { VndCurrencyPipe } from '../../shared/pipes/vnd-currency.pipe';
         <div class="products-grid" *ngIf="!loading">
           <div *ngFor="let prod of products" class="product-card-premium" [routerLink]="['/product', prod.id]">
              <div class="img-wrap">
-                <img [src]="'http://localhost:3000' + prod.image" [alt]="prod.name">
+                <img [src]="'https://nestjs-zvmg.onrender.com' + prod.image" [alt]="prod.name">
                 <div class="badge" *ngIf="prod.originalPrice && prod.originalPrice > prod.price">SALE</div>
              </div>
              <div class="info">

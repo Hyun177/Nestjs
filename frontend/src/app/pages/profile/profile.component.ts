@@ -274,7 +274,7 @@ export class ProfileComponent implements OnInit {
   getImageUrl(url?: string): string {
     if (!url) return 'https://ui-avatars.com/api/?name=User&background=random';
     if (url.startsWith('/uploads')) {
-      return `http://localhost:3000${url}`;
+      return `https://nestjs-zvmg.onrender.com${url}`;
     }
     return url;
   }

@@ -7,8 +7,8 @@ import { catchError } from 'rxjs/operators';
   providedIn: 'root'
 })
 export class DashboardService {
-  private apiUrl = 'http://localhost:3000/api/dashboard';
-  private orderUrl = 'http://localhost:3000/api/orders';
+  private apiUrl = 'https://nestjs-zvmg.onrender.com/api/dashboard';
+  private orderUrl = 'https://nestjs-zvmg.onrender.com/api/orders';
   private http = inject(HttpClient);
 
   private getHeaders(): HttpHeaders {
@@ -33,14 +33,14 @@ export class DashboardService {
   }
 
   getAllOrdersAdmin(): Observable<any[]> {
-    return this.http.get<any[]>('http://localhost:3000/api/order/all/admin', { headers: this.getHeaders() }).pipe(
+    return this.http.get<any[]>('https://nestjs-zvmg.onrender.com/api/order/all/admin', { headers: this.getHeaders() }).pipe(
       catchError(() => of([]))
     );
   }
 
   getRecentUsers(): Observable<any[]> {
     // Calling the base users API as a proxy for 'recent users' till a dedicated dashboard endpoint exists
-    return this.http.get<any[]>('http://localhost:3000/api/users', { headers: this.getHeaders() }).pipe(
+    return this.http.get<any[]>('https://nestjs-zvmg.onrender.com/api/users', { headers: this.getHeaders() }).pipe(
       catchError(() => of([]))
     );
   }

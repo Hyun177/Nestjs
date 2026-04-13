@@ -7,7 +7,7 @@ import { Observable } from 'rxjs';
 })
 export class SellerRequestService {
   private http = inject(HttpClient);
-  private apiUrl = 'http://localhost:3000/api/seller-request';
+  private apiUrl = 'https://nestjs-zvmg.onrender.com/api/seller-request';
 
   submitRequest(data: any): Observable<any> {
     return this.http.post(this.apiUrl, data);

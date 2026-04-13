@@ -189,7 +189,7 @@ export class ProductsComponent implements OnInit, OnDestroy {
   getImageUrl(url?: string): string {
     if (!url) return 'assets/placeholder.png';
     if (url.startsWith('/uploads')) {
-      return `http://localhost:3000${url}`;
+      return `https://nestjs-zvmg.onrender.com${url}`;
     }
     return url;
   }

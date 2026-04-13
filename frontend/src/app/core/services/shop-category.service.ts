@@ -7,7 +7,7 @@ import { Observable } from 'rxjs';
 })
 export class ShopCategoryService {
   private http = inject(HttpClient);
-  private apiUrl = 'http://localhost:3000/api/shop-category';
+  private apiUrl = 'https://nestjs-zvmg.onrender.com/api/shop-category';
 
   create(data: any): Observable<any> {
     return this.http.post(this.apiUrl, data);
