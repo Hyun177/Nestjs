@@ -21,9 +21,15 @@ const HCM_CODE = '12';
   selector: 'app-order-confirm',
   standalone: true,
   imports: [
-    CommonModule, FormsModule, RouterLink,
-    NzIconModule, NzButtonModule, NzModalModule,
-    NzSelectModule, NzPopconfirmModule, VndCurrencyPipe,
+    CommonModule,
+    FormsModule,
+    RouterLink,
+    NzIconModule,
+    NzButtonModule,
+    NzModalModule,
+    NzSelectModule,
+    NzPopconfirmModule,
+    VndCurrencyPipe,
   ],
   providers: [NzMessageService],
   templateUrl: './order-confirm.component.html',
@@ -71,7 +77,7 @@ export class OrderConfirmComponent implements OnInit {
   paymentMethods = [
     { id: 'COD', name: 'Tiền mặt (COD)', icon: 'wallet', desc: 'Thanh toán khi nhận hàng' },
     { id: 'VNPAY', name: 'VNPAY', icon: 'credit-card', desc: 'Thanh toán trực tuyến an toàn' },
-    { id: 'VISA', name: 'Thẻ VISA/Mastercard', icon: 'bank', desc: 'Thanh toán qua cổng VNPAY' },
+    { id: 'MOMO', name: 'MoMo', icon: 'bank', desc: 'Thanh toán qua cổng MoMo' },
   ];
 
   isPlacingOrder = false;
@@ -89,24 +95,36 @@ export class OrderConfirmComponent implements OnInit {
   }
 
   get selectedAddress(): UserAddress | null {
-    return this.addresses.find(a => a.id === this.selectedAddressId) ?? null;
+    return this.addresses.find((a) => a.id === this.selectedAddressId) ?? null;
   }
 
   get hasFreeShip(): boolean {
-    return this.selectedItems.length > 0 && this.selectedItems.every(i =>
-      (i.product.labels || []).some((l: string) => l.toLowerCase().includes('freeship'))
+    return (
+      this.selectedItems.length > 0 &&
+      this.selectedItems.every((i) =>
+        (i.product.labels || []).some((l: string) => l.toLowerCase().includes('freeship')),
+      )
     );
   }
 
   emptyForm(): UserAddress {
-    return { fullName: '', phone: '', provinceCode: '', provinceName: '', wardCode: '', wardName: '', detail: '', isDefault: false };
+    return {
+      fullName: '',
+      phone: '',
+      provinceCode: '',
+      provinceName: '',
+      wardCode: '',
+      wardName: '',
+      detail: '',
+      isDefault: false,
+    };
   }
 
   ngOnInit() {
     if (isPlatformBrowser(this.platformId)) {
       const nav = history.state;
       this.selectedItemIds = nav?.itemIds ?? [];
-      
+
       // Set payment method from chatbot if provided
       if (nav?.paymentMethod) {
         const method = nav.paymentMethod.toUpperCase();
@@ -116,20 +134,26 @@ export class OrderConfirmComponent implements OnInit {
       }
     }
 
-    this.locationService.getProvinces().subscribe(p => { this.provinces = p; this.cdr.detectChanges(); });
-    this.voucherService.getMyVouchers().subscribe(v => { this.myVouchers = v; this.cdr.detectChanges(); });
-    this.addressService.getAll().subscribe(list => {
+    this.locationService.getProvinces().subscribe((p) => {
+      this.provinces = p;
+      this.cdr.detectChanges();
+    });
+    this.voucherService.getMyVouchers().subscribe((v) => {
+      this.myVouchers = v;
+      this.cdr.detectChanges();
+    });
+    this.addressService.getAll().subscribe((list) => {
       this.addresses = list;
-      const def = list.find(a => a.isDefault);
+      const def = list.find((a) => a.isDefault);
       if (def) this.selectedAddressId = def.id!;
       this.calcShipping();
       this.cdr.markForCheck();
     });
 
-    this.cartService.cartItems$.subscribe(items => {
+    this.cartService.cartItems$.subscribe((items) => {
       this.cartItems = items;
       this.selectedItems = this.selectedItemIds.length
-        ? items.filter(i => this.selectedItemIds.includes(i.id))
+        ? items.filter((i) => this.selectedItemIds.includes(i.id))
         : items;
       this.cdr.markForCheck();
     });
@@ -137,7 +161,10 @@ export class OrderConfirmComponent implements OnInit {
   }
 
   calcShipping() {
-    if (this.hasFreeShip || !this.selectedAddress) { this.shippingFee = 0; return; }
+    if (this.hasFreeShip || !this.selectedAddress) {
+      this.shippingFee = 0;
+      return;
+    }
     this.shippingFee = this.selectedAddress.provinceCode === HCM_CODE ? 15000 : 30000;
   }
 
@@ -160,35 +187,45 @@ export class OrderConfirmComponent implements OnInit {
     this.wards = [];
     if (addr.provinceCode) {
       this.loadingWards = true;
-      this.locationService.getWards(addr.provinceCode).subscribe(w => {
-        this.wards = w; this.loadingWards = false; this.cdr.markForCheck();
+      this.locationService.getWards(addr.provinceCode).subscribe((w) => {
+        this.wards = w;
+        this.loadingWards = false;
+        this.cdr.markForCheck();
       });
     }
     this.showAddressModal = true;
   }
 
   onFormProvinceChange(code: string) {
-    const prov = this.provinces.find(p => p.code === code);
+    const prov = this.provinces.find((p) => p.code === code);
     this.addressForm.provinceName = prov?.name ?? '';
     this.addressForm.wardCode = '';
     this.addressForm.wardName = '';
     this.wards = [];
     if (code) {
       this.loadingWards = true;
-      this.locationService.getWards(code).subscribe(w => {
-        this.wards = w; this.loadingWards = false; this.cdr.markForCheck();
+      this.locationService.getWards(code).subscribe((w) => {
+        this.wards = w;
+        this.loadingWards = false;
+        this.cdr.markForCheck();
       });
     }
   }
 
   onFormWardChange(code: string) {
-    const ward = this.wards.find(w => w.code === code);
+    const ward = this.wards.find((w) => w.code === code);
     this.addressForm.wardName = ward?.name ?? '';
   }
 
   saveAddress() {
-    if (!this.addressForm.fullName || !this.addressForm.phone || !this.addressForm.provinceCode || !this.addressForm.detail) {
-      this.message.warning('Vui lòng điền đầy đủ thông tin'); return;
+    if (
+      !this.addressForm.fullName ||
+      !this.addressForm.phone ||
+      !this.addressForm.provinceCode ||
+      !this.addressForm.detail
+    ) {
+      this.message.warning('Vui lòng điền đầy đủ thông tin');
+      return;
     }
     const req$ = this.editingAddress?.id
       ? this.addressService.update(this.editingAddress.id, this.addressForm)
@@ -198,10 +235,10 @@ export class OrderConfirmComponent implements OnInit {
       next: () => {
         this.message.success(this.editingAddress ? 'Đã cập nhật địa chỉ' : 'Đã thêm địa chỉ');
         this.showAddressModal = false;
-        this.addressService.getAll().subscribe(list => {
+        this.addressService.getAll().subscribe((list) => {
           this.addresses = list;
           if (!this.selectedAddressId) {
-            const def = list.find(a => a.isDefault);
+            const def = list.find((a) => a.isDefault);
             if (def) this.selectedAddressId = def.id!;
           }
           this.calcShipping();
@@ -216,7 +253,7 @@ export class OrderConfirmComponent implements OnInit {
     this.addressService.delete(id).subscribe({
       next: () => {
         this.message.success('Đã xóa địa chỉ');
-        this.addresses = this.addresses.filter(a => a.id !== id);
+        this.addresses = this.addresses.filter((a) => a.id !== id);
         if (this.selectedAddressId === id) {
           this.selectedAddressId = this.addresses[0]?.id ?? null;
         }
@@ -228,69 +265,84 @@ export class OrderConfirmComponent implements OnInit {
 
   applyVoucher(overrideCode?: string) {
     const code = overrideCode || this.voucherCode;
-    if (!code) { this.message.warning('Vui lòng chọn hoặc nhập mã giảm giá'); return; }
-    
-    const ids = this.selectedItemIds.length > 0
-      ? this.selectedItemIds
-      : this.selectedItems.map(i => i.id);
-      
-    if (!ids.length) { this.message.warning('Không có sản phẩm nào được chọn'); return; }
-    
+    if (!code) {
+      this.message.warning('Vui lòng chọn hoặc nhập mã giảm giá');
+      return;
+    }
+
+    const ids =
+      this.selectedItemIds.length > 0 ? this.selectedItemIds : this.selectedItems.map((i) => i.id);
+
+    if (!ids.length) {
+      this.message.warning('Không có sản phẩm nào được chọn');
+      return;
+    }
+
     this.voucherService.applyVoucher(code, ids).subscribe({
-      next: res => { 
-        this.appliedVoucher = res; 
+      next: (res) => {
+        this.appliedVoucher = res;
         this.voucherCode = code;
         this.showVoucherModal = false;
-        this.message.success('Áp dụng mã giảm giá thành công!'); 
-        this.cdr.detectChanges(); 
+        this.message.success('Áp dụng mã giảm giá thành công!');
+        this.cdr.detectChanges();
       },
-      error: err => this.message.error(err.error?.message || 'Mã giảm giá không hợp lệ hoặc không đủ điều kiện'),
+      error: (err) =>
+        this.message.error(
+          err.error?.message || 'Mã giảm giá không hợp lệ hoặc không đủ điều kiện',
+        ),
     });
   }
 
-  removeVoucher() { 
-    this.appliedVoucher = null; 
-    this.voucherCode = ''; 
+  removeVoucher() {
+    this.appliedVoucher = null;
+    this.voucherCode = '';
     this.cdr.detectChanges();
   }
 
   placeOrder() {
     if (!this.selectedAddressId && !this.hasFreeShip) {
-      this.message.warning('Vui lòng chọn địa chỉ giao hàng'); return;
+      this.message.warning('Vui lòng chọn địa chỉ giao hàng');
+      return;
     }
     if (!this.selectedAddressId) {
-      this.message.warning('Vui lòng chọn địa chỉ giao hàng'); return;
+      this.message.warning('Vui lòng chọn địa chỉ giao hàng');
+      return;
     }
 
     this.isPlacingOrder = true;
     const method = this.selectedPaymentMethod === 'VISA' ? 'VNPAY' : this.selectedPaymentMethod;
 
-    this.orderService.checkout({
-      paymentMethod: method,
-      itemIds: this.selectedItemIds.length ? this.selectedItemIds : undefined,
-      voucherCode: this.appliedVoucher ? this.voucherCode : undefined,
-      addressId: this.selectedAddressId,
-      shippingFee: this.shippingFee,
-    }).subscribe({
-      next: res => {
-        this.isPlacingOrder = false;
-        if (res.paymentUrl) { window.location.href = res.paymentUrl; return; }
-        this.message.success('Đặt hàng thành công!');
-        this.cartService.refreshCart();
-        this.router.navigate(['/order-success'], {
-          state: {
-            orderId: res.id,
-            totalAmount: res.totalAmount,
-            paymentMethod: res.paymentMethod,
-            shippingAddress: res.shippingAddress,
+    this.orderService
+      .checkout({
+        paymentMethod: method,
+        itemIds: this.selectedItemIds.length ? this.selectedItemIds : undefined,
+        voucherCode: this.appliedVoucher ? this.voucherCode : undefined,
+        addressId: this.selectedAddressId,
+        shippingFee: this.shippingFee,
+      })
+      .subscribe({
+        next: (res) => {
+          this.isPlacingOrder = false;
+          if (res.paymentUrl) {
+            window.location.href = res.paymentUrl;
+            return;
           }
-        });
-      },
-      error: err => {
-        this.isPlacingOrder = false;
-        this.message.error(err.error?.message || 'Có lỗi xảy ra');
-      },
-    });
+          this.message.success('Đặt hàng thành công!');
+          this.cartService.refreshCart();
+          this.router.navigate(['/order-success'], {
+            state: {
+              orderId: res.id,
+              totalAmount: res.totalAmount,
+              paymentMethod: res.paymentMethod,
+              shippingAddress: res.shippingAddress,
+            },
+          });
+        },
+        error: (err) => {
+          this.isPlacingOrder = false;
+          this.message.error(err.error?.message || 'Có lỗi xảy ra');
+        },
+      });
   }
 
   removeItem(itemId: number) {
@@ -300,7 +352,7 @@ export class OrderConfirmComponent implements OnInit {
         // Refresh cart
         this.cartService.refreshCart();
         // Remove from selectedItemIds
-        this.selectedItemIds = this.selectedItemIds.filter(id => id !== itemId);
+        this.selectedItemIds = this.selectedItemIds.filter((id) => id !== itemId);
         // If no items left, go back to cart
         if (this.selectedItems.length === 0) {
           this.router.navigate(['/cart']);
@@ -308,7 +360,7 @@ export class OrderConfirmComponent implements OnInit {
       },
       error: () => {
         this.message.error('Không thể xóa sản phẩm');
-      }
+      },
     });
   }
 }

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common'; 
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Contact, ContactStatus } from './entities/contact.entity';
@@ -11,8 +11,14 @@ export class ContactService {
     private contactRepository: Repository<Contact>,
   ) {}
 
-  async create(createContactDto: CreateContactDto, userId?: number): Promise<Contact> {
-    const contact = this.contactRepository.create({ ...createContactDto, userId });
+  async create(
+    createContactDto: CreateContactDto,
+    userId?: number,
+  ): Promise<Contact> {
+    const contact = this.contactRepository.create({
+      ...createContactDto,
+      userId,
+    });
     return await this.contactRepository.save(contact);
   }
 
@@ -39,11 +45,11 @@ export class ContactService {
 
   async reply(id: number, replyContactDto: ReplyContactDto): Promise<Contact> {
     const contact = await this.findOne(id);
-    
+
     contact.replyMessage = replyContactDto.replyMessage;
     contact.status = ContactStatus.REPLIED;
     contact.repliedAt = new Date();
-    
+
     return await this.contactRepository.save(contact);
   }
 

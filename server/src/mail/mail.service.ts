@@ -54,7 +54,7 @@ export class MailService {
   }
 
   private getFrontendUrl() {
-    return process.env.FRONTEND_URL || 'http://localhost:4200';
+    return process.env.FRONTEND_URL || 'https://frontend-q443.onrender.com';
   }
 
   private formatMoney(value?: number) {

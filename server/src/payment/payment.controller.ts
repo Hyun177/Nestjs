@@ -16,9 +16,9 @@ export class PaymentController {
 
     // Redirect to frontend with status
     if (result.success) {
-      return res.redirect('http://localhost:4200/payment-success'); // Match your Frontend URL
+      return res.redirect('https://frontend-q443.onrender.com/payment-success'); // Match your Frontend URL
     } else {
-      return res.redirect('http://localhost:4200/payment-failed'); // Match your Frontend URL
+      return res.redirect('https://frontend-q443.onrender.com/payment-failed'); // Match your Frontend URL
     }
   }
 }

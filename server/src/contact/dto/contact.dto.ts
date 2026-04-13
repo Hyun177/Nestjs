@@ -3,23 +3,23 @@ import { IsEmail, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 export class CreateContactDto {
   @IsNotEmpty()
   @IsString()
-  name: string;
+  name!: string;
 
   @IsNotEmpty()
   @IsEmail()
-  email: string;
+  email!: string;
 
   @IsOptional()
   @IsString()
-  subject: string;
+  subject!: string;
 
   @IsNotEmpty()
   @IsString()
-  message: string;
+  message!: string;
 }
 
 export class ReplyContactDto {
   @IsNotEmpty()
   @IsString()
-  replyMessage: string;
+  replyMessage!: string;
 }

@@ -1,10 +1,21 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+  Request,
+} from '@nestjs/common';
 import { ContactService } from './contact.service';
 import { CreateContactDto, ReplyContactDto } from './dto/contact.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RoleGuard } from '../auth/role.guard';
 import { JwtOptionalGuard } from '../auth/jwt-optional.guard';
 import { Roles } from '../decorators/roles.decorator';
+import type { RequestWithUser } from 'src/users/types/user-payload.type';
 
 @Controller('contact')
 export class ContactController {
@@ -19,7 +30,7 @@ export class ContactController {
 
   @Get('me')
   @UseGuards(JwtAuthGuard)
-  findMyRequests(@Request() req) {
+  findMyRequests(@Request() req: RequestWithUser) {
     return this.contactService.findByUserId(req.user.userId);
   }
 
