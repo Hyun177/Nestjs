@@ -56,7 +56,7 @@ import { ContactModule } from './contact/contact.module';
     CategoryModule,
     BrandModule,
     ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', 'uploads'),
+      rootPath: join(process.cwd(), 'uploads'),
       serveRoot: '/uploads',
     }),
     CartModule,
