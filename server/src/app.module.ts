@@ -28,11 +28,14 @@ import { NewsletterModule } from './newsletter/newsletter.module';
 import { MailModule } from './mail/mail.module';
 import { ContactModule } from './contact/contact.module';
 
+import { CloudinaryModule } from './cloudinary/cloudinary.module';
+
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+    CloudinaryModule,
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

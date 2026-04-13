@@ -32,13 +32,15 @@ import { Permission } from '../auth/permission/permissions.enum';
 import type { RequestWithUser } from '../common/types/request-with-user';
 import { AnyFilesInterceptor } from '@nestjs/platform-express';
 import type { Express } from 'express';
-import { diskStorage } from 'multer';
-import { extname } from 'path';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
 
 @ApiTags('Products')
 @Controller('product')
 export class ProductController {
-  constructor(private readonly ProductService: ProductService) {}
+  constructor(
+    private readonly ProductService: ProductService,
+    private readonly cloudinaryService: CloudinaryService,
+  ) {}
 
   @Post()
   @ApiBearerAuth('accessToken')
@@ -47,14 +49,6 @@ export class ProductController {
   @ApiOperation({ summary: 'Create a product (admin/manager)' })
   @UseInterceptors(
     AnyFilesInterceptor({
-      storage: diskStorage({
-        destination: './uploads',
-        filename: (req, file, cb) => {
-          const uniqueName = Date.now() + '-' + Math.round(Math.random() * 1e9);
-          const ext = extname(file.originalname);
-          cb(null, `${uniqueName}${ext}`);
-        },
-      }),
       limits: { fileSize: 5 * 1024 * 1024 },
       fileFilter: (req, file, cb) => {
         if (file.mimetype.startsWith('image/')) cb(null, true);
@@ -95,11 +89,22 @@ export class ProductController {
     const mainFile = files.find((f) => f.fieldname === 'image');
     const galleryFiles = files.filter((f) => f.fieldname === 'images');
 
-    const imageUrl = mainFile ? `/uploads/${mainFile.filename}` : undefined;
-    const galleryUrls = galleryFiles.map((f) => `/uploads/${f.filename}`);
+    // Upload main image to Cloudinary
+    if (mainFile) {
+      const uploadResult = await this.cloudinaryService.uploadFile(mainFile);
+      body.image = uploadResult.secure_url;
+    }
 
-    if (imageUrl) body.image = imageUrl;
-    if (galleryUrls.length > 0) body.images = galleryUrls;
+    // Upload gallery images to Cloudinary
+    if (galleryFiles.length > 0) {
+      const galleryUrls = await Promise.all(
+        galleryFiles.map(async (file) => {
+          const res = await this.cloudinaryService.uploadFile(file);
+          return res.secure_url;
+        }),
+      );
+      body.images = galleryUrls;
+    }
 
     return this.ProductService.createProduct(body, req.user.userId);
   }
@@ -199,14 +204,6 @@ export class ProductController {
   @ApiOperation({ summary: 'Update a product (admin/manager)' })
   @UseInterceptors(
     AnyFilesInterceptor({
-      storage: diskStorage({
-        destination: './uploads',
-        filename: (req, file, cb) => {
-          const uniqueName = Date.now() + '-' + Math.round(Math.random() * 1e9);
-          const ext = extname(file.originalname);
-          cb(null, `${uniqueName}${ext}`);
-        },
-      }),
       limits: { fileSize: 5 * 1024 * 1024 },
       fileFilter: (req, file, cb) => {
         if (file.mimetype.startsWith('image/')) cb(null, true);
@@ -223,10 +220,10 @@ export class ProductController {
     const mainFile = files?.find((f) => f.fieldname === 'image');
     const galleryFiles = files?.filter((f) => f.fieldname === 'images') || [];
 
-    // If a new main image was uploaded, use it.
-    // Otherwise, body.image might already contain the existing path sent from frontend.
+    // If a new main image was uploaded, upload to Cloudinary.
     if (mainFile) {
-      body.image = `/uploads/${mainFile.filename}`;
+      const uploadResult = await this.cloudinaryService.uploadFile(mainFile);
+      body.image = uploadResult.secure_url;
     }
 
     // Handle gallery images
@@ -246,10 +243,15 @@ export class ProductController {
       }
     }
 
-    // 2. Add new uploaded gallery files
+    // 2. Add new uploaded gallery files to Cloudinary
     if (galleryFiles.length > 0) {
-      const newFiles = galleryFiles.map((f) => `/uploads/${f.filename}`);
-      finalGallery = [...finalGallery, ...newFiles];
+      const newUrls = await Promise.all(
+        galleryFiles.map(async (file) => {
+          const res = await this.cloudinaryService.uploadFile(file);
+          return res.secure_url;
+        }),
+      );
+      finalGallery = [...finalGallery, ...newUrls];
     }
 
     // Assign back to body.images for the service to handle

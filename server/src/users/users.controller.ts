@@ -28,12 +28,17 @@ import { Permissions } from '../auth/permission/permissions.decorator';
 import { Permission } from '../auth/permission/permissions.enum';
 import type { RequestWithUser } from './types/user-payload.type';
 
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
+
 @ApiTags('Users')
 @Controller('users')
 @ApiBearerAuth('accessToken')
 @UseGuards(JwtAuthGuard, PermissionGuard)
 export class UsersController {
-  constructor(private readonly UsersService: UsersService) {}
+  constructor(
+    private readonly UsersService: UsersService,
+    private readonly cloudinaryService: CloudinaryService,
+  ) {}
 
   @Get('profile')
   @ApiOperation({ summary: 'Get current user profile' })
@@ -54,14 +59,6 @@ export class UsersController {
   @ApiOperation({ summary: 'Update current user avatar' })
   @UseInterceptors(
     FileInterceptor('avatar', {
-      storage: diskStorage({
-        destination: './uploads/avatars',
-        filename: (req, file, cb) => {
-          const uniqueName = Date.now() + '-' + Math.round(Math.random() * 1e9);
-          const ext = extname(file.originalname);
-          cb(null, `${uniqueName}${ext}`);
-        },
-      }),
       limits: { fileSize: 2 * 1024 * 1024 },
       fileFilter: (req, file, cb) => {
         if (file.mimetype.startsWith('image/')) cb(null, true);
@@ -73,9 +70,11 @@ export class UsersController {
     @Req() req: RequestWithUser,
     @UploadedFile() file: Express.Multer.File,
   ) {
-    const avatarUrl = file ? `/uploads/avatars/${file.filename}` : undefined;
-    if (!avatarUrl) return { message: 'No file uploaded' };
-    return this.UsersService.updateUser(req.user.userId, { avatar: avatarUrl });
+    if (!file) return { message: 'No file uploaded' };
+    const uploadResult = await this.cloudinaryService.uploadFile(file);
+    return this.UsersService.updateUser(req.user.userId, {
+      avatar: uploadResult.secure_url,
+    });
   }
 
   @Patch('change-password')
