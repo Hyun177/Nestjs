@@ -2,6 +2,7 @@ import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CartService, CartItem } from '../../../core/services/cart.service';
 import { VndCurrencyPipe } from '../../../shared/pipes/vnd-currency.pipe';
+import { ImageUrlPipe } from '../../../shared/pipes/image-url.pipe';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzInputNumberModule } from 'ng-zorro-antd/input-number';
 import { NzButtonModule } from 'ng-zorro-antd/button';
@@ -27,6 +28,7 @@ const SHIP_OTHER = 30000;
     NzButtonModule,
     NzSelectModule,
     VndCurrencyPipe,
+    ImageUrlPipe,
     FormsModule,
     RouterLink,
   ],

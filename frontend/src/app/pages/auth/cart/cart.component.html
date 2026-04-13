@@ -32,7 +32,7 @@
                                    style="width: 18px; height: 18px; accent-color: #000; cursor: pointer;">
                         </div>
                         <div class="item-img">
-                            <img [src]="item.product.image?.startsWith('http') ? item.product.image : 'https://nestjs-zvmg.onrender.com' + item.product.image" [alt]="item.product.name">
+                            <img [src]="item.product.image | imageUrl" [alt]="item.product.name">
                         </div>
                         <div class="item-details">
                             <div class="item-row">

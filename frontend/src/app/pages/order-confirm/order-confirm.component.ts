@@ -14,6 +14,7 @@ import { AddressService, UserAddress } from '../../core/services/address.service
 import { VoucherService, VoucherApplyResult } from '../../core/services/voucher.service';
 import { LocationService, Province, Ward } from '../../core/services/location.service';
 import { VndCurrencyPipe } from '../../shared/pipes/vnd-currency.pipe';
+import { ImageUrlPipe } from '../../shared/pipes/image-url.pipe';
 
 const HCM_CODE = '12';
 
@@ -30,6 +31,7 @@ const HCM_CODE = '12';
     NzSelectModule,
     NzPopconfirmModule,
     VndCurrencyPipe,
+    ImageUrlPipe,
   ],
   providers: [NzMessageService],
   templateUrl: './order-confirm.component.html',
