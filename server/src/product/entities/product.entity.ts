@@ -26,7 +26,7 @@ export class Product {
   @Column({ nullable: true })
   originalPrice?: number;
 
-  @Column({ type: 'longtext', nullable: true })
+  @Column({ type: 'text', nullable: true })
   description!: string;
   @Column({ nullable: true })
   image?: string;
