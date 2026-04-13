@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { v2 as cloudinary } from 'cloudinary';
 import { CloudinaryResponse } from './cloudinary-response';
-import * as streamifier from 'streamifier';
 import { Readable } from 'stream';
 @Injectable()
 export class CloudinaryService {
@@ -18,8 +17,7 @@ export class CloudinaryService {
           resolve(result);
         },
       );
-      const stream = streamifier.createReadStream(file.buffer) as Readable;
-      stream.pipe(uploadStream);
+      Readable.from(file.buffer).pipe(uploadStream);
     });
   }
 }
