@@ -37,14 +37,13 @@ import { ContactModule } from './contact/contact.module';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
-        type: 'mysql',
-        host: configService.get<string>('DB_HOST'),
-        port: Number(configService.get<number>('DB_PORT') ?? 3306),
-        username: configService.get<string>('DB_USERNAME'),
-        password: configService.get<string>('DB_PASSWORD'),
-        database: configService.get<string>('DB_NAME'),
+        type: 'postgres',
+        url: configService.get<string>('DATABASE_URL'),
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
-        synchronize: true,
+        synchronize: true, // Lưu ý: Để true để tự động tạo table, nhưng cẩn thận ở môi trường production
+        ssl: {
+          rejectUnauthorized: false,
+        },
       }),
     }),
     UsersModule,
