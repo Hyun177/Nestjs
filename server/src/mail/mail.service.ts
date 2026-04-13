@@ -7,6 +7,9 @@ type MailConfig = {
   user: string;
   pass: string;
   from: string;
+  secure?: boolean;
+  requireTLS?: boolean;
+  tlsRejectUnauthorized?: boolean;
 };
 
 type OrderEmailItem = {
@@ -40,16 +43,59 @@ export class MailService {
     const pass = process.env.MAIL_PASS;
     const from = process.env.MAIL_FROM || '"SOFTBEE" <no-reply@softbee.local>';
 
-    if (!host || !port || !user || !pass) return null;
-    return { host, port, user, pass, from };
+    const secureEnv = process.env.MAIL_SECURE;
+    const requireTLSEnv = process.env.MAIL_REQUIRE_TLS;
+    const tlsRejectEnv = process.env.MAIL_TLS_REJECT_UNAUTHORIZED;
+
+    const secure =
+      secureEnv !== undefined
+        ? secureEnv === 'true' || secureEnv === '1'
+        : port === 465;
+    const requireTLS =
+      requireTLSEnv !== undefined
+        ? requireTLSEnv === 'true' || requireTLSEnv === '1'
+        : port === 587; // STARTTLS
+    const tlsRejectUnauthorized =
+      tlsRejectEnv !== undefined
+        ? tlsRejectEnv === 'true' || tlsRejectEnv === '1'
+        : true;
+
+    if (!host || !port || !user || !pass) {
+      console.log('Email skipped: missing MAIL_* env config', {
+        hasHost: !!host,
+        hasPort: !!port,
+        hasUser: !!user,
+        hasPass: !!pass,
+      });
+      return null;
+    }
+    return {
+      host,
+      port,
+      user,
+      pass,
+      from,
+      secure,
+      requireTLS,
+      tlsRejectUnauthorized,
+    };
   }
 
   private createTransporter(cfg: MailConfig) {
     return nodemailer.createTransport({
       host: cfg.host,
       port: cfg.port,
-      secure: cfg.port === 465,
+      secure: cfg.secure ?? cfg.port === 465,
+      requireTLS: cfg.requireTLS ?? cfg.port === 587,
       auth: { user: cfg.user, pass: cfg.pass },
+      tls: {
+        // Render/Gmail STARTTLS stability + allow override if needed
+        servername: cfg.host,
+        rejectUnauthorized: cfg.tlsRejectUnauthorized ?? true,
+      },
+      connectionTimeout: 20_000,
+      greetingTimeout: 20_000,
+      socketTimeout: 30_000,
     });
   }
 
