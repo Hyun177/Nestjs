@@ -47,7 +47,7 @@ export class ReviewController {
     @Body('comment') comment: string,
     @Body('orderId') orderId?: string,
   ) {
-    let imageUrl = undefined;
+    let imageUrl: string | undefined = undefined;
     if (file) {
       const uploadResult = await this.cloudinaryService.uploadFile(file);
       imageUrl = uploadResult.secure_url;
@@ -83,7 +83,7 @@ export class ReviewController {
     @Body('rating', ParseIntPipe) rating: number,
     @Body('comment') comment: string,
   ) {
-    let imageUrl = undefined;
+    let imageUrl: string | undefined = undefined;
     if (file) {
       const uploadResult = await this.cloudinaryService.uploadFile(file);
       imageUrl = uploadResult.secure_url;

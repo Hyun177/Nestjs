@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { v2 as cloudinary } from 'cloudinary';
-import { CloudinaryResponse } from './cloudinary-response';
+import { v2 as cloudinary, UploadApiResponse } from 'cloudinary';
+import { CloudinaryResponse, LocalUploadResponse } from './cloudinary-response';
 import { Readable } from 'stream';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -23,7 +23,7 @@ export class CloudinaryService {
     return configured;
   }
 
-  async uploadFile(file: Express.Multer.File): Promise<CloudinaryResponse> {
+  async uploadFile(file: Express.Multer.File): Promise<CloudinaryResponse | LocalUploadResponse> {
     // Nếu Cloudinary không được cấu hình, sử dụng local storage
     if (!this.isCloudinaryConfigured()) {
       console.warn('Cloudinary not configured, using local storage fallback');
@@ -65,7 +65,7 @@ export class CloudinaryService {
     }
   }
 
-  private async uploadToLocal(file: Express.Multer.File): Promise<CloudinaryResponse> {
+  private async uploadToLocal(file: Express.Multer.File): Promise<LocalUploadResponse> {
     try {
       console.log('Using local storage fallback for:', file.originalname);
       
@@ -101,7 +101,7 @@ export class CloudinaryService {
         width: undefined,
         height: undefined,
         created_at: new Date().toISOString(),
-      } as CloudinaryResponse;
+      };
     } catch (error) {
       throw new Error(`Local upload failed: ${error.message}`);
     }
