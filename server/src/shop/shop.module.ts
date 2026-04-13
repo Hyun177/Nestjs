@@ -6,8 +6,10 @@ import { Shop } from './entities/shop.entity';
 import { Product } from '../product/entities/product.entity';
 import { ShopFollower } from './entities/shop-follower.entity';
 
+import { CloudinaryModule } from '../cloudinary/cloudinary.module';
+
 @Module({
-  imports: [TypeOrmModule.forFeature([Shop, Product, ShopFollower])],
+  imports: [TypeOrmModule.forFeature([Shop, Product, ShopFollower]), CloudinaryModule],
   controllers: [ShopController],
   providers: [ShopService],
   exports: [ShopService],

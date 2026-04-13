@@ -20,9 +20,14 @@ import { RoleGuard } from '../auth/role.guard';
 import { Roles } from '../decorators/roles.decorator';
 import type { RequestWithUser } from '../users/types/user-payload.type';
 
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
+
 @Controller('shop')
 export class ShopController {
-  constructor(private readonly shopService: ShopService) {}
+  constructor(
+    private readonly shopService: ShopService,
+    private readonly cloudinaryService: CloudinaryService,
+  ) {}
 
   @Get('me')
   @UseGuards(JwtAuthGuard, RoleGuard)
@@ -84,21 +89,20 @@ export class ShopController {
   @Roles('admin', 'manager', 'seller')
   @UseInterceptors(
     FileInterceptor('logo', {
-      storage: diskStorage({
-        destination: './uploads/shops',
-        filename: (req, file, cb) => {
-          const uniqueName = Date.now() + '-' + Math.round(Math.random() * 1e9);
-          cb(null, `logo-${uniqueName}${extname(file.originalname)}`);
-        },
-      }),
+      limits: { fileSize: 2 * 1024 * 1024 },
+      fileFilter: (req, file, cb) => {
+        if (file.mimetype.startsWith('image/')) cb(null, true);
+        else cb(new Error('Only image files are allowed!'), false);
+      },
     }),
   )
   async uploadLogo(
     @Param('id') id: string,
     @UploadedFile() file: Express.Multer.File,
   ) {
-    const logoUrl = `/uploads/shops/${file.filename}`;
-    return this.shopService.updateById(+id, { logo: logoUrl });
+    if (!file) return { message: 'No file uploaded' };
+    const uploadResult = await this.cloudinaryService.uploadFile(file);
+    return this.shopService.updateById(+id, { logo: uploadResult.secure_url });
   }
 
   @Post(':id/cover')
@@ -106,21 +110,22 @@ export class ShopController {
   @Roles('admin', 'manager', 'seller')
   @UseInterceptors(
     FileInterceptor('cover', {
-      storage: diskStorage({
-        destination: './uploads/shops',
-        filename: (req, file, cb) => {
-          const uniqueName = Date.now() + '-' + Math.round(Math.random() * 1e9);
-          cb(null, `cover-${uniqueName}${extname(file.originalname)}`);
-        },
-      }),
+      limits: { fileSize: 5 * 1024 * 1024 },
+      fileFilter: (req, file, cb) => {
+        if (file.mimetype.startsWith('image/')) cb(null, true);
+        else cb(new Error('Only image files are allowed!'), false);
+      },
     }),
   )
   async uploadCover(
     @Param('id') id: string,
     @UploadedFile() file: Express.Multer.File,
   ) {
-    const coverUrl = `/uploads/shops/${file.filename}`;
-    return this.shopService.updateById(+id, { coverImage: coverUrl });
+    if (!file) return { message: 'No file uploaded' };
+    const uploadResult = await this.cloudinaryService.uploadFile(file);
+    return this.shopService.updateById(+id, {
+      coverImage: uploadResult.secure_url,
+    });
   }
 
   @Get('stats/:sellerId')

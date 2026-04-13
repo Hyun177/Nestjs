@@ -7,8 +7,10 @@ import { Product } from '../product/entities/product.entity';
 import { Order } from '../order/entities/order.entity';
 import { OrderItem } from '../order/entities/order-item.entity';
 
+import { CloudinaryModule } from '../cloudinary/cloudinary.module';
+
 @Module({
-  imports: [TypeOrmModule.forFeature([Review, Product, Order, OrderItem])],
+  imports: [TypeOrmModule.forFeature([Review, Product, Order, OrderItem]), CloudinaryModule],
   providers: [ReviewService],
   controllers: [ReviewController],
 })

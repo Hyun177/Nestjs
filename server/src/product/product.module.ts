@@ -7,8 +7,10 @@ import { Category } from '../category/entities/category.entity/category.entity';
 import { Brand } from '../brand/entities/brand.entity/brand.entity';
 import { Shop } from '../shop/entities/shop.entity';
 
+import { CloudinaryModule } from '../cloudinary/cloudinary.module';
+
 @Module({
-  imports: [TypeOrmModule.forFeature([Product, Category, Brand, Shop])],
+  imports: [TypeOrmModule.forFeature([Product, Category, Brand, Shop]), CloudinaryModule],
   providers: [ProductService],
   controllers: [ProductController],
 })

@@ -8,10 +8,12 @@ import { UserAddress } from './entities/user-address.entity';
 import { AddressService } from './address.service';
 import { AddressController } from './address.controller';
 
+import { CloudinaryModule } from '../cloudinary/cloudinary.module';
+
 @Module({
   controllers: [UsersController, AddressController],
   providers: [UsersService, AddressService],
-  imports: [TypeOrmModule.forFeature([User, Role, UserAddress])],
+  imports: [TypeOrmModule.forFeature([User, Role, UserAddress]), CloudinaryModule],
   exports: [AddressService, UsersService],
 })
 export class UsersModule {}

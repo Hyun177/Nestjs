@@ -15,34 +15,28 @@ import {
 import { ReviewService } from './review.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { ApiTags, ApiBearerAuth, ApiConsumes } from '@nestjs/swagger';
-import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { extname } from 'path';
-
-const imageUploadInterceptor = FileInterceptor('image', {
-  storage: diskStorage({
-    destination: './uploads/reviews',
-    filename: (req, file, cb) => {
-      const uniqueName = Date.now() + '-' + Math.round(Math.random() * 1e9);
-      cb(null, `${uniqueName}${extname(file.originalname)}`);
-    },
-  }),
-  limits: { fileSize: 5 * 1024 * 1024 },
-  fileFilter: (req, file, cb) => {
-    if (file.mimetype.startsWith('image/')) cb(null, true);
-    else cb(new Error('Only image files are allowed!'), false);
-  },
-});
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
 
 @ApiTags('review')
 @Controller('review')
 export class ReviewController {
-  constructor(private readonly reviewService: ReviewService) {}
+  constructor(
+    private readonly reviewService: ReviewService,
+    private readonly cloudinaryService: CloudinaryService,
+  ) {}
 
   @Post()
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('accessToken')
-  @UseInterceptors(imageUploadInterceptor)
+  @UseInterceptors(
+    FileInterceptor('image', {
+      limits: { fileSize: 5 * 1024 * 1024 },
+      fileFilter: (req, file, cb) => {
+        if (file.mimetype.startsWith('image/')) cb(null, true);
+        else cb(new Error('Only image files are allowed!'), false);
+      },
+    }),
+  )
   @ApiConsumes('multipart/form-data')
   async createReview(
     @Req() req: any,
@@ -52,7 +46,11 @@ export class ReviewController {
     @Body('comment') comment: string,
     @Body('orderId') orderId?: string,
   ) {
-    const imageUrl = file ? `/uploads/reviews/${file.filename}` : undefined;
+    let imageUrl = undefined;
+    if (file) {
+      const uploadResult = await this.cloudinaryService.uploadFile(file);
+      imageUrl = uploadResult.secure_url;
+    }
     const numericOrderId = orderId ? parseInt(orderId, 10) : undefined;
     return this.reviewService.createOrUpdateReview(
       req.user.userId,
@@ -67,7 +65,15 @@ export class ReviewController {
   @Patch(':id')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('accessToken')
-  @UseInterceptors(imageUploadInterceptor)
+  @UseInterceptors(
+    FileInterceptor('image', {
+      limits: { fileSize: 5 * 1024 * 1024 },
+      fileFilter: (req, file, cb) => {
+        if (file.mimetype.startsWith('image/')) cb(null, true);
+        else cb(new Error('Only image files are allowed!'), false);
+      },
+    }),
+  )
   @ApiConsumes('multipart/form-data')
   async updateReview(
     @Req() req: any,
@@ -76,7 +82,11 @@ export class ReviewController {
     @Body('rating', ParseIntPipe) rating: number,
     @Body('comment') comment: string,
   ) {
-    const imageUrl = file ? `/uploads/reviews/${file.filename}` : undefined;
+    let imageUrl = undefined;
+    if (file) {
+      const uploadResult = await this.cloudinaryService.uploadFile(file);
+      imageUrl = uploadResult.secure_url;
+    }
     return this.reviewService.updateReview(
       id,
       req.user.userId,
