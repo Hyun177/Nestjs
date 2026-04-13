@@ -58,11 +58,11 @@
                     <ul nz-menu>
                         <li nz-menu-item routerLink="/profile">Profile</li>
                         <li nz-menu-item routerLink="/chat">Messages</li>
-                        <li nz-menu-item *ngIf="user.roles.includes('seller')" routerLink="/seller/orders">Seller
+                        <li nz-menu-item *ngIf="hasRole(user, 'seller')" routerLink="/seller/orders">Seller
                             Dashboard</li>
-                        <li nz-menu-item *ngIf="user.roles.includes('admin')" routerLink="/admin/products">Admin Panel
+                        <li nz-menu-item *ngIf="hasRole(user, 'admin')" routerLink="/admin/products">Admin Panel
                         </li>
-                        <li nz-menu-item *ngIf="user.roles.includes('manager')" routerLink="/manager/home">Manager Panel
+                        <li nz-menu-item *ngIf="hasRole(user, 'manager')" routerLink="/manager/home">Manager Panel
                         </li>
                         <li nz-divider></li>
                         <li nz-menu-item (click)="logout()">Logout</li>

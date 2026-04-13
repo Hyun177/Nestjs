@@ -31,10 +31,16 @@ export class HeaderComponent implements OnInit {
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
 
+  hasRole(user: any, roleName: string): boolean {
+    if (!user || !user.roles || !Array.isArray(user.roles)) return false;
+    return user.roles.some((r: any) => {
+      const name = (typeof r === 'string' ? r : r.name) || '';
+      return name.toLowerCase() === roleName.toLowerCase();
+    });
+  }
+
   get isSeller(): boolean {
-    const user = this.authService.currentUserValue;
-    if (!user || !user.roles) return false;
-    return user.roles.some((r: any) => (r.name || r) === 'SELLER');
+    return this.hasRole(this.authService.currentUserValue, 'seller');
   }
 
   ngOnInit() {
