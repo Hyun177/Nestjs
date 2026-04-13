@@ -14,7 +14,7 @@ import { UsersModule } from '../users/users.module';
     TypeOrmModule.forFeature([Message, Conversation]),
     AuthModule,
     ShopModule,
-    UsersModule
+    UsersModule,
   ],
   controllers: [MessageController],
   providers: [MessageService, ChatGateway],

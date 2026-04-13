@@ -1,4 +1,6 @@
+import { ChangePasswordDto } from './dto/change-password.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+
 import type { User } from './types/users.type';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -19,17 +21,12 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
-import {
-  ApiBearerAuth,
-  ApiOperation,
-  ApiTags,
-  ApiConsumes,
-  ApiBody,
-} from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { PermissionGuard } from '../auth/permission/permission.guard';
 import { Permissions } from '../auth/permission/permissions.decorator';
 import { Permission } from '../auth/permission/permissions.enum';
+import type { RequestWithUser } from './types/user-payload.type';
 
 @ApiTags('Users')
 @Controller('users')
@@ -40,14 +37,14 @@ export class UsersController {
 
   @Get('profile')
   @ApiOperation({ summary: 'Get current user profile' })
-  async getProfile(@Req() req): Promise<Partial<User>> {
+  async getProfile(@Req() req: RequestWithUser): Promise<Partial<User>> {
     return this.UsersService.getUserById(req.user.userId);
   }
 
   @Patch('profile')
   @ApiOperation({ summary: 'Update current user profile' })
   async updateProfile(
-    @Req() req,
+    @Req() req: RequestWithUser,
     @Body() body: UpdateUserDto,
   ): Promise<Partial<User>> {
     return this.UsersService.updateUser(req.user.userId, body);
@@ -72,7 +69,10 @@ export class UsersController {
       },
     }),
   )
-  async updateAvatar(@Req() req, @UploadedFile() file: Express.Multer.File) {
+  async updateAvatar(
+    @Req() req: RequestWithUser,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
     const avatarUrl = file ? `/uploads/avatars/${file.filename}` : undefined;
     if (!avatarUrl) return { message: 'No file uploaded' };
     return this.UsersService.updateUser(req.user.userId, { avatar: avatarUrl });
@@ -81,8 +81,8 @@ export class UsersController {
   @Patch('change-password')
   @ApiOperation({ summary: 'Change current user password' })
   async changePassword(
-    @Req() req,
-    @Body() body: any, // Should use a proper DTO, maybe {oldPassword, newPassword}
+    @Req() req: RequestWithUser,
+    @Body() body: ChangePasswordDto,
   ): Promise<any> {
     // We will implement this in the service
     return this.UsersService.changePassword(

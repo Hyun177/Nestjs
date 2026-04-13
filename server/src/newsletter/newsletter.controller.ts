@@ -19,8 +19,7 @@ export class NewsletterController {
   @Post('subscribe')
   @UseGuards(JwtOptionalGuard)
   subscribe(@Body('email') email: string, @Req() req: RequestWithUser) {
-    const userId = (req as any)?.user?.userId;
+    const userId = req.user?.userId;
     return this.newsletterService.subscribe(email, userId);
   }
 }
-

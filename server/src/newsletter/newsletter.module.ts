@@ -11,4 +11,3 @@ import { NewsletterService } from './newsletter.service';
   exports: [NewsletterService],
 })
 export class NewsletterModule {}
-

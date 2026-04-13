@@ -11,7 +11,9 @@ export class NewsletterService {
   ) {}
 
   async subscribe(email: string, userId?: number) {
-    const normalized = String(email || '').trim().toLowerCase();
+    const normalized = String(email || '')
+      .trim()
+      .toLowerCase();
     if (!normalized || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalized)) {
       throw new BadRequestException('Email không hợp lệ');
     }
@@ -23,7 +25,9 @@ export class NewsletterService {
       }
       return { subscribed: true };
     }
-    await this.repo.save(this.repo.create({ email: normalized, userId: userId ?? null }));
+    await this.repo.save(
+      this.repo.create({ email: normalized, userId: userId ?? null }),
+    );
     return { subscribed: true };
   }
 
@@ -37,4 +41,3 @@ export class NewsletterService {
     return { subscribed: !!row, email: row?.email || null };
   }
 }
-

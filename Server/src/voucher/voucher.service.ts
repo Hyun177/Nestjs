@@ -50,8 +50,6 @@ export class VoucherService {
     }
 
     const saved = await this.voucherRepository.save(voucher);
-
-    // Notify newsletter subscribers about new voucher (best-effort)
     this.newsletterService
       .listSubscriberEmails()
       .then((emails) => {

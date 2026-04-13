@@ -15,4 +15,3 @@ export class NewsletterSubscriber {
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   createdAt!: Date;
 }
-
