@@ -17,6 +17,7 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { OrderStatus } from './enums/order-status.enum';
 
 import { CheckoutDto } from './dto/checkout.dto';
+import { UpdateOrderAdminDto } from './dto/update-order-admin.dto';
 import { PermissionGuard } from '../auth/permission/permission.guard';
 import { Permissions } from '../auth/permission/permissions.decorator';
 import { Permission } from '../auth/permission/permissions.enum';
@@ -84,7 +85,10 @@ export class OrderController {
 
   @Put(':id')
   @Permissions(Permission.ORDER_UPDATE)
-  updateOrderAdmin(@Param('id', ParseIntPipe) id: number, @Body() data: any) {
+  updateOrderAdmin(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() data: UpdateOrderAdminDto,
+  ) {
     return this.orderService.updateOrderAdmin(id, data);
   }
 

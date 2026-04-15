@@ -11,8 +11,19 @@ import { Server, Socket } from 'socket.io';
 import { MessageService } from './message.service';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
+import { ConfigService } from '@nestjs/config';
 
-@WebSocketGateway({ cors: { origin: '*' } })
+@WebSocketGateway({
+  cors: {
+    origin: [
+      'http://localhost:4200',
+      'http://localhost:3000',
+      'https://frontend-bb25.onrender.com',
+      'https://nestjs-zvmg.onrender.com',
+    ],
+    credentials: true,
+  },
+})
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   server!: Server;
@@ -24,6 +35,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private readonly messageService: MessageService,
     private readonly jwtService: JwtService,
     private readonly userService: UsersService,
+    private readonly configService: ConfigService,
   ) {}
 
   async handleConnection(socket: Socket) {
@@ -42,7 +54,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         sub?: string;
         userId?: string;
         id?: string;
-      }>(token, { secret: 'secretKey' });
+      }>(token, {
+        secret: this.configService.getOrThrow<string>('JWT_SECRET'),
+      });
       const userId = Number(payload.sub ?? payload.userId ?? payload.id);
 
       if (!userId) throw new Error('Invalid user ID in token');

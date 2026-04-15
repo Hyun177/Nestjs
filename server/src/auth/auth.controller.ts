@@ -31,7 +31,6 @@ export class AuthController {
   @Get('profile')
   @UseGuards(JwtAuthGuard, RoleGuard)
   async getProfile(@Req() req: RequestWithUser): Promise<User> {
-    console.log('User from token:', req.user);
     return this.authService.getProfile(req.user.userId);
   }
   @UseGuards(RoleGuard)
@@ -45,12 +44,12 @@ export class AuthController {
   async googleLogin(@Body() body: GoogleLoginDto): Promise<LoginDto> {
     return await this.authService.loginWithGoogle(body.credential);
   }
-  @UseGuards(RoleGuard)
+  @UseGuards(JwtAuthGuard)
   @Put('change-password')
   async changePassword(
-    @Body('userId') userId: number,
+    @Req() req: RequestWithUser,
     @Body('newPassword') newPassword: string,
   ): Promise<User> {
-    return await this.authService.changePassword(userId, newPassword);
+    return await this.authService.changePassword(req.user.userId, newPassword);
   }
 }

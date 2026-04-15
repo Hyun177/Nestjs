@@ -353,12 +353,22 @@ export class OrderService {
     await this.orderRepository.remove(order);
   }
 
-  async updateOrderAdmin(id: number, data: any): Promise<Order> {
+  async updateOrderAdmin(
+    id: number,
+    data: {
+      shippingAddress?: string;
+      shippingPhone?: string;
+      status?: OrderStatus;
+    },
+  ): Promise<Order> {
     const order = await this.orderRepository.findOne({ where: { id } });
     if (!order) throw new BadRequestException('Không tìm thấy đơn hàng');
 
-    // Simple update for fields like address, phone, total
-    Object.assign(order, data);
+    if (data.shippingAddress !== undefined)
+      order.shippingAddress = data.shippingAddress;
+    if (data.shippingPhone !== undefined)
+      order.shippingPhone = data.shippingPhone;
+    if (data.status !== undefined) order.status = data.status;
     return this.orderRepository.save(order);
   }
 }

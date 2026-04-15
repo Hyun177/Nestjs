@@ -23,10 +23,15 @@ app = FastAPI(title="Marketplace Gemini Chatbot")
 # Cho phép Frontend Angular gọi API
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "http://localhost:4200",
+        "http://localhost:3000",
+        "https://frontend-bb25.onrender.com",
+        "https://nestjs-zvmg.onrender.com",
+    ],
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allow_headers=["Content-Type", "Authorization"],
 )
 
 # Cấu hình Gemini

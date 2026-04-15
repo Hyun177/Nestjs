@@ -10,7 +10,6 @@ export class RoleGuard implements CanActivate {
       context.getHandler(),
       context.getClass(),
     ]);
-    console.log('roles:', roles);
     if (!roles || roles.length === 0) {
       return true;
     }
@@ -20,15 +19,12 @@ export class RoleGuard implements CanActivate {
     const user = request.user;
 
     if (!user) return false;
-    console.log('Required roles (metadata):', roles);
-    console.log('User roles from token:', user?.roles);
 
     const hasRole = roles.some((requiredRole) =>
       user.roles
         ?.map((r) => r.toLowerCase())
         .includes(requiredRole.toLowerCase()),
     );
-    console.log('Final Access Granted:', hasRole);
     return hasRole;
   }
 }
