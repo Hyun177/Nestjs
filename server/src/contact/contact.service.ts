@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Contact, ContactStatus } from './entities/contact.entity';
@@ -45,6 +49,12 @@ export class ContactService {
 
   async reply(id: number, replyContactDto: ReplyContactDto): Promise<Contact> {
     const contact = await this.findOne(id);
+
+    if (contact.status === ContactStatus.REPLIED) {
+      throw new ConflictException(
+        `Contact request with ID ${id} has already been replied to`,
+      );
+    }
 
     contact.replyMessage = replyContactDto.replyMessage;
     contact.status = ContactStatus.REPLIED;
