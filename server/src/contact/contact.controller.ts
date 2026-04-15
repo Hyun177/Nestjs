@@ -8,6 +8,9 @@ import {
   Delete,
   UseGuards,
   Request,
+  ParseIntPipe,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import { ContactService } from './contact.service';
 import { CreateContactDto, ReplyContactDto } from './dto/contact.dto';
@@ -23,7 +26,10 @@ export class ContactController {
 
   @Post()
   @UseGuards(JwtOptionalGuard)
-  create(@Request() req, @Body() createContactDto: CreateContactDto) {
+  create(
+    @Request() req: Partial<RequestWithUser>,
+    @Body() createContactDto: CreateContactDto,
+  ) {
     const userId = req.user?.userId;
     return this.contactService.create(createContactDto, userId);
   }
@@ -44,21 +50,25 @@ export class ContactController {
   @Get(':id')
   @UseGuards(JwtAuthGuard, RoleGuard)
   @Roles('admin', 'manager')
-  findOne(@Param('id') id: string) {
-    return this.contactService.findOne(+id);
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.contactService.findOne(id);
   }
 
   @Patch(':id/reply')
   @UseGuards(JwtAuthGuard, RoleGuard)
   @Roles('admin', 'manager')
-  reply(@Param('id') id: string, @Body() replyContactDto: ReplyContactDto) {
-    return this.contactService.reply(+id, replyContactDto);
+  reply(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() replyContactDto: ReplyContactDto,
+  ) {
+    return this.contactService.reply(id, replyContactDto);
   }
 
   @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(JwtAuthGuard, RoleGuard)
   @Roles('admin', 'manager')
-  remove(@Param('id') id: string) {
-    return this.contactService.remove(+id);
+  remove(@Param('id', ParseIntPipe) id: number) {
+    return this.contactService.remove(id);
   }
 }
