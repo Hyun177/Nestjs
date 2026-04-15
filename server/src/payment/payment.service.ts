@@ -16,6 +16,7 @@ import {
   VnpLocale,
   ReturnQueryFromVNPay,
 } from 'vnpay';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class PaymentService {
@@ -30,10 +31,13 @@ export class PaymentService {
     private readonly orderItemRepo: Repository<OrderItem>,
     @InjectRepository(Product)
     private readonly productRepo: Repository<Product>,
+    private readonly configService: ConfigService,
   ) {
     this.vnpayClient = new VNPay({
-      tmnCode: '9YTBK030',
-      secureSecret: 'FMG2B2UFAYCP3CK46CT1VB3E34LFMHL4',
+      tmnCode: this.configService.getOrThrow<string>('VNPAY_TMN_CODE'),
+      secureSecret: this.configService.getOrThrow<string>(
+        'VNPAY_SECURE_SECRET',
+      ),
       vnpayHost: 'https://sandbox.vnpayment.vn',
       testMode: true,
       hashAlgorithm: HashAlgorithm.SHA512,
@@ -76,7 +80,8 @@ export class PaymentService {
       vnp_TxnRef: order.id.toString(),
       vnp_OrderInfo: `Thanh toan don hang ${order.id}`,
       vnp_OrderType: ProductCode.Other,
-      vnp_ReturnUrl: 'https://nestjs-zvmg.onrender.com/api/payments/vnpay-callback',
+      vnp_ReturnUrl:
+        'https://nestjs-zvmg.onrender.com/api/payments/vnpay-callback',
       vnp_Locale: VnpLocale.VN,
     });
 

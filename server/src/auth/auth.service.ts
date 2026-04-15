@@ -52,7 +52,10 @@ export class AuthService {
       .assignWelcomeVoucher(savedUser.id)
       .catch(() => {});
 
-    return savedUser;
+    // Strip sensitive fields before returning
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password: _pw, refreshToken: _rt, ...safeUser } = savedUser;
+    return safeUser as User;
   }
   async login(data: LoginInputDto): Promise<LoginDto> {
     const user = await this.userRepo.findOne({
@@ -81,12 +84,12 @@ export class AuthService {
 
     const access_token = this.jwtService.sign(
       { ...payload, type: 'access' },
-      { expiresIn: '30d' },
+      { expiresIn: '1h' },
     );
 
     const refresh_token = this.jwtService.sign(
       { ...payload, type: 'refresh' },
-      { expiresIn: '90d' },
+      { expiresIn: '7d' },
     );
     const hashedRt = await bcrypt.hash(refresh_token, 10);
     user.refreshToken = hashedRt;
@@ -118,7 +121,6 @@ export class AuthService {
     if (!user) {
       throw new UnauthorizedException('User not found');
     }
-    console.log('DB user:', user);
     return user;
   }
 
@@ -181,11 +183,11 @@ export class AuthService {
     };
     const access_token = this.jwtService.sign(
       { ...jwtPayload, type: 'access' },
-      { expiresIn: '30d' },
+      { expiresIn: '1h' },
     );
     const refresh_token = this.jwtService.sign(
       { ...jwtPayload, type: 'refresh' },
-      { expiresIn: '90d' },
+      { expiresIn: '7d' },
     );
     const hashedRt = await bcrypt.hash(refresh_token, 10);
     user.refreshToken = hashedRt;

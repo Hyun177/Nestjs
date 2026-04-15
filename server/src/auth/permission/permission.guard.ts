@@ -29,7 +29,6 @@ export class PermissionGuard implements CanActivate {
     });
 
     if (!roles || roles.length === 0) {
-      console.log(`Roles ${user.roles.join(', ')} not found in database`);
       return false;
     }
     const userPermissions: string[] = [];
@@ -41,22 +40,14 @@ export class PermissionGuard implements CanActivate {
       });
     });
 
-    console.log('User roles from request:', user.roles);
-    console.log('Combined user permissions from DB:', userPermissions);
-    console.log('Required permissions:', requiredPermissions);
     const normalize = (p: string) => p.replace(':', '_').toLowerCase().trim();
 
     const normalizedUserPerms = userPermissions.map(normalize);
     const result = requiredPermissions.every((perm) => {
       const normalizedPerm = normalize(perm);
-      const isMatch = normalizedUserPerms.includes(normalizedPerm);
-      console.log(
-        `Checking permission: ${perm} (normalized: ${normalizedPerm}) -> ${isMatch}`,
-      );
-      return isMatch;
+      return normalizedUserPerms.includes(normalizedPerm);
     });
 
-    console.log('Final Permission Check Result:', result);
     return result;
   }
 }

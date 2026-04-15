@@ -43,9 +43,10 @@ import { CloudinaryModule } from './cloudinary/cloudinary.module';
         type: 'postgres',
         url: configService.get<string>('DATABASE_URL'),
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
-        synchronize: true, // Lưu ý: Để true để tự động tạo table, nhưng cẩn thận ở môi trường production
+        synchronize: configService.get<string>('NODE_ENV') !== 'production',
         ssl: {
-          rejectUnauthorized: false,
+          rejectUnauthorized:
+            configService.get<string>('DB_SSL_REJECT_UNAUTHORIZED') !== 'false',
         },
       }),
     }),
