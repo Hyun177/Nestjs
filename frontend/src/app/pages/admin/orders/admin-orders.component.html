@@ -310,7 +310,8 @@
       <div class="items-list">
         <div *ngFor="let item of selectedOrder()?.items" class="item-row">
           <div class="item-thumb">
-            <img *ngIf="item.product?.image" [src]="'https://nestjs-zvmg.onrender.com' + item.product.image"
+            <img *ngIf="item.product?.image" 
+              [src]="item.product.image.startsWith('http') ? item.product.image : 'https://nestjs-zvmg.onrender.com' + item.product.image"
               [alt]="item.product?.name" />
             <div *ngIf="!item.product?.image" class="item-thumb-placeholder">
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"

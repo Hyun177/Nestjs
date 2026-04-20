@@ -133,7 +133,7 @@ export class AdminUsersComponent implements OnInit {
           email: u.email,
           phone: u.phone || 'Chưa cập nhật',
           avatar: u.avatar
-            ? 'https://nestjs-zvmg.onrender.com' + u.avatar
+            ? (u.avatar.startsWith('http') ? u.avatar : 'https://nestjs-zvmg.onrender.com' + u.avatar)
             : 'https://api.realworld.io/images/demo-avatar.jpg',
           role: u.roles && u.roles.length > 0 ? u.roles.map((r: any) => r.name).join(', ') : 'user',
           status: u.status || 'active',
