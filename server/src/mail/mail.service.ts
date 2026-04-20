@@ -182,7 +182,9 @@ export class MailService {
   private buildOrderDetailsBlock(summary: OrderEmailSummary) {
     const rows: string[] = [];
     const createdAt = summary.createdAt
-      ? new Date(summary.createdAt).toLocaleString('vi-VN')
+      ? new Date(summary.createdAt).toLocaleString('vi-VN', {
+          timeZone: 'Asia/Ho_Chi_Minh',
+        })
       : '';
     if (createdAt) {
       rows.push(
@@ -361,9 +363,15 @@ export class MailService {
       return;
     }
     const transporter = this.createTransporter(cfg);
-    const end = endDate ? new Date(endDate).toLocaleDateString('vi-VN') : '';
+    const end = endDate
+      ? new Date(endDate).toLocaleDateString('vi-VN', {
+          timeZone: 'Asia/Ho_Chi_Minh',
+        })
+      : '';
     const start = meta?.startDate
-      ? new Date(meta.startDate).toLocaleDateString('vi-VN')
+      ? new Date(meta.startDate).toLocaleDateString('vi-VN', {
+          timeZone: 'Asia/Ho_Chi_Minh',
+        })
       : '';
     const url = `${this.getFrontendUrl()}/products`;
     const html = this.buildTemplate(
