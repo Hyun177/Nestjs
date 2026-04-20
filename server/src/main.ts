@@ -40,6 +40,7 @@ async function bootstrap() {
     origin: [
       'http://localhost:4200',
       'http://localhost:3000',
+      'https://finalsoa115.site',
       'https://frontend-bb25.onrender.com',
       'https://nestjs-zvmg.onrender.com'
     ],

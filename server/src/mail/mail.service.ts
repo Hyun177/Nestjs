@@ -37,10 +37,10 @@ type OrderEmailSummary = {
 @Injectable()
 export class MailService {
   private getConfig(): MailConfig | null {
-    const host = process.env.MAIL_HOST;
+    const host = process.env.MAIL_HOST?.trim();
     const port = Number(process.env.MAIL_PORT || 0);
-    const user = process.env.MAIL_USER;
-    const pass = process.env.MAIL_PASS;
+    const user = process.env.MAIL_USER?.trim();
+    const pass = process.env.MAIL_PASS?.trim();
     const from = process.env.MAIL_FROM || '"SOFTBEE" <no-reply@softbee.local>';
 
     const secureEnv = process.env.MAIL_SECURE;
@@ -82,25 +82,64 @@ export class MailService {
   }
 
   private createTransporter(cfg: MailConfig) {
+    const debug =
+      process.env.MAIL_DEBUG === 'true' || process.env.MAIL_DEBUG === '1';
     return nodemailer.createTransport({
       host: cfg.host,
       port: cfg.port,
       secure: cfg.secure ?? cfg.port === 465,
-      requireTLS: cfg.requireTLS ?? cfg.port === 587,
+      pool: true, // Maintain persistent connection for bulk emails
       auth: { user: cfg.user, pass: cfg.pass },
       tls: {
-        // Render/Gmail STARTTLS stability + allow override if needed
+        // Render/Gmail STARTTLS stability
         servername: cfg.host,
-        rejectUnauthorized: cfg.tlsRejectUnauthorized ?? true,
+        // Default to false for better compatibility on cloud providers unless specifically overridden
+        rejectUnauthorized: cfg.tlsRejectUnauthorized ?? false,
       },
       connectionTimeout: 20_000,
       greetingTimeout: 20_000,
       socketTimeout: 30_000,
+      logger: debug,
+      debug,
     });
   }
 
+  private async sendMailSafely(
+    transporter: nodemailer.Transporter,
+    payload: nodemailer.SendMailOptions,
+  ): Promise<nodemailer.SentMessageInfo> {
+    const debug =
+      process.env.MAIL_DEBUG === 'true' || process.env.MAIL_DEBUG === '1';
+    try {
+      if (debug) {
+        await transporter.verify();
+      }
+      const info: nodemailer.SentMessageInfo =
+        await transporter.sendMail(payload);
+      if (debug) {
+        console.log('Email sent:', {
+          messageId: info.messageId,
+          accepted: info.accepted,
+          rejected: info.rejected,
+          response: info.response,
+        });
+      }
+      return info as unknown as nodemailer.SentMessageInfo;
+    } catch (err: any) {
+      console.log('Email send failed:', {
+        name: err?.name,
+        code: err?.code,
+        command: err?.command,
+        responseCode: err?.responseCode,
+        response: err?.response,
+        message: err?.message,
+      });
+      throw err;
+    }
+  }
+
   private getFrontendUrl() {
-    return process.env.FRONTEND_URL || 'https://frontend-bb25.onrender.com';
+    return process.env.FRONTEND_URL || 'https://finalsoa115.site';
   }
 
   private formatMoney(value?: number) {
@@ -259,7 +298,7 @@ export class MailService {
         <p>Cảm ơn bạn đã mua sắm tại <b>SOFTBEE</b> 💚</p>
       `,
     );
-    await transporter.sendMail({
+    await this.sendMailSafely(transporter, {
       from: cfg.from,
       to: email,
       subject: `Xác nhận đơn hàng #${summary.id}`,
@@ -294,7 +333,7 @@ export class MailService {
         </div>
       `,
     );
-    await transporter.sendMail({
+    await this.sendMailSafely(transporter, {
       from: cfg.from,
       to: email,
       subject: `Đơn hàng #${summary.id} đã giao thành công`,
@@ -370,7 +409,7 @@ export class MailService {
         </div>
       `,
     );
-    await transporter.sendMail({
+    await this.sendMailSafely(transporter, {
       from: cfg.from,
       to: email,
       subject: `Voucher mới: ${code}`,

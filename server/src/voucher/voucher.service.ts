@@ -52,14 +52,14 @@ export class VoucherService {
     const saved = await this.voucherRepository.save(voucher);
     this.newsletterService
       .listSubscriberEmails()
-      .then((emails) => {
+      .then(async (emails) => {
         const valueText =
           saved.type === VoucherType.PERCENT
             ? `${saved.value}%`
             : `${saved.value} VNĐ`;
-        for (const email of emails) {
-          this.mailService
-            .sendNewVoucher(email, saved.code, valueText, saved.endDate, {
+        const results = await Promise.allSettled(
+          emails.map((email) =>
+            this.mailService.sendNewVoucher(email, saved.code, valueText, saved.endDate, {
               minOrderAmount: Number(saved.minOrderAmount || 0),
               maxDiscountAmount: saved.maxDiscountAmount
                 ? Number(saved.maxDiscountAmount)
@@ -68,11 +68,18 @@ export class VoucherService {
               userUsageLimit: Number(saved.userUsageLimit || 0),
               startDate: saved.startDate,
               isActive: saved.isActive,
-            })
-            .catch(() => {});
+            }),
+          ),
+        );
+        const failed = results.filter((r) => r.status === 'rejected');
+        if (failed.length > 0) {
+          console.log('Voucher email send failures:', {
+            total: results.length,
+            failed: failed.length,
+          });
         }
       })
-      .catch(() => {});
+      .catch((e) => console.log('Voucher email list/send failed:', e));
 
     return saved;
   }
