@@ -17,13 +17,22 @@
             </div>
             } @else {
             <div class="newsletter-form">
-                <div class="input-wrapper">
-                    <span nz-icon nzType="mail"></span>
-                    <input type="email" placeholder="Enter your email address" [(ngModel)]="email" [disabled]="loading">
-                </div>
-                <button class="btn-subscribe" (click)="subscribe()" [disabled]="loading">
-                    {{ loading ? 'Subscribing...' : 'Subscribe to Newsletter' }}
-                </button>
+                @if (authService.isAuthenticated) {
+                    <button class="btn-subscribe-big" (click)="subscribeWithUserEmail()" [disabled]="loading">
+                        {{ loading ? 'Đang xử lý...' : 'NHẤN VÀO ĐÂY ĐỂ NHẬN THÔNG BÁO VOUCHER' }}
+                    </button>
+                    <p class="subscribe-hint" *ngIf="authService.currentUserValue">
+                        (Sử dụng email: {{ authService.currentUserValue.email }})
+                    </p>
+                } @else {
+                    <div class="input-wrapper">
+                        <span nz-icon nzType="mail"></span>
+                        <input type="email" placeholder="Nhập địa chỉ email của bạn" [(ngModel)]="email" [disabled]="loading">
+                    </div>
+                    <button class="btn-subscribe" (click)="subscribe()" [disabled]="loading">
+                        {{ loading ? 'Đang xử lý...' : 'Đăng ký nhận ưu đãi' }}
+                    </button>
+                }
             </div>
             }
         </div>

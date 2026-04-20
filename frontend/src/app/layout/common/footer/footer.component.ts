@@ -4,11 +4,13 @@ import { NzMessageService } from 'ng-zorro-antd/message';
 import { NewsletterService } from '../../../core/services/newsletter.service';
 import { RouterLink } from '@angular/router';
 import { NzIconModule } from 'ng-zorro-antd/icon';
+import { AuthService } from '../../../core/services/auth.service';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-footer',
   standalone: true,
-  imports: [NzIconModule, FormsModule, RouterLink],
+  imports: [NzIconModule, FormsModule, RouterLink, CommonModule],
   templateUrl: './footer.component.html',
   styleUrls: ['./footer.component.scss'],
 })
@@ -21,6 +23,7 @@ export class FooterComponent implements OnInit {
 
   private newsletterService = inject(NewsletterService);
   private message = inject(NzMessageService);
+  public authService = inject(AuthService);
 
   ngOnInit(): void {
     // If logged in, check subscription status to hide input.
@@ -48,14 +51,27 @@ export class FooterComponent implements OnInit {
       this.message.warning('Vui lòng nhập email');
       return;
     }
+    this.executeSubscription(value);
+  }
+
+  subscribeWithUserEmail() {
+    const user = this.authService.currentUserValue;
+    if (!user || !user.email) {
+      this.message.warning('Không tìm thấy email của bạn. Vui lòng đăng nhập lại.');
+      return;
+    }
+    this.executeSubscription(user.email);
+  }
+
+  private executeSubscription(email: string) {
     this.loading = true;
-    this.newsletterService.subscribe(value).subscribe({
+    this.newsletterService.subscribe(email).subscribe({
       next: () => {
         this.loading = false;
         this.subscribed = true;
-        this.subscribedEmail = value;
-        this.email = value;
-        this.message.success('Đã đăng ký nhận voucher/ưu đãi qua email!');
+        this.subscribedEmail = email;
+        this.email = email;
+        this.message.success('Đã đăng ký nhận thông báo voucher thành công!');
       },
       error: (err) => {
         this.loading = false;

@@ -12,12 +12,12 @@ async function bootstrap() {
   app.setGlobalPrefix('api');
   app.useGlobalPipes(new ValidationPipe({ transform: true }));
   app.useGlobalFilters(new HttpExceptionFilter());
-  
+
   // Serve static files from uploads directory
   app.useStaticAssets(join(__dirname, '..', 'uploads'), {
     prefix: '/uploads/',
   });
-  
+
   const config = new DocumentBuilder()
     .setTitle('API Demo')
     .setDescription('API documentation')
@@ -34,7 +34,7 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
 
   SwaggerModule.setup('api', app, document);
-  
+
   // Configure CORS properly
   app.enableCors({
     origin: [
@@ -42,13 +42,14 @@ async function bootstrap() {
       'http://localhost:3000',
       'https://finalsoa115.site',
       'https://frontend-bb25.onrender.com',
+      'https://frontend-bb25.onrender.com',
       'https://nestjs-zvmg.onrender.com'
     ],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,
   });
-  
+
   await app.listen(process.env.PORT ?? 3000);
 }
 void bootstrap();

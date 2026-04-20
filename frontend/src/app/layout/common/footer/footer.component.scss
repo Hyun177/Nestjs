@@ -63,51 +63,83 @@
             border: none;
             cursor: pointer;
             width: 100%;
+            transition: all 0.3s ease;
+            &:hover:not(:disabled) { background: #f0f0f0; transform: scale(1.02); }
         }
-                .success-wrapper {
-                    background: #fff;
-                    border-radius: 99px;
-                    padding: 0.75rem 1.25rem;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    gap: 0.75rem;
-        
-                    .success-icon {
-                        color: #52c41a;
-                        /* Đổi màu icon sang xanh lá chuẩn Ant Design */
-                        font-size: 1.5rem;
-                    }
-        
-                    .success-content {
-                        display: flex;
-                        flex-direction: column;
-                        justify-content: center;
-        
-                        .success-title {
-                            font-weight: 600;
-                            font-size: 0.875rem;
-                            color: #000;
-                            line-height: 1.2;
-                        }
-        
-                        .success-email {
-                            font-size: 0.75rem;
-                            color: #00000099;
-                            max-width: 240px;
-                            /* Chiều rộng tối đa của email */
-                            white-space: nowrap;
-                            /* Không cho rớt dòng */
-                            overflow: hidden;
-                            /* Cắt phần chữ thừa */
-                            text-overflow: ellipsis;
-                            /* Hiển thị ... khi bị cắt */
-                            margin-top: 2px;
-                        }
-                    }
+
+        .btn-subscribe-big {
+            background: #fff;
+            color: #000;
+            border-radius: 12px;
+            padding: 1.25rem;
+            font-weight: 700;
+            font-size: 1rem;
+            border: none;
+            cursor: pointer;
+            width: 100%;
+            text-transform: uppercase;
+            box-shadow: 0 4px 15px rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+            &:hover:not(:disabled) {
+                background: #f0f0f0;
+                transform: translateY(-2px);
+                box-shadow: 0 6px 20px rgba(255, 255, 255, 0.2);
+            }
+            &:active { transform: translateY(0); }
+        }
+
+        .subscribe-hint {
+            color: #ffffff99;
+            font-size: 0.75rem;
+            text-align: center;
+            margin: 0;
+        }
+
+        .success-wrapper {
+            background: #fff;
+            border-radius: 99px;
+            padding: 0.75rem 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+
+            .success-icon {
+                color: #52c41a;
+                /* Đổi màu icon sang xanh lá chuẩn Ant Design */
+                font-size: 1.5rem;
+            }
+
+            .success-content {
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+
+                .success-title {
+                    font-weight: 600;
+                    font-size: 0.875rem;
+                    color: #000;
+                    line-height: 1.2;
+                }
+
+                .success-email {
+                    font-size: 0.75rem;
+                    color: #00000099;
+                    max-width: 240px;
+                    /* Chiều rộng tối đa của email */
+                    white-space: nowrap;
+                    /* Không cho rớt dòng */
+                    overflow: hidden;
+                    /* Cắt phần chữ thừa */
+                    text-overflow: ellipsis;
+                    /* Hiển thị ... khi bị cắt */
+                    margin-top: 2px;
+                }
+            }
+        }
     }
 }
-}
+
 .footer-main {
     display: grid;
     grid-template-columns: 1.5fr 1fr 1fr 1fr 1fr;
