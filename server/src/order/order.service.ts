@@ -299,6 +299,7 @@ export class OrderService {
           discountAmount: Number(order.discountAmount || 0),
           totalAmount: Number(order.totalAmount || 0),
           createdAt: order.createdAt,
+          completedAt: order.updatedAt,
         })
         .catch((e) => console.log('Email send failed:', e));
     }

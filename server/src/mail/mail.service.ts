@@ -32,6 +32,7 @@ type OrderEmailSummary = {
   totalAmount?: number;
   voucherCode?: string | null;
   createdAt?: Date;
+  completedAt?: Date;
 };
 
 @Injectable()
@@ -189,6 +190,16 @@ export class MailService {
     if (createdAt) {
       rows.push(
         `<div>🕒 Thời gian đặt: <b>${this.escapeHtml(createdAt)}</b></div>`,
+      );
+    }
+    const completedAt = summary.completedAt
+      ? new Date(summary.completedAt).toLocaleString('vi-VN', {
+          timeZone: 'Asia/Ho_Chi_Minh',
+        })
+      : '';
+    if (completedAt) {
+      rows.push(
+        `<div>✅ Hoàn thành lúc: <b>${this.escapeHtml(completedAt)}</b></div>`,
       );
     }
     if (summary.paymentMethod) {
