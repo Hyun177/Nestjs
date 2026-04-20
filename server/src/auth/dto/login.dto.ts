@@ -7,6 +7,7 @@ export class LoginDto {
     firstname: string;
     lastname: string;
     email: string;
+    avatar?: string;
     roles: string[];
   };
 }

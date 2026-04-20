@@ -100,6 +100,7 @@ export class AuthService {
         firstname: user.firstname,
         lastname: user.lastname,
         email: user.email,
+        avatar: user.avatar,
         roles: user.roles?.map((r) => r.name) || ['user'],
       },
     };
@@ -169,9 +170,26 @@ export class AuthService {
       user = await this.userRepo.save(user);
       await this.voucherService.assignWelcomeVoucher(user.id).catch(() => {});
       user.roles = [defaultRole];
-    } else if (!user.roles || user.roles.length === 0) {
-      user.roles = [defaultRole];
-      await this.userRepo.save(user);
+    } else {
+      // If user exists, update avatar and names if they are empty
+      let changed = false;
+      if (!user.avatar && payload.picture) {
+        user.avatar = payload.picture;
+        changed = true;
+      }
+      if (!user.firstname && payload.given_name) {
+        user.firstname = payload.given_name;
+        changed = true;
+      }
+      if (!user.lastname && payload.family_name) {
+        user.lastname = payload.family_name;
+        changed = true;
+      }
+      if (!user.roles || user.roles.length === 0) {
+        user.roles = [defaultRole];
+        changed = true;
+      }
+      if (changed) await this.userRepo.save(user);
     }
 
     const jwtPayload = {
@@ -200,6 +218,7 @@ export class AuthService {
         firstname: user.firstname,
         lastname: user.lastname,
         email: user.email,
+        avatar: user.avatar,
         roles: user.roles?.map((r) => r.name) || ['user'],
       },
     };
