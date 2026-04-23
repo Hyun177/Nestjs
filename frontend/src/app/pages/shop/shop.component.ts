@@ -19,7 +19,7 @@ import { NzMenuModule } from 'ng-zorro-antd/menu';
     <div class="shop-page" *ngIf="shop && !loading">
       
       <!-- Premium Glass Header -->
-      <div class="shop-header-wrapper" [style.background-image]="'url(' + getFullUrl(shop.coverImage, 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1200&q=80') + ')'">
+      <div class="shop-header-wrapper" [style.background-image]="'url(' + getFullUrl(shop.coverImage, 'assets/images/shop-3d-bg.png') + ')'">
         <div class="header-glass-overlay">
           <div class="header-main-content">
             <div class="shop-brand">
