@@ -135,7 +135,7 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  @HostListener('window:scroll', ['$event'])
+  @HostListener('window:scroll')
   onWindowScroll() {
     if (isPlatformBrowser(this.platformId)) {
       this.scrollY = window.scrollY;
