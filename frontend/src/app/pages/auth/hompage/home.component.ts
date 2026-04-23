@@ -3,6 +3,7 @@ import { Router, RouterLink } from '@angular/router';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import * as THREE from 'three';
+import { OrbitControls } from 'three-stdlib';
 import { ProductService, Product } from '../../../core/services/product.service';
 import { BrandService } from '../../../core/services/brand.service';
 import { CartService } from '../../../core/services/cart.service';
@@ -178,35 +179,68 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
     parent.appendChild(this.renderer.domElement);
 
     this.camera = new THREE.PerspectiveCamera(45, parent.clientWidth / parent.clientHeight, 0.1, 1000);
-    this.camera.position.z = 15;
+    this.camera.position.z = 18;
 
-    // 1. Center Object: Abstract Wireframe TorusKnot
-    const geometry = new THREE.TorusKnotGeometry(3, 1.2, 128, 32);
-    const material = new THREE.MeshBasicMaterial({ 
-      color: 0x4B6BFF, // Tech blue (matches oklch 250)
-      wireframe: true,
-      transparent: true,
-      opacity: 0.3
+    // Interactive OrbitControls
+    const controls = new OrbitControls(this.camera, this.renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.enableZoom = false; // Disable zoom to not mess with page scroll
+    controls.autoRotate = true;
+    controls.autoRotateSpeed = 1.0;
+
+    // Lights for glass material
+    const ambientLight = new THREE.AmbientLight(0xffffff, 1.2);
+    this.scene.add(ambientLight);
+
+    const dirLight = new THREE.DirectionalLight(0xffffff, 2.5);
+    dirLight.position.set(10, 10, 10);
+    this.scene.add(dirLight);
+
+    const blueLight = new THREE.PointLight(0x4B6BFF, 5, 20);
+    blueLight.position.set(-5, -5, 5);
+    this.scene.add(blueLight);
+
+    // 1. Center Object: Abstract Glassy TorusKnot (similar to generated blobs)
+    const geometry = new THREE.TorusKnotGeometry(3.5, 1.2, 200, 64);
+    const material = new THREE.MeshPhysicalMaterial({ 
+      color: 0x4B6BFF,
+      metalness: 0.1,
+      roughness: 0.1,
+      transmission: 0.95, // glassy transparent
+      thickness: 2.0,
+      ior: 1.5,
+      clearcoat: 1.0,
+      clearcoatRoughness: 0.1
     });
     this.centerMesh = new THREE.Mesh(geometry, material);
     this.scene.add(this.centerMesh);
 
+    // Add secondary rotating object inside the knot
+    const innerGeometry = new THREE.IcosahedronGeometry(1.8, 0);
+    const innerMaterial = new THREE.MeshPhysicalMaterial({
+      color: 0x8DA2FF,
+      metalness: 0.8,
+      roughness: 0.2,
+      clearcoat: 1.0
+    });
+    const innerMesh = new THREE.Mesh(innerGeometry, innerMaterial);
+    this.scene.add(innerMesh);
+
     // 2. Particle Geometry
     const particlesGeo = new THREE.BufferGeometry();
-    const particlesCount = 800;
+    const particlesCount = 1500;
     const posArray = new Float32Array(particlesCount * 3);
     for(let i=0; i<particlesCount*3; i++) {
-        // Spread particles around
-        posArray[i] = (Math.random() - 0.5) * 40;
+        posArray[i] = (Math.random() - 0.5) * 50;
     }
     particlesGeo.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
     
-    // Abstract glowy tech blue dots
     const particlesMat = new THREE.PointsMaterial({
-        size: 0.12,
+        size: 0.15,
         color: 0x8DA2FF,
         transparent: true,
-        opacity: 0.8,
+        opacity: 0.9,
         blending: THREE.AdditiveBlending
     });
     this.particleSystem = new THREE.Points(particlesGeo, particlesMat);
@@ -216,27 +250,27 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
       this.animationId = requestAnimationFrame(animate);
 
       // Base rotation
-      this.centerMesh.rotation.x += 0.002;
-      this.centerMesh.rotation.y += 0.003;
+      this.centerMesh.rotation.x += 0.001;
+      this.centerMesh.rotation.y += 0.002;
+      innerMesh.rotation.x -= 0.003;
+      innerMesh.rotation.y -= 0.002;
       
-      this.particleSystem.rotation.y += 0.001;
+      this.particleSystem.rotation.y += 0.0005;
 
       // Interactive scroll effect
-      // When scrolling down, camera rotates/moves around the object
       const scrollProxy = this.scrollY * 0.001;
-      this.camera.position.y = -scrollProxy * 2;
-      // Object rotates faster on scroll
-      this.centerMesh.rotation.z = scrollProxy * Math.PI;
+      this.centerMesh.position.y = scrollProxy * 1.5;
+      
+      // Update OrbitControls
+      controls.update();
 
-      // Mouse Parallax effect
-      const targetX = this.mouseX * 0.5;
-      const targetY = this.mouseY * 0.5;
+      // Mouse Parallax effect overlaid on controls
+      const targetX = this.mouseX * 0.3;
+      const targetY = this.mouseY * 0.3;
       
       this.particleSystem.rotation.x += 0.02 * (targetY - this.particleSystem.rotation.x);
       this.particleSystem.rotation.y += 0.02 * (targetX - this.particleSystem.rotation.y);
-      this.camera.position.x += (this.mouseX * 1.5 - this.camera.position.x) * 0.05;
 
-      this.camera.lookAt(this.scene.position);
       this.renderer.render(this.scene, this.camera);
     };
 

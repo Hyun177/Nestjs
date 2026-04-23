@@ -12,7 +12,7 @@
 
 /* ── Newsletter Card ──────────────────────────────────────────── */
 .newsletter-card {
-  background: var(--color-accent);
+  background: oklch(0.16 0.02 258);
   border-radius: var(--radius-xl);
   padding: 3rem 4rem;
   display: flex;
@@ -25,11 +25,12 @@
   width: calc(100% - 2rem);
   max-width: 1240px;
   gap: 2rem;
-  box-shadow: 0 24px 60px oklch(0.78 0.17 75 / 0.35);
+  border: 1px solid oklch(1 0 0 / 0.1);
+  box-shadow: 0 24px 60px oklch(0 0 0 / 0.4), inset 0 1px 1px oklch(1 0 0 / 0.1);
 
   .newsletter-title {
     font-family: var(--font-display);
-    color: var(--color-text-primary);
+    color: var(--color-surface-raised);
     font-size: clamp(1.75rem, 3vw, 2.75rem);
     font-weight: 900;
     margin: 0;
@@ -82,8 +83,8 @@
     }
 
     .btn-subscribe {
-      background: var(--color-text-primary);
-      color: var(--color-accent);
+      background: var(--color-accent);
+      color: var(--color-surface-raised);
       border-radius: var(--radius-pill);
       padding: 0.8rem;
       font-family: var(--font-body);
@@ -96,16 +97,17 @@
       letter-spacing: 0.02em;
 
       &:hover:not(:disabled) {
-        background: oklch(0.22 0.025 258);
+        background: var(--color-accent-hover);
         transform: translateY(-1px);
+        box-shadow: var(--shadow-accent);
       }
 
       &:disabled { opacity: 0.6; cursor: not-allowed; }
     }
 
     .btn-subscribe-big {
-      background: var(--color-text-primary);
-      color: var(--color-accent);
+      background: var(--color-accent);
+      color: var(--color-surface-raised);
       border-radius: var(--radius-md);
       padding: 1.1rem var(--space-4);
       font-family: var(--font-body);
@@ -119,8 +121,9 @@
       transition: all var(--duration-fast) var(--ease-out-quart);
 
       &:hover:not(:disabled) {
-        background: oklch(0.22 0.025 258);
+        background: var(--color-accent-hover);
         transform: translateY(-1px);
+        box-shadow: var(--shadow-accent);
       }
 
       &:active { transform: translateY(0); }
