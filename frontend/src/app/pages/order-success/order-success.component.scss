@@ -1,6 +1,13 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+/* ═══════════════════════════════════════════════════════════════
+   SOFTBEE Order Success — Sharp Aesthetic
+   ═══════════════════════════════════════════════════════════════ */
 
-:host { display: block; background: #f5f5f7; min-height: 100vh; font-family: 'Inter', sans-serif; }
+:host {
+  display: block;
+  background: var(--color-surface-base);
+  min-height: 100vh;
+  font-family: var(--font-body);
+}
 
 .success-page {
   display: flex;
@@ -16,26 +23,27 @@
   text-align: center;
 }
 
-// Animated checkmark
+/* ── Animated checkmark ─────────────────────────────────────── */
 .check-wrap {
   display: flex;
   justify-content: center;
-  margin-bottom: 28px;
+  margin-bottom: var(--space-6);
 }
 
 .check-circle {
   width: 88px;
   height: 88px;
   border-radius: 50%;
-  background: #111;
+  background: var(--color-text-primary);
   display: flex;
   align-items: center;
   justify-content: center;
-  animation: pop .4s cubic-bezier(.34, 1.56, .64, 1) both;
+  animation: pop .4s var(--ease-out-quart) both;
+  box-shadow: 0 12px 32px oklch(0.14 0.02 258 / 0.15);
 
   .check-icon {
     font-size: 40px;
-    color: #fff;
+    color: var(--color-surface-base);
   }
 }
 
@@ -45,31 +53,33 @@
 }
 
 .title {
-  font-size: 28px;
+  font-family: var(--font-display);
+  font-size: 2.2rem;
   font-weight: 900;
-  color: #111;
+  color: var(--color-text-primary);
   margin: 0 0 10px;
-  letter-spacing: -.5px;
+  letter-spacing: -0.04em;
 }
 
 .subtitle {
-  font-size: 14px;
-  color: #666;
-  margin: 0 0 32px;
+  font-size: 0.95rem;
+  color: var(--color-text-secondary);
+  margin: 0 0 var(--space-8);
   font-weight: 500;
 }
 
-// Order info card
+/* ── Order info card ────────────────────────────────────────── */
 .order-card {
-  background: #fff;
-  border: 1px solid #e5e7eb;
-  border-radius: 20px;
-  padding: 24px;
-  margin-bottom: 28px;
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+  margin-bottom: var(--space-8);
   text-align: left;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: var(--space-4);
+  box-shadow: var(--shadow-card);
 }
 
 .order-row {
@@ -77,20 +87,20 @@
   justify-content: space-between;
   align-items: flex-start;
   gap: 12px;
-  font-size: 13px;
+  font-size: 0.85rem;
 
-  .label { color: #888; font-weight: 500; flex-shrink: 0; }
-  .value { color: #111; font-weight: 600; text-align: right; }
-  .bold  { font-weight: 800; font-size: 14px; }
+  .label { color: var(--color-text-secondary); font-weight: 600; flex-shrink: 0; }
+  .value { color: var(--color-text-primary); font-weight: 700; text-align: right; }
+  .bold  { font-family: var(--font-display); font-weight: 900; font-size: 1.1rem; color: var(--color-danger); letter-spacing: -0.02em; }
 }
 
-// Steps
+/* ── Steps ──────────────────────────────────────────────────── */
 .steps-note {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  margin-bottom: 36px;
+  margin-bottom: var(--space-8);
   flex-wrap: wrap;
 }
 
@@ -99,25 +109,25 @@
   flex-direction: column;
   align-items: center;
   gap: 6px;
-  font-size: 11px;
-  font-weight: 700;
-  color: #555;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--color-text-tertiary);
   text-transform: uppercase;
-  letter-spacing: .05em;
+  letter-spacing: 0.05em;
 
-  [nz-icon] { font-size: 20px; color: #111; }
+  [nz-icon] { font-size: 1.4rem; color: var(--color-text-primary); }
 }
 
 .step-arrow {
-  color: #ccc;
-  font-size: 12px;
+  color: var(--color-border-strong);
+  font-size: 0.8rem;
   margin-bottom: 18px;
 }
 
-// Action buttons
+/* ── Action buttons ─────────────────────────────────────────── */
 .actions {
   display: flex;
-  gap: 12px;
+  gap: var(--space-3);
   justify-content: center;
   flex-wrap: wrap;
 }
@@ -127,15 +137,19 @@
   align-items: center;
   gap: 7px;
   height: 48px;
-  padding: 0 24px;
-  border: 2px solid #111;
-  border-radius: 99px;
-  font-size: 13px;
+  padding: 0 var(--space-6);
+  border: 1.5px solid var(--color-text-primary);
+  border-radius: var(--radius-md);
+  font-size: 0.85rem;
   font-weight: 800;
-  color: #111;
+  color: var(--color-text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
   text-decoration: none;
-  transition: all .2s;
-  &:hover { background: #111; color: #fff; }
+  transition: all var(--duration-fast);
+  background: transparent;
+
+  &:hover { background: var(--color-text-primary); color: var(--color-surface-base); }
 }
 
 .btn-black {
@@ -143,13 +157,16 @@
   align-items: center;
   gap: 7px;
   height: 48px;
-  padding: 0 24px;
-  background: #111;
-  border-radius: 99px;
-  font-size: 13px;
+  padding: 0 var(--space-6);
+  background: var(--color-text-primary);
+  border-radius: var(--radius-md);
+  font-size: 0.85rem;
   font-weight: 800;
-  color: #fff;
+  color: var(--color-surface-base);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
   text-decoration: none;
-  transition: all .2s;
-  &:hover { background: #333; }
+  transition: all var(--duration-fast);
+
+  &:hover { background: var(--color-accent); color: var(--color-text-primary); box-shadow: var(--shadow-accent); transform: translateY(-1px); }
 }

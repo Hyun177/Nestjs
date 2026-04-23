@@ -733,7 +733,7 @@
     &:focus {
       background: var(--color-surface-raised) !important;
       border-color: var(--color-accent) !important;
-      box-shadow: 0 0 0 2px oklch(0.78 0.17 75 / 0.2) !important;
+      box-shadow: 0 0 0 2px oklch(0.68 0.16 250 / 0.2) !important;
     }
 
     &[disabled] { opacity: 0.5; color: var(--color-text-secondary); cursor: not-allowed; }

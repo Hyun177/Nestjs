@@ -1,7 +1,8 @@
-import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef, ViewChild, ElementRef, AfterViewInit, OnDestroy, HostListener, PLATFORM_ID } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
-import { CommonModule } from '@angular/common';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import * as THREE from 'three';
 import { ProductService, Product } from '../../../core/services/product.service';
 import { BrandService } from '../../../core/services/brand.service';
 import { CartService } from '../../../core/services/cart.service';
@@ -19,7 +20,7 @@ import { NzMessageService } from 'ng-zorro-antd/message';
   styleUrls: ['./home.component.scss'],
   providers: [NzMessageService],
 })
-export class HomeComponent implements OnInit {
+export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   private productService = inject(ProductService);
   private brandService = inject(BrandService);
   private cartService = inject(CartService);
@@ -27,6 +28,18 @@ export class HomeComponent implements OnInit {
   private router = inject(Router);
   private message = inject(NzMessageService);
   private cdr = inject(ChangeDetectorRef);
+  private platformId = inject(PLATFORM_ID);
+
+  @ViewChild('hero3dContainer') hero3dContainer!: ElementRef;
+  private scene!: THREE.Scene;
+  private camera!: THREE.PerspectiveCamera;
+  private renderer!: THREE.WebGLRenderer;
+  private centerMesh!: THREE.Mesh;
+  private particleSystem!: THREE.Points;
+  private animationId: number = 0;
+  private scrollY: number = 0;
+  private mouseX: number = 0;
+  private mouseY: number = 0;
 
   products: Product[] = [];
   topSelling: Product[] = [];
@@ -94,6 +107,140 @@ export class HomeComponent implements OnInit {
   ngOnInit() {
     this.fetchData();
     this.loadFavorites();
+  }
+
+  ngAfterViewInit() {
+    if (isPlatformBrowser(this.platformId)) {
+      // Delay initialization slightly to let layout computing stabilize
+      setTimeout(() => {
+        this.initThreeJS();
+      }, 100);
+    }
+  }
+
+  ngOnDestroy() {
+    if (isPlatformBrowser(this.platformId)) {
+      cancelAnimationFrame(this.animationId);
+      if (this.renderer) {
+        this.renderer.dispose();
+      }
+      if (this.centerMesh) {
+        this.centerMesh.geometry.dispose();
+        (this.centerMesh.material as THREE.Material).dispose();
+      }
+      if (this.particleSystem) {
+        this.particleSystem.geometry.dispose();
+        (this.particleSystem.material as THREE.Material).dispose();
+      }
+    }
+  }
+
+  @HostListener('window:scroll', ['$event'])
+  onWindowScroll() {
+    if (isPlatformBrowser(this.platformId)) {
+      this.scrollY = window.scrollY;
+    }
+  }
+
+  @HostListener('document:mousemove', ['$event'])
+  onMouseMove(event: MouseEvent) {
+    if (isPlatformBrowser(this.platformId)) {
+      this.mouseX = (event.clientX / window.innerWidth) * 2 - 1;
+      this.mouseY = -(event.clientY / window.innerHeight) * 2 + 1;
+    }
+  }
+
+  @HostListener('window:resize')
+  onWindowResize() {
+    if (this.camera && this.renderer && this.hero3dContainer) {
+      const parent = this.hero3dContainer.nativeElement as HTMLElement;
+      this.camera.aspect = parent.clientWidth / parent.clientHeight;
+      this.camera.updateProjectionMatrix();
+      this.renderer.setSize(parent.clientWidth, parent.clientHeight);
+    }
+  }
+
+  private initThreeJS() {
+    const parent = this.hero3dContainer.nativeElement as HTMLElement;
+    if (!parent || parent.clientWidth === 0) return;
+
+    // Remove fallback image if WebGL initializes successfully
+    const fallback = parent.querySelector('.fallback-img');
+    if (fallback) fallback.remove();
+
+    // Init Scene & Camera
+    this.scene = new THREE.Scene();
+    
+    // Abstract dark background, but we make scene transparent to blend with CSS
+    this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    this.renderer.setSize(parent.clientWidth, parent.clientHeight);
+    this.renderer.setPixelRatio(window.devicePixelRatio);
+    parent.appendChild(this.renderer.domElement);
+
+    this.camera = new THREE.PerspectiveCamera(45, parent.clientWidth / parent.clientHeight, 0.1, 1000);
+    this.camera.position.z = 15;
+
+    // 1. Center Object: Abstract Wireframe TorusKnot
+    const geometry = new THREE.TorusKnotGeometry(3, 1.2, 128, 32);
+    const material = new THREE.MeshBasicMaterial({ 
+      color: 0x4B6BFF, // Tech blue (matches oklch 250)
+      wireframe: true,
+      transparent: true,
+      opacity: 0.3
+    });
+    this.centerMesh = new THREE.Mesh(geometry, material);
+    this.scene.add(this.centerMesh);
+
+    // 2. Particle Geometry
+    const particlesGeo = new THREE.BufferGeometry();
+    const particlesCount = 800;
+    const posArray = new Float32Array(particlesCount * 3);
+    for(let i=0; i<particlesCount*3; i++) {
+        // Spread particles around
+        posArray[i] = (Math.random() - 0.5) * 40;
+    }
+    particlesGeo.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+    
+    // Abstract glowy tech blue dots
+    const particlesMat = new THREE.PointsMaterial({
+        size: 0.12,
+        color: 0x8DA2FF,
+        transparent: true,
+        opacity: 0.8,
+        blending: THREE.AdditiveBlending
+    });
+    this.particleSystem = new THREE.Points(particlesGeo, particlesMat);
+    this.scene.add(this.particleSystem);
+
+    const animate = () => {
+      this.animationId = requestAnimationFrame(animate);
+
+      // Base rotation
+      this.centerMesh.rotation.x += 0.002;
+      this.centerMesh.rotation.y += 0.003;
+      
+      this.particleSystem.rotation.y += 0.001;
+
+      // Interactive scroll effect
+      // When scrolling down, camera rotates/moves around the object
+      const scrollProxy = this.scrollY * 0.001;
+      this.camera.position.y = -scrollProxy * 2;
+      // Object rotates faster on scroll
+      this.centerMesh.rotation.z = scrollProxy * Math.PI;
+
+      // Mouse Parallax effect
+      const targetX = this.mouseX * 0.5;
+      const targetY = this.mouseY * 0.5;
+      
+      this.particleSystem.rotation.x += 0.02 * (targetY - this.particleSystem.rotation.x);
+      this.particleSystem.rotation.y += 0.02 * (targetX - this.particleSystem.rotation.y);
+      this.camera.position.x += (this.mouseX * 1.5 - this.camera.position.x) * 0.05;
+
+      this.camera.lookAt(this.scene.position);
+      this.renderer.render(this.scene, this.camera);
+    };
+
+    animate();
   }
 
   fetchData() {

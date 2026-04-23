@@ -26,7 +26,7 @@ export class RegisterComponent implements OnInit, OnDestroy {
 
   registerForm: FormGroup;
   // Slider Data
-  images = ['hinh1.jpg', 'hinh2.jpg', 'hinh3.jpg'];
+  images = ['assets/images/auth-3d-bg.png'];
   currentIndex = 0;
   passwordVisible = false;
   confirmPasswordVisible = false;

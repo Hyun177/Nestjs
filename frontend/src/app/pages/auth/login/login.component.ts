@@ -73,7 +73,7 @@ export class LoginComponent implements OnInit, OnDestroy {
     }
   }
   // Slider Data
-  images = ['hinh1.jpg', 'hinh2.jpg', 'hinh3.jpg'];
+  images = ['assets/images/auth-3d-bg.png'];
   currentIndex = 0;
   slideInterval: any;
 

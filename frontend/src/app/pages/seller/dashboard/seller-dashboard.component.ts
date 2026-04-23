@@ -134,25 +134,25 @@ import { VndCurrencyPipe } from '../../../shared/pipes/vnd-currency.pipe';
           <div class="card-header"><h3>Truy cập nhanh</h3></div>
           <div class="quick-links">
             <a routerLink="/seller/product-upload" class="quick-link-item">
-              <div class="ql-icon" style="background:#eef2ff;color:#6366f1">
+              <div class="ql-icon" style="background:var(--color-accent-subtle);color:var(--color-accent)">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
               </div>
               <div><p>Đăng sản phẩm mới</p><span>Tải sản phẩm lên cửa hàng</span></div>
             </a>
             <a routerLink="/seller/categories" class="quick-link-item">
-              <div class="ql-icon" style="background:#f0fdf4;color:#10b981">
+              <div class="ql-icon" style="background:var(--color-success-subtle);color:var(--color-success)">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
               </div>
               <div><p>Quản lý danh mục</p><span>Thêm/sửa danh mục shop</span></div>
             </a>
             <a routerLink="/seller/brands" class="quick-link-item">
-              <div class="ql-icon" style="background:#fff7ed;color:#f59e0b">
+              <div class="ql-icon" style="background:var(--color-surface-sunken);color:var(--color-accent)">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg>
               </div>
               <div><p>Quản lý thương hiệu</p><span>Tạo và quản lý brand</span></div>
             </a>
             <a routerLink="/seller/orders" class="quick-link-item">
-              <div class="ql-icon" style="background:#fdf2f8;color:#ec4899">
+              <div class="ql-icon" style="background:var(--color-danger-subtle);color:var(--color-danger)">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
               </div>
               <div><p>Quản lý đơn hàng</p><span>Xem và xử lý đơn hàng</span></div>
@@ -163,82 +163,81 @@ import { VndCurrencyPipe } from '../../../shared/pipes/vnd-currency.pipe';
     </div>
   `,
   styles: [`
-    .seller-dash { padding: 0; max-width: 1400px; margin: 0 auto; display: flex; flex-direction: column; gap: 24px; }
+    .seller-dash { padding: 0; max-width: 1400px; margin: 0 auto; display: flex; flex-direction: column; gap: var(--space-6); font-family: var(--font-body); }
 
     /* Welcome */
-    .welcome-banner { background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%); border-radius: 20px; padding: 40px; display: flex; justify-content: space-between; align-items: center; position: relative; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
-    .welcome-banner::after { content: ''; position: absolute; top: -50%; right: -10%; width: 400px; height: 400px; background: radial-gradient(circle, rgba(99,102,241,0.2) 0%, transparent 70%); border-radius: 50%; }
-    .welcome-text h1 { margin: 0; font-size: 2rem; font-weight: 800; color: #fff; letter-spacing: -0.5px; }
-    .welcome-text p { margin: 10px 0 0; color: #c7d2fe; font-size: 1.05rem; font-weight: 500; }
-    .banner-date { background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); color: #fff; padding: 10px 24px; border-radius: 12px; font-weight: 700; font-size: 0.9rem; border: 1px solid rgba(255,255,255,0.15); }
+    .welcome-banner { background: linear-gradient(135deg, var(--color-surface-dark-2) 0%, var(--color-surface-dark) 100%); border-radius: var(--radius-xl); padding: var(--space-12); display: flex; justify-content: space-between; align-items: center; position: relative; overflow: hidden; box-shadow: var(--shadow-card); }
+    .welcome-banner::after { content: ''; position: absolute; top: -50%; right: -10%; width: 400px; height: 400px; background: radial-gradient(circle, oklch(0.68 0.16 250 / 0.1) 0%, transparent 70%); border-radius: 50%; }
+    .welcome-text h1 { margin: 0; font-family: var(--font-display); font-size: 2.2rem; font-weight: 900; color: var(--color-text-on-dark); letter-spacing: -0.02em; }
+    .welcome-text p { margin: 8px 0 0; color: var(--color-text-on-dark-muted); font-size: 1.05rem; font-weight: 500; }
+    .banner-date { background: oklch(1 0 0 / 0.1); backdrop-filter: blur(10px); color: var(--color-text-on-dark); padding: 10px 24px; border-radius: var(--radius-md); font-weight: 800; font-size: 0.9rem; border: 1px solid oklch(1 0 0 / 0.15); text-transform: uppercase; letter-spacing: 0.05em; }
 
     /* Stat Cards */
-    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
-    .stat-card { background: #fff; border-radius: 18px; padding: 24px; display: flex; align-items: center; gap: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.04); border: 1px solid #f1f5f9; transition: all 0.3s ease; position: relative; overflow: hidden; }
-    .stat-card:hover { transform: translateY(-5px); box-shadow: 0 12px 30px rgba(0,0,0,0.08); border-color: #6366f1; }
-    .stat-icon { width: 56px; height: 56px; border-radius: 14px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-4); }
+    .stat-card { background: var(--color-surface-raised); border-radius: var(--radius-lg); padding: var(--space-6); display: flex; align-items: center; gap: var(--space-4); box-shadow: var(--shadow-card); border: 1px solid var(--color-border); transition: all var(--duration-fast); position: relative; overflow: hidden; }
+    .stat-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-hover); border-color: var(--color-border-strong); }
+    .stat-icon { width: 56px; height: 56px; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
     .stat-body { flex: 1; }
-    .stat-label { margin: 0; font-size: 0.8rem; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
-    .stat-value { margin: 4px 0 0; font-size: 1.6rem; font-weight: 800; color: #0f172a; line-height: 1.2; }
-    .stat-unit { font-size: 0.75rem; color: #94a3b8; font-weight: 500; }
-    .stat-trend { position: absolute; top: 16px; right: 16px; color: #10b981; display: flex; align-items: center; }
+    .stat-label { margin: 0; font-size: 0.75rem; color: var(--color-text-tertiary); font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; }
+    .stat-value { margin: 4px 0 0; font-family: var(--font-display); font-size: 1.6rem; font-weight: 900; color: var(--color-text-primary); line-height: 1.2; letter-spacing: -0.02em; }
+    .stat-unit { font-size: 0.75rem; color: var(--color-text-secondary); font-weight: 600; }
+    .stat-trend { position: absolute; top: 16px; right: 16px; color: var(--color-success); display: flex; align-items: center; }
 
     /* Charts */
-    .charts-row { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
-    .chart-card { background: #fff; border-radius: 20px; padding: 24px; box-shadow: 0 4px 16px rgba(0,0,0,0.04); border: 1px solid #f1f5f9; }
-    .chart-card.wide { }
-    .chart-body { height: 240px; position: relative; }
+    .charts-row { display: grid; grid-template-columns: 2fr 1fr; gap: var(--space-4); }
+    .chart-card { background: var(--color-surface-raised); border-radius: var(--radius-lg); padding: var(--space-6); box-shadow: var(--shadow-card); border: 1px solid var(--color-border); }
+    .chart-body { height: 260px; position: relative; }
     .chart-body canvas { max-height: 100%; }
 
     /* Card Header */
-    .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
-    .card-header h3 { margin: 0; font-size: 1.15rem; font-weight: 700; color: #1e293b; position: relative; padding-left: 14px; }
-    .card-header h3::before { content: ''; position: absolute; left: 0; top: 15%; height: 70%; width: 4px; background: #6366f1; border-radius: 4px; }
-    .view-all-btn { font-size: 0.85rem; color: #6366f1; font-weight: 700; text-decoration: none; transition: all 0.2s; display: flex; align-items: center; gap: 4px; }
-    .view-all-btn:hover { color: #4f46e5; transform: translateX(5px); }
+    .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-6); }
+    .card-header h3 { margin: 0; font-family: var(--font-display); font-size: 1.25rem; font-weight: 900; color: var(--color-text-primary); position: relative; padding-left: 14px; letter-spacing: -0.01em; }
+    .card-header h3::before { content: ''; position: absolute; left: 0; top: 15%; height: 70%; width: 5px; background: var(--color-accent); border-radius: 4px; }
+    .view-all-btn { font-size: 0.8rem; color: var(--color-accent); font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; text-decoration: none; transition: all var(--duration-fast); display: flex; align-items: center; gap: 4px; }
+    .view-all-btn:hover { color: var(--color-text-primary); transform: translateX(4px); }
 
     /* Tables */
-    .table-card { background: #fff; border-radius: 20px; padding: 24px; box-shadow: 0 4px 16px rgba(0,0,0,0.04); border: 1px solid #f1f5f9; }
+    .table-card { background: var(--color-surface-raised); border-radius: var(--radius-xl); padding: var(--space-6); box-shadow: var(--shadow-card); border: 1px solid var(--color-border); }
     .table-wrap { overflow-x: auto; }
     .data-table { width: 100%; border-collapse: collapse; }
-    .data-table thead th { padding: 12px 16px; text-align: left; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: #64748b; letter-spacing: 0.05em; border-bottom: 1.5px solid #f1f5f9; background: #f8fafc; }
-    .data-table tbody td { padding: 14px 16px; font-size: 0.875rem; color: #1e293b; border-bottom: 1px solid #f8fafc; }
+    .data-table thead th { padding: 14px 16px; text-align: left; font-size: 0.72rem; font-weight: 800; text-transform: uppercase; color: var(--color-text-tertiary); letter-spacing: 0.1em; border-bottom: 2px solid var(--color-border); background: var(--color-surface-sunken); }
+    .data-table tbody td { padding: 16px; font-size: 0.9rem; color: var(--color-text-primary); border-bottom: 1px solid var(--color-border); font-weight: 500; }
     .data-table tbody tr:last-child td { border-bottom: none; }
-    .data-table tbody tr:hover { background: #fafbff; }
-    .order-code { font-weight: 700; color: #6366f1; }
-    .status-badge { padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; }
-    .empty-row { text-align: center; color: #94a3b8; padding: 40px 0 !important; }
+    .data-table tbody tr:hover { background: var(--color-surface-sunken); }
+    .order-code { font-weight: 800; color: var(--color-accent); font-family: monospace; font-size: 1rem; }
+    .status-badge { padding: 6px 12px; border-radius: var(--radius-pill); font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; }
+    .empty-row { text-align: center; color: var(--color-text-tertiary); padding: 40px 0 !important; font-weight: 600; }
 
     /* Bottom Row */
-    .bottom-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-    .table-card.half { }
+    .bottom-row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
 
     /* Product List */
-    .product-list { display: flex; flex-direction: column; gap: 12px; }
-    .product-item { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid #f8fafc; }
+    .product-list { display: flex; flex-direction: column; gap: var(--space-2); }
+    .product-item { display: flex; align-items: center; gap: 14px; padding: 12px; border-radius: var(--radius-sm); border-bottom: 1px solid var(--color-surface-sunken); transition: background var(--duration-fast); }
+    .product-item:hover { background: var(--color-surface-sunken); }
     .product-item:last-child { border-bottom: none; }
-    .rank { width: 24px; height: 24px; border-radius: 50%; background: #f1f5f9; color: #64748b; display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 800; flex-shrink: 0; }
-    .rank.gold { background: #fef3c7; color: #d97706; }
-    .rank.silver { background: #f1f5f9; color: #475569; }
-    .rank.bronze { background: #fff7ed; color: #9a3412; }
-    .product-thumb { width: 40px; height: 40px; border-radius: 10px; object-fit: cover; flex-shrink: 0; }
-    .product-avatar { width: 40px; height: 40px; border-radius: 10px; background: linear-gradient(135deg, #6366f1, #a855f7); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 800; flex-shrink: 0; }
+    .rank { width: 28px; height: 28px; border-radius: 50%; background: var(--color-surface-sunken); color: var(--color-text-tertiary); display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 900; flex-shrink: 0; }
+    .rank.gold { background: var(--color-accent-subtle); color: var(--color-accent); }
+    .rank.silver { background: oklch(0.9 0.02 255); color: oklch(0.5 0.02 255); }
+    .rank.bronze { background: oklch(0.9 0.02 50); color: oklch(0.5 0.04 50); }
+    .product-thumb { width: 44px; height: 44px; border-radius: var(--radius-sm); object-fit: cover; flex-shrink: 0; border: 1px solid var(--color-border); }
+    .product-avatar { width: 44px; height: 44px; border-radius: var(--radius-sm); background: var(--color-surface-dark); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 1.1rem; flex-shrink: 0; }
     .product-info { flex: 1; min-width: 0; }
-    .product-name { display: block; font-weight: 600; font-size: 0.875rem; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .product-meta { font-size: 0.75rem; color: #94a3b8; }
-    .product-price { font-weight: 700; font-size: 0.875rem; color: #ef4444; white-space: nowrap; }
+    .product-name { display: block; font-weight: 700; font-size: 0.9rem; color: var(--color-text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .product-meta { font-size: 0.75rem; color: var(--color-text-tertiary); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+    .product-price { font-weight: 800; font-size: 1rem; color: var(--color-danger); white-space: nowrap; font-family: var(--font-display); }
 
     /* Quick Links */
-    .quick-links { display: flex; flex-direction: column; gap: 14px; }
-    .quick-link-item { display: flex; align-items: center; gap: 16px; padding: 18px; border-radius: 16px; background: #fff; text-decoration: none; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); border: 1px solid #f1f5f9; }
-    .quick-link-item:hover { background: #fdfcff; border-color: #6366f1; transform: translateX(8px) translateY(-2px); box-shadow: 0 10px 20px rgba(99, 102, 241, 0.05); }
-    .ql-icon { width: 50px; height: 50px; border-radius: 14px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: inset 0 2px 4px rgba(255,255,255,0.5); }
-    .quick-link-item div p { margin: 0; font-weight: 700; font-size: 1rem; color: #0f172a; }
-    .quick-link-item div span { font-size: 0.8rem; color: #64748b; font-weight: 500; }
+    .quick-links { display: flex; flex-direction: column; gap: var(--space-3); }
+    .quick-link-item { display: flex; align-items: center; gap: 16px; padding: 18px; border-radius: var(--radius-md); background: var(--color-surface-raised); text-decoration: none; transition: all var(--duration-fast); border: 1px solid var(--color-border); }
+    .quick-link-item:hover { background: var(--color-surface-sunken); border-color: var(--color-accent); transform: translateX(4px); box-shadow: var(--shadow-card); }
+    .ql-icon { width: 50px; height: 50px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .quick-link-item p { margin: 0; font-weight: 800; font-size: 0.9rem; color: var(--color-text-primary); text-transform: uppercase; letter-spacing: 0.05em; }
+    .quick-link-item span { font-size: 0.8rem; color: var(--color-text-secondary); font-weight: 600; }
 
     /* Loading */
-    .loading-state { display: flex; align-items: center; gap: 12px; padding: 24px; color: #64748b; }
-    .spinner { width: 20px; height: 20px; border: 3px solid #f1f5f9; border-top-color: #6366f1; border-radius: 50%; animation: spin 0.8s linear infinite; }
+    .loading-state { display: flex; align-items: center; justify-content: center; gap: 12px; padding: 40px; color: var(--color-text-tertiary); font-weight: 700; font-size: 0.9rem; }
+    .spinner { width: 24px; height: 24px; border: 3px solid var(--color-border); border-top-color: var(--color-text-primary); border-radius: 50%; animation: spin 0.8s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
     @media (max-width: 1200px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
@@ -287,22 +286,22 @@ export class SellerDashboardComponent implements OnInit, AfterViewInit, OnDestro
   readonly statCards: { key: string; title: string; unit: string; color: string; bgColor: string; svgIcon: SafeHtml }[] = [
     {
       key: 'revenue', title: 'Doanh thu', unit: 'VNĐ',
-      color: '#6366f1', bgColor: '#eef2ff',
+      color: 'var(--color-accent)', bgColor: 'var(--color-accent-subtle)',
       svgIcon: this.sanitizer.bypassSecurityTrustHtml(`<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>`),
     },
     {
       key: 'orders', title: 'Đơn hàng', unit: 'đơn',
-      color: '#10b981', bgColor: '#ecfdf5',
+      color: 'var(--color-success)', bgColor: 'var(--color-success-subtle)',
       svgIcon: this.sanitizer.bypassSecurityTrustHtml(`<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>`),
     },
     {
       key: 'products', title: 'Sản phẩm', unit: 'sản phẩm',
-      color: '#f59e0b', bgColor: '#fffbeb',
+      color: 'var(--color-accent)', bgColor: 'var(--color-surface-sunken)',
       svgIcon: this.sanitizer.bypassSecurityTrustHtml(`<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>`),
     },
     {
       key: 'categories', title: 'Danh mục', unit: 'loại',
-      color: '#ef4444', bgColor: '#fef2f2',
+      color: 'var(--color-danger)', bgColor: 'var(--color-danger-subtle)',
       svgIcon: this.sanitizer.bypassSecurityTrustHtml(`<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="7" height="7"/><rect x="15" y="3" width="7" height="7"/><rect x="15" y="14" width="7" height="7"/><rect x="2" y="14" width="7" height="7"/></svg>`),
     },
   ];

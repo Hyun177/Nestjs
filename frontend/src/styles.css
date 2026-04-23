@@ -26,11 +26,11 @@
   --color-text-on-dark:    oklch(0.94 0.005 255);    /* text on dark surface */
   --color-text-on-dark-muted: oklch(0.70 0.010 255);
 
-  /* Accent – Electric Amber (use sparingly: CTAs, active, badges) */
-  --color-accent:          oklch(0.78 0.170 75);
-  --color-accent-hover:    oklch(0.72 0.175 72);
-  --color-accent-subtle:   oklch(0.96 0.040 80);
-  --color-accent-text:     oklch(0.30 0.060 55);     /* amber text on light bg */
+  /* Accent – Light Tech Blue (CTAs, active, badges) */
+  --color-accent:          oklch(0.68 0.160 250);
+  --color-accent-hover:    oklch(0.62 0.160 250);
+  --color-accent-subtle:   oklch(0.95 0.050 250);
+  --color-accent-text:     oklch(0.35 0.100 255);    /* blue text on light bg */
 
   /* Danger */
   --color-danger:          oklch(0.56 0.215 25);
@@ -70,7 +70,7 @@
   /* Shadows — minimal, purposeful */
   --shadow-card:  0 1px 3px oklch(0.14 0.02 258 / 0.06), 0 4px 12px oklch(0.14 0.02 258 / 0.04);
   --shadow-hover: 0 8px 28px oklch(0.14 0.02 258 / 0.10);
-  --shadow-accent: 0 4px 16px oklch(0.78 0.17 75 / 0.28);
+  --shadow-accent: 0 4px 16px oklch(0.68 0.16 250 / 0.28);
 
   /* Motion */
   --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);

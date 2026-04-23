@@ -7,9 +7,10 @@
                 <p class="hero-subtitle">{{ heroData.subtitle }}</p>
                 <button class="btn-black" [routerLink]="['/products']">{{ heroData.primaryCta }}</button>
             </div>
-            <div class="hero-image">
-                <img src="https://cdnv2.tgdd.vn/mwg-static/common/News/1576413/hinh-nen-may-tinh-6.jpg"
-                    alt="Hero Fashion">
+            <div class="hero-image" #hero3dContainer>
+                <!-- Three.js Canvas will spawn here. Fallback image below. -->
+                <img src="assets/images/hero-3d-bg.png"
+                    alt="Hero Premium 3D Tech Background" class="fallback-img">
             </div>
         </div>
     </section>
