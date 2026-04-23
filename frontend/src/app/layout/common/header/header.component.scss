@@ -1,202 +1,308 @@
+/* ═══════════════════════════════════════════════════════════════
+   SOFTBEE Header — Sharp · Precise · Electric
+   ═══════════════════════════════════════════════════════════════ */
+
 .app-header {
-  background-color: #ffffff;
-  font-family: 'Inter', sans-serif;
+  background: var(--color-surface-raised);
+  font-family: var(--font-body);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  border-bottom: 1px solid var(--color-border);
+  /* Subtle depth */
+  box-shadow: 0 1px 0 var(--color-border), 0 2px 12px oklch(0.14 0.02 258 / 0.04);
 }
 
+/* ── Promo Banner ─────────────────────────────────────────────── */
 .top-banner {
-  background-color: #000;
-  color: #fff;
-  padding: 0.5rem;
+  background: var(--color-surface-dark);
+  color: var(--color-text-on-dark);
+  padding: 9px var(--space-6);
   text-align: center;
-  font-size: 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
   position: relative;
 
   a {
-    color: #fff;
+    color: var(--color-accent);
     font-weight: 700;
-    text-decoration: underline;
+    text-decoration: none;
+    transition: opacity var(--duration-fast) var(--ease-out-quart);
+
+    &:hover { opacity: 0.8; }
   }
 
   .banner-link {
-    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--color-accent);
     font-weight: 800;
-    text-decoration: underline;
-    margin-left: 6px;
+    margin-left: 8px;
+    padding: 2px 10px;
+    border-radius: var(--radius-pill);
+    background: oklch(0.78 0.17 75 / 0.15);
+    transition: all var(--duration-fast) var(--ease-out-quart);
     cursor: pointer;
+
+    &:hover {
+      background: oklch(0.78 0.17 75 / 0.25);
+      opacity: 1;
+    }
   }
 
   .close-banner {
     position: absolute;
-    right: 1.5rem;
+    right: var(--space-6);
     top: 50%;
     transform: translateY(-50%);
     cursor: pointer;
-    opacity: 0.7;
-    transition: opacity 0.2s;
+    color: var(--color-text-on-dark-muted);
+    font-size: 1rem;
+    transition: color var(--duration-fast);
+    display: flex;
+    align-items: center;
 
-    &:hover {
-      opacity: 1;
-    }
+    &:hover { color: var(--color-text-on-dark); }
   }
 }
 
+/* ── Main Header Row ──────────────────────────────────────────── */
 .header-container {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 1.5rem 1rem;
+  gap: var(--space-8);
+  padding: var(--space-4) var(--space-6);
   max-width: 1440px;
   margin: 0 auto;
 }
 
-.logo-text {
-  font-family: 'Archivo Black', 'Inter', sans-serif;
-  font-weight: 900;
-  font-size: 2rem;
-  letter-spacing: -0.05em;
-  color: #000;
-  margin: 0;
-  cursor: pointer;
+/* ── Logo ─────────────────────────────────────────────────────── */
+.logo-section {
+  flex-shrink: 0;
 }
 
+.logo-text {
+  font-family: var(--font-logo);
+  font-weight: 900;
+  font-size: 1.75rem;
+  letter-spacing: -0.04em;
+  color: var(--color-text-primary);
+  cursor: pointer;
+  position: relative;
+  user-select: none;
+  transition: color var(--duration-fast) var(--ease-out-quart);
+  margin: 0;
+
+  /* Electric amber underline — the brand's signature touch */
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -3px;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--color-accent);
+    border-radius: 2px;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform var(--duration-base) var(--ease-out-quart);
+  }
+
+  &:hover {
+    color: var(--color-accent-text);
+    &::after { transform: scaleX(1); }
+  }
+}
+
+/* ── Navigation ───────────────────────────────────────────────── */
 .nav-links {
   display: flex;
-  gap: 1.5rem;
+  gap: var(--space-1);
   align-items: center;
 
   a {
+    font-family: var(--font-body);
     text-decoration: none;
-    color: #000;
-    font-size: 1rem;
-    font-weight: 500;
+    color: var(--color-text-secondary);
+    font-size: 0.9rem;
+    font-weight: 600;
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius-sm);
     display: flex;
     align-items: center;
-    gap: 0.25rem;
+    gap: 5px;
+    transition: all var(--duration-fast) var(--ease-out-quart);
 
     &:hover {
-      color: #666;
+      color: var(--color-text-primary);
+      background: var(--color-surface-sunken);
+    }
+
+    &.active-nav {
+      color: var(--color-accent-text);
+      background: var(--color-accent-subtle);
     }
   }
 }
 
+/* ── Search Bar ───────────────────────────────────────────────── */
 .search-bar {
   flex: 1;
-  max-width: 600px;
-  margin: 0 2rem;
+  max-width: 520px;
   position: relative;
+  margin: 0 auto;
 
   .search-icon {
     position: absolute;
-    left: 1rem;
+    left: var(--space-4);
     top: 50%;
     transform: translateY(-50%);
-    color: #00000066;
-    font-size: 1.25rem;
+    color: var(--color-text-tertiary);
+    font-size: 1.1rem;
+    pointer-events: none;
+    transition: color var(--duration-fast);
   }
 
   input {
     width: 100%;
-    background-color: #F0F0F0;
-    border: none;
-    border-radius: 99px;
-    padding: 0.75rem 1rem 0.75rem 3rem;
-    font-size: 1rem;
+    background: var(--color-surface-sunken);
+    border: 1.5px solid transparent;
+    border-radius: var(--radius-pill);
+    padding: 10px var(--space-4) 10px 44px;
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    color: var(--color-text-primary);
     outline: none;
+    transition: all var(--duration-fast) var(--ease-out-quart);
 
-    &::placeholder {
-      color: #00000066;
+    &::placeholder { color: var(--color-text-tertiary); }
+
+    &:focus {
+      border-color: var(--color-accent);
+      background: var(--color-surface-raised);
+      box-shadow: 0 0 0 3px oklch(0.78 0.17 75 / 0.12);
+
+      & ~ .search-icon { color: var(--color-accent-text); }
     }
+  }
+
+  /* Focus-within to update icon color */
+  &:focus-within .search-icon {
+    color: var(--color-accent-text);
   }
 }
 
+/* ── Header Actions ───────────────────────────────────────────── */
 .header-actions {
   display: flex;
-  gap: 1.25rem;
+  gap: var(--space-2);
   align-items: center;
+  flex-shrink: 0;
 
   .action-btn {
-    font-size: 1.5rem;
+    font-size: 1.3rem;
     cursor: pointer;
-    color: #000;
-    transition: transform 0.2s;
+    color: var(--color-text-secondary);
+    padding: var(--space-2);
+    border-radius: var(--radius-sm);
+    transition: all var(--duration-fast) var(--ease-out-quart);
+    display: flex;
+    align-items: center;
+    justify-content: center;
 
     &:hover {
-      transform: scale(1.1);
+      color: var(--color-text-primary);
+      background: var(--color-surface-sunken);
+      transform: translateY(-1px);
     }
   }
 
   .cart-container {
     position: relative;
-    display: flex;
-    align-items: center;
 
     .cart-badge {
       position: absolute;
-      top: -8px;
-      right: -8px;
-      background: #FF3333;
-      color: #fff;
-      border-radius: 99px;
-      padding: 2px 5px;
-      font-size: 0.7rem;
-      font-weight: 700;
-      line-height: 1;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-      min-width: 18px;
+      top: -4px;
+      right: -4px;
+      background: var(--color-accent);
+      color: var(--color-text-primary);
+      border-radius: var(--radius-pill);
+      padding: 1px 5px;
+      font-size: 0.65rem;
+      font-weight: 800;
+      line-height: 1.4;
+      min-width: 17px;
       text-align: center;
+      font-family: var(--font-body);
     }
   }
 
   .auth-links {
     display: flex;
-    gap: 1rem;
+    gap: var(--space-2);
     align-items: center;
-    margin-left: 0.5rem;
+    margin-left: var(--space-2);
 
     a {
+      font-family: var(--font-body);
       text-decoration: none;
-      font-size: 0.95rem;
+      font-size: 0.875rem;
       font-weight: 600;
-      transition: all 0.2s;
+      transition: all var(--duration-fast) var(--ease-out-quart);
     }
 
     .login-link {
-      color: #000;
+      color: var(--color-text-secondary);
+      padding: var(--space-2) var(--space-3);
+      border-radius: var(--radius-sm);
 
       &:hover {
-        color: #666;
+        color: var(--color-text-primary);
+        background: var(--color-surface-sunken);
       }
     }
 
     .register-link {
-      background-color: #000;
-      color: #fff;
-      padding: 0.5rem 1.2rem;
-      border-radius: 99px;
+      background: var(--color-accent);
+      color: var(--color-text-primary);
+      padding: 9px var(--space-4);
+      border-radius: var(--radius-pill);
+      font-weight: 800;
+      letter-spacing: 0.01em;
 
       &:hover {
-        background-color: #333;
+        background: var(--color-accent-hover);
+        transform: translateY(-1px);
+        box-shadow: var(--shadow-accent);
       }
     }
   }
 }
 
+/* ── Shop Dropdown ────────────────────────────────────────────── */
 .shop-dropdown {
   display: flex;
-  padding: 1rem;
-  min-width: 400px;
-  background-color: #dbdbdb;
-  border-color: black;
+  padding: var(--space-4);
+  min-width: 420px;
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: 0 12px 40px oklch(0.14 0.02 258 / 0.12);
 
   .column {
     flex: 1;
-    padding: 0 1rem;
+    padding: 0 var(--space-3);
 
     h4 {
-      font-size: 1.3rem;
-      font-weight: 600;
-      margin-bottom: 0.5rem;
-      color: #000;
+      font-family: var(--font-body);
+      font-size: 0.7rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--color-text-tertiary);
+      margin-bottom: var(--space-3);
     }
 
     ul {
@@ -205,16 +311,22 @@
       margin: 0;
 
       li {
-        margin-bottom: 0.5rem;
+        margin-bottom: var(--space-1);
 
         a {
+          font-family: var(--font-body);
           text-decoration: none;
-          color: #666;
-          font-size: 1.0rem;
-          transition: color 0.2s;
+          color: var(--color-text-secondary);
+          font-size: 0.9rem;
+          font-weight: 500;
+          padding: var(--space-2) var(--space-3);
+          border-radius: var(--radius-sm);
+          display: block;
+          transition: all var(--duration-fast) var(--ease-out-quart);
 
           &:hover {
-            color: #000;
+            color: var(--color-text-primary);
+            background: var(--color-surface-sunken);
           }
         }
       }

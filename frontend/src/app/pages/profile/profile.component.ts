@@ -22,6 +22,7 @@ import { NzRateModule } from 'ng-zorro-antd/rate';
 import { NzPopconfirmModule } from 'ng-zorro-antd/popconfirm';
 import { Router, RouterModule } from '@angular/router';
 import { SellerRequestService } from '../../core/services/seller-request.service';
+import { AuthService } from '../../core/services/auth.service';
 
 @Component({
   selector: 'app-profile',
@@ -59,6 +60,7 @@ export class ProfileComponent implements OnInit {
   private sellerRequestService = inject(SellerRequestService);
   private router = inject(Router);
   private platformId = inject(PLATFORM_ID);
+  public authService = inject(AuthService);
 
   userProfile: any = {};
   passwordData = { oldPassword: '', newPassword: '', confirmPassword: '' };
@@ -235,6 +237,19 @@ export class ProfileComponent implements OnInit {
     this.userService.getProfile().subscribe({
       next: (res) => {
         this.userProfile = res;
+        
+        // Sync with AuthService to update local storage and subject
+        const currentAuthUser = this.authService.currentUserValue;
+        if (currentAuthUser && JSON.stringify(currentAuthUser.roles) !== JSON.stringify(res.roles?.map((r: any) => r.name || r))) {
+          this.authService.updateCurrentUser({
+            ...currentAuthUser,
+            firstname: res.firstname,
+            lastname: res.lastname,
+            avatar: res.avatar,
+            roles: res.roles?.map((r: any) => r.name || r) || ['user']
+          });
+        }
+
         // Extract role names if it's an array of objects or just a string
         if (res.roles && Array.isArray(res.roles)) {
           this.userRoleName = res.roles.map((r: any) => r.name || r).join(', ');

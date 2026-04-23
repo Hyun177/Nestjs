@@ -2,12 +2,9 @@
     display: flex;
     flex-direction: column;
     min-height: 100vh;
-    /* Đảm bảo layout luôn bao phủ toàn màn hình */
 }
 
 .main-content {
     flex: 1;
-    /* Đẩy footer xuống dưới cùng nếu nội dung trang ngắn */
-    background-color: #f8fafc;
-    /* Màu nền nhạt khớp với thiết kế */
+    background: var(--color-surface-base);
 }

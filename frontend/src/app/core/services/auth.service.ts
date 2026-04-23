@@ -120,6 +120,13 @@ export class AuthService {
     return this.currentUserSubject.value;
   }
 
+  updateCurrentUser(user: User) {
+    this.currentUserSubject.next(user);
+    if (this.isBrowser) {
+      localStorage.setItem('user', JSON.stringify(user));
+    }
+  }
+
   logout() {
     if (this.isBrowser) {
       localStorage.removeItem('accessToken');
