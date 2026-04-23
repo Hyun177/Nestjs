@@ -121,40 +121,64 @@ export class LoginComponent implements OnInit, AfterViewInit, OnDestroy {
     this.camera = new THREE.PerspectiveCamera(45, parent.clientWidth / parent.clientHeight, 0.1, 1000);
     this.camera.position.z = 8;
 
-    this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
     this.renderer.setSize(parent.clientWidth, parent.clientHeight);
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    this.renderer.setPixelRatio(window.devicePixelRatio); 
+    this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     parent.appendChild(this.renderer.domElement);
 
-    const ambientLight = new THREE.AmbientLight(0xffffff, 1.0);
+    const textureLoader = new THREE.TextureLoader();
+    const envTexture = textureLoader.load('assets/images/sci-fi-auth.png');
+    envTexture.mapping = THREE.EquirectangularReflectionMapping;
+
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
     this.scene.add(ambientLight);
 
-    const pointLight1 = new THREE.PointLight(0x8b5cf6, 5, 20); // Neon purple
-    pointLight1.position.set(2, 2, 2);
-    this.scene.add(pointLight1);
+    const accentLight = new THREE.PointLight(0x8b5cf6, 80);
+    accentLight.position.set(5, 5, 5);
+    this.scene.add(accentLight);
 
-    // Subtle floating Glass Prism
-    const geometry = new THREE.OctahedronGeometry(2, 0);
+    const geometry = new THREE.IcosahedronGeometry(3, 15);
     const material = new THREE.MeshPhysicalMaterial({
-      color: 0x8b5cf6,
-      metalness: 0.1,
-      roughness: 0.05,
-      transmission: 0.9,
-      thickness: 1.0,
+      color: 0x4f46e5,
+      metalness: 0.2,
+      roughness: 0.01,
+      transmission: 0.95,
+      thickness: 3.0,
       ior: 1.5,
       clearcoat: 1.0,
+      envMap: envTexture,
+      envMapIntensity: 2.0
     });
     
     this.shard = new THREE.Mesh(geometry, material);
     this.scene.add(this.shard);
 
+    // Initial position states for morphing
+    const initialPositions = (geometry.attributes['position'].array as Float32Array).slice();
+
     const animate = () => {
       this.animationId = requestAnimationFrame(animate);
-      this.shard.rotation.y += 0.01;
-      this.shard.rotation.x += 0.01;
       
-      this.shard.position.x = this.mouseX * 1;
-      this.shard.position.y = -this.mouseY * 1;
+      const time = Date.now() * 0.001;
+      
+      // Morphing effect
+      const posAttr = geometry.attributes['position'];
+      for (let i = 0; i < posAttr.count; i++) {
+        const x = initialPositions[i * 3];
+        const y = initialPositions[i * 3 + 1];
+        const z = initialPositions[i * 3 + 2];
+        
+        const noise = Math.sin(x * 1.2 + time) * 0.15 + Math.cos(y * 1.5 + time) * 0.15;
+        posAttr.setZ(i, z + noise);
+      }
+      posAttr.needsUpdate = true;
+
+      this.shard.rotation.y += 0.005;
+      
+      // Follow mouse
+      this.shard.position.x += (this.mouseX * 2 - this.shard.position.x) * 0.1;
+      this.shard.position.y += (-this.mouseY * 2 - this.shard.position.y) * 0.1;
       
       this.renderer.render(this.scene, this.camera);
     };

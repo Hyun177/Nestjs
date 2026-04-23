@@ -148,46 +148,77 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
     this.camera.position.z = 15;
     this.camera.position.x = 4;
 
-    this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
     this.renderer.setSize(parent.clientWidth, parent.clientHeight);
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    this.renderer.setPixelRatio(window.devicePixelRatio); // Full resolution
+    this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     parent.appendChild(this.renderer.domElement);
 
-    // Dynamic Lights for the Glass Shard
-    const ambientLight = new THREE.AmbientLight(0xffffff, 1.2);
+    // Environment Map from the Background Image
+    const textureLoader = new THREE.TextureLoader();
+    const envTexture = textureLoader.load('assets/images/sci-fi-hero.png');
+    envTexture.mapping = THREE.EquirectangularReflectionMapping;
+
+    // Lights
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
     this.scene.add(ambientLight);
 
-    const pointLight = new THREE.PointLight(0x00ffff, 4, 20);
-    pointLight.position.set(5, 5, 5);
-    this.scene.add(pointLight);
+    const mainLight = new THREE.SpotLight(0x00f2ff, 150);
+    mainLight.position.set(10, 10, 10);
+    mainLight.castShadow = true;
+    this.scene.add(mainLight);
 
-    // Crystalline Glassy Torus - Floating in the center of the right side
-    const geometry = new THREE.TorusKnotGeometry(2.5, 0.8, 150, 24);
-    const material = new THREE.MeshPhysicalMaterial({
-      color: 0x00f2ff,
+    const purpleLight = new THREE.PointLight(0xbc13fe, 100);
+    purpleLight.position.set(-10, -5, 5);
+    this.scene.add(purpleLight);
+
+    // Crystalline Group
+    const crystalGroup = new THREE.Group();
+    this.scene.add(crystalGroup);
+
+    const crystalMaterial = new THREE.MeshPhysicalMaterial({
+      color: 0xffffff,
       metalness: 0.1,
-      roughness: 0.05,
-      transmission: 0.95,
-      thickness: 1.5,
-      ior: 1.5,
+      roughness: 0.02,
+      transmission: 0.98,
+      thickness: 2.5,
+      ior: 2.4, // Diamond-like refraction
       clearcoat: 1.0,
-      attenuationDistance: 0.5,
-      attenuationColor: new THREE.Color(0xffffff),
+      envMap: envTexture,
+      envMapIntensity: 1.5,
+      dispersion: 5.0
     });
-    
-    this.floatingKnot = new THREE.Mesh(geometry, material);
-    this.floatingKnot.position.x = 4; 
-    this.scene.add(this.floatingKnot);
+
+    const crystals: THREE.Mesh[] = [];
+    for (let i = 0; i < 6; i++) {
+      const size = Math.random() * 1.5 + 0.5;
+      const crystalGeo = new THREE.IcosahedronGeometry(size, 0);
+      const mesh = new THREE.Mesh(crystalGeo, crystalMaterial);
+      
+      mesh.position.set(
+        Math.random() * 6 - 3 + 6, // Offset to the right
+        Math.random() * 6 - 3,
+        Math.random() * 4 - 2
+      );
+      mesh.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, 0);
+      
+      crystalGroup.add(mesh);
+      crystals.push(mesh);
+    }
 
     const animate = () => {
       this.animationId = requestAnimationFrame(animate);
       
-      // Auto rotation + follow mouse subtly
-      this.floatingKnot.rotation.y += 0.01;
-      this.floatingKnot.rotation.x += 0.005;
-      
-      this.floatingKnot.position.y = -this.mouseY * 1.5;
-      this.floatingKnot.position.x = 4 + (this.mouseX * 1.5);
+      // Floating motion
+      crystals.forEach((c, i) => {
+        c.rotation.y += 0.005 + (i * 0.001);
+        c.rotation.x += 0.003;
+        c.position.y += Math.sin(Date.now() * 0.001 + i) * 0.005;
+      });
+
+      // Mouse Parallax for the whole group
+      crystalGroup.position.x = this.mouseX * 2;
+      crystalGroup.position.y = -this.mouseY * 2;
       
       this.renderer.render(this.scene, this.camera);
     };
