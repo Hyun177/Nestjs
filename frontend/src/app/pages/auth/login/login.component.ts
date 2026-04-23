@@ -1,7 +1,9 @@
-import { Component, OnInit, OnDestroy, inject, ChangeDetectorRef, NgZone } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, ChangeDetectorRef, NgZone, HostListener, PLATFORM_ID, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
 import { RouterLink, Router } from '@angular/router';
 import { NzIconModule } from 'ng-zorro-antd/icon';
-import { isPlatformBrowser } from '@angular/common';
+import { isPlatformBrowser, CommonModule } from '@angular/common';
+import * as THREE from 'three';
+import { OrbitControls } from 'three-stdlib';
 import {
   ReactiveFormsModule,
   FormsModule,
@@ -19,14 +21,27 @@ import { NzMessageService } from 'ng-zorro-antd/message';
   templateUrl: './login.component.html',
   styleUrls: ['./auth.scss'],
 })
-export class LoginComponent implements OnInit {
+export class LoginComponent implements OnInit, AfterViewInit, OnDestroy {
+  @ViewChild('auth3dContainer') auth3dContainer!: ElementRef;
+
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
   private router = inject(Router);
   private message = inject(NzMessageService);
   private cdr = inject(ChangeDetectorRef);
   private zone = inject(NgZone);
+  private platformId = inject(PLATFORM_ID);
 
+  // 3D Interaction state
+  private scene!: THREE.Scene;
+  private camera!: THREE.PerspectiveCamera;
+  private renderer!: THREE.WebGLRenderer;
+  private shard!: THREE.Mesh;
+  private animationId: number = 0;
+  
+  mouseX = 0;
+  mouseY = 0;
+  
   loginForm: FormGroup;
   loading = false;
   passwordVisible = false;
@@ -74,8 +89,77 @@ export class LoginComponent implements OnInit {
     }
   }
 
+  @HostListener('document:mousemove', ['$event'])
+  onMouseMove(event: MouseEvent) {
+    if (isPlatformBrowser(this.platformId)) {
+      this.mouseX = (event.clientX / window.innerWidth - 0.5) * 2;
+      this.mouseY = (event.clientY / window.innerHeight - 0.5) * 2;
+    }
+  }
+
   ngOnInit() {
     this.initGoogleSignIn();
+  }
+
+  ngAfterViewInit() {
+    if (isPlatformBrowser(this.platformId)) {
+      this.initThreeJS();
+    }
+  }
+
+  ngOnDestroy() {
+    if (isPlatformBrowser(this.platformId)) {
+      cancelAnimationFrame(this.animationId);
+      if (this.renderer) this.renderer.dispose();
+    }
+  }
+
+  private initThreeJS() {
+    const parent = this.auth3dContainer.nativeElement as HTMLElement;
+    if (!parent) return;
+
+    this.scene = new THREE.Scene();
+    this.camera = new THREE.PerspectiveCamera(45, parent.clientWidth / parent.clientHeight, 0.1, 1000);
+    this.camera.position.z = 8;
+
+    this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    this.renderer.setSize(parent.clientWidth, parent.clientHeight);
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    parent.appendChild(this.renderer.domElement);
+
+    const ambientLight = new THREE.AmbientLight(0xffffff, 1.0);
+    this.scene.add(ambientLight);
+
+    const pointLight1 = new THREE.PointLight(0x8b5cf6, 5, 20); // Neon purple
+    pointLight1.position.set(2, 2, 2);
+    this.scene.add(pointLight1);
+
+    // Subtle floating Glass Prism
+    const geometry = new THREE.OctahedronGeometry(2, 0);
+    const material = new THREE.MeshPhysicalMaterial({
+      color: 0x8b5cf6,
+      metalness: 0.1,
+      roughness: 0.05,
+      transmission: 0.9,
+      thickness: 1.0,
+      ior: 1.5,
+      clearcoat: 1.0,
+    });
+    
+    this.shard = new THREE.Mesh(geometry, material);
+    this.scene.add(this.shard);
+
+    const animate = () => {
+      this.animationId = requestAnimationFrame(animate);
+      this.shard.rotation.y += 0.01;
+      this.shard.rotation.x += 0.01;
+      
+      this.shard.position.x = this.mouseX * 1;
+      this.shard.position.y = -this.mouseY * 1;
+      
+      this.renderer.render(this.scene, this.camera);
+    };
+    animate();
   }
 
   setSlide(index: number) {

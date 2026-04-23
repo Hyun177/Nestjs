@@ -1,9 +1,10 @@
 <div class="homepage-container">
     <!-- Hero Section -->
     <section class="hero-section">
-        <!-- Full width 3D Background Image -->
-        <div class="hero-3d-bg">
-            <img src="assets/images/sci-fi-hero.png" alt="Sci-Fi Premium Background" class="fallback-img">
+        <!-- Full width 3D Background Image with Interactive Parallax -->
+        <div class="hero-3d-bg" #hero3dContainer>
+            <img src="assets/images/sci-fi-hero.png" alt="Sci-Fi Premium Background" class="interactive-3d-img"
+                 [style.transform]="'perspective(1200px) scale(1.1) rotateX(' + (-mouseY * 8) + 'deg) rotateY(' + (mouseX * 12) + 'deg)'">
         </div>
         
         <!-- Foreground Content -->

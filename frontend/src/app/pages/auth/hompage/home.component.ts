@@ -1,7 +1,9 @@
-import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, HostListener, inject, ChangeDetectorRef, PLATFORM_ID, ViewChild, ElementRef, AfterViewInit, OnDestroy } from '@angular/core';
+import { isPlatformBrowser, CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
-import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import * as THREE from 'three';
+import { OrbitControls } from 'three-stdlib';
 import { ProductService, Product } from '../../../core/services/product.service';
 import { BrandService } from '../../../core/services/brand.service';
 import { CartService } from '../../../core/services/cart.service';
@@ -19,7 +21,9 @@ import { NzMessageService } from 'ng-zorro-antd/message';
   styleUrls: ['./home.component.scss'],
   providers: [NzMessageService],
 })
-export class HomeComponent implements OnInit {
+export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
+  @ViewChild('hero3dContainer') hero3dContainer!: ElementRef;
+  
   private productService = inject(ProductService);
   private brandService = inject(BrandService);
   private cartService = inject(CartService);
@@ -27,6 +31,18 @@ export class HomeComponent implements OnInit {
   private router = inject(Router);
   private message = inject(NzMessageService);
   private cdr = inject(ChangeDetectorRef);
+  private platformId = inject(PLATFORM_ID);
+  
+  // Three.js Logic for REAL 3D Depth
+  private scene!: THREE.Scene;
+  private camera!: THREE.PerspectiveCamera;
+  private renderer!: THREE.WebGLRenderer;
+  private floatingKnot!: THREE.Mesh;
+  private animationId: number = 0;
+  
+  // Interactive 3D Parallax State
+  mouseX = 0;
+  mouseY = 0;
 
   products: Product[] = [];
   topSelling: Product[] = [];
@@ -91,9 +107,91 @@ export class HomeComponent implements OnInit {
     return this.topSelling.slice(0, 4);
   }
 
+  @HostListener('document:mousemove', ['$event'])
+  onMouseMove(event: MouseEvent) {
+    if (isPlatformBrowser(this.platformId)) {
+      this.mouseX = (event.clientX / window.innerWidth - 0.5) * 2;
+      this.mouseY = (event.clientY / window.innerHeight - 0.5) * 2;
+      
+      // Update CSS variables for shine effect
+      const xPercent = (event.clientX / window.innerWidth) * 100;
+      const yPercent = (event.clientY / window.innerHeight) * 100;
+      document.documentElement.style.setProperty('--mouse-x', xPercent + '%');
+      document.documentElement.style.setProperty('--mouse-y', yPercent + '%');
+    }
+  }
+
   ngOnInit() {
     this.fetchData();
     this.loadFavorites();
+  }
+
+  ngAfterViewInit() {
+    if (isPlatformBrowser(this.platformId)) {
+      this.initThreeJS();
+    }
+  }
+
+  ngOnDestroy() {
+    if (isPlatformBrowser(this.platformId)) {
+      cancelAnimationFrame(this.animationId);
+      if (this.renderer) this.renderer.dispose();
+    }
+  }
+
+  private initThreeJS() {
+    const parent = this.hero3dContainer.nativeElement as HTMLElement;
+    if (!parent) return;
+
+    this.scene = new THREE.Scene();
+    this.camera = new THREE.PerspectiveCamera(45, parent.clientWidth / parent.clientHeight, 0.1, 1000);
+    this.camera.position.z = 15;
+    this.camera.position.x = 4;
+
+    this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    this.renderer.setSize(parent.clientWidth, parent.clientHeight);
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    parent.appendChild(this.renderer.domElement);
+
+    // Dynamic Lights for the Glass Shard
+    const ambientLight = new THREE.AmbientLight(0xffffff, 1.2);
+    this.scene.add(ambientLight);
+
+    const pointLight = new THREE.PointLight(0x00ffff, 4, 20);
+    pointLight.position.set(5, 5, 5);
+    this.scene.add(pointLight);
+
+    // Crystalline Glassy Torus - Floating in the center of the right side
+    const geometry = new THREE.TorusKnotGeometry(2.5, 0.8, 150, 24);
+    const material = new THREE.MeshPhysicalMaterial({
+      color: 0x00f2ff,
+      metalness: 0.1,
+      roughness: 0.05,
+      transmission: 0.95,
+      thickness: 1.5,
+      ior: 1.5,
+      clearcoat: 1.0,
+      attenuationDistance: 0.5,
+      attenuationColor: new THREE.Color(0xffffff),
+    });
+    
+    this.floatingKnot = new THREE.Mesh(geometry, material);
+    this.floatingKnot.position.x = 4; 
+    this.scene.add(this.floatingKnot);
+
+    const animate = () => {
+      this.animationId = requestAnimationFrame(animate);
+      
+      // Auto rotation + follow mouse subtly
+      this.floatingKnot.rotation.y += 0.01;
+      this.floatingKnot.rotation.x += 0.005;
+      
+      this.floatingKnot.position.y = -this.mouseY * 1.5;
+      this.floatingKnot.position.x = 4 + (this.mouseX * 1.5);
+      
+      this.renderer.render(this.scene, this.camera);
+    };
+    animate();
   }
 
   fetchData() {

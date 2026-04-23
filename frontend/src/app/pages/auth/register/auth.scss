@@ -51,6 +51,28 @@ $border-color: #f1f5f9;
         height: 200px;
     }
 
+    perspective: 1000px;
+    transform-style: preserve-3d;
+
+    .interactive-auth-img {
+        width: 100%; height: 100%;
+        object-fit: cover; opacity: 1.0; /* Crisp! */
+        transition: transform 0.1s linear;
+        will-change: transform;
+        filter: brightness(1.1) contrast(1.1);
+        z-index: 1;
+    }
+
+    canvas {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100% !important;
+        height: 100% !important;
+        z-index: 5;
+        pointer-events: none;
+    }
+
     .slider-img {
         width: 100%; height: 100%;
         object-fit: cover; opacity: 0.8;

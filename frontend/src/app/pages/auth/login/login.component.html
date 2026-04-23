@@ -1,8 +1,9 @@
 <div class="auth-page">
     <div class="auth-card">
         <!-- Visual Side -->
-        <div class="auth-left">
-            <img src="assets/images/sci-fi-auth.png" class="slider-img zoom-effect" alt="Sci Fi 3D Tech Background">
+        <div class="auth-left" #auth3dContainer>
+            <img src="assets/images/sci-fi-auth.png" class="interactive-auth-img" alt="Sci Fi 3D Tech Background"
+                 [style.transform]="'perspective(1000px) rotateX(' + (-mouseY * 5) + 'deg) rotateY(' + (mouseX * 7) + 'deg) scale(1.1)'">
             <!-- Overlay and branding go on top (z-index 10) -->
             <div class="overlay" style="z-index: 5; pointer-events: none;"></div>
             <div class="branding">
