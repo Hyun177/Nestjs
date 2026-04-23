@@ -10,11 +10,6 @@
             </div>
             <div class="content-overlay">
                 <h2>Join Our<br>Community</h2>
-                <div class="dots">
-                    @for (img of images; track $index) {
-                    <span class="dot" [class.active]="$index === currentIndex" (click)="setSlide($index)"></span>
-                    }
-                </div>
             </div>
         </div>
 
