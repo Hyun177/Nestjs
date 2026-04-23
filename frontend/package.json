@@ -4,7 +4,7 @@
   "scripts": {
     "ng": "ng",
     "start": "npx serve -s dist/Frontend/browser",
-    "build": "ng build",
+    "build": "node --max_old_space_size=3072 ./node_modules/@angular/cli/bin/ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "serve:ssr:Frontend": "node dist/Frontend/server/server.mjs"
