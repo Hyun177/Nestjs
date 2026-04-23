@@ -179,10 +179,12 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
     parent.appendChild(this.renderer.domElement);
 
     this.camera = new THREE.PerspectiveCamera(45, parent.clientWidth / parent.clientHeight, 0.1, 1000);
+    this.camera.position.x = 5.5; // Offset camera to match target
     this.camera.position.z = 18;
 
     // Interactive OrbitControls
     const controls = new OrbitControls(this.camera, this.renderer.domElement);
+    controls.target.set(5.5, 0, 0); // Orbit around the object on the right
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
     controls.enableZoom = false; // Disable zoom to not mess with page scroll
@@ -214,6 +216,7 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
       clearcoatRoughness: 0.1
     });
     this.centerMesh = new THREE.Mesh(geometry, material);
+    this.centerMesh.position.x = 5.5; // Shift to the right
     this.scene.add(this.centerMesh);
 
     // Add secondary rotating object inside the knot
@@ -225,6 +228,7 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
       clearcoat: 1.0
     });
     const innerMesh = new THREE.Mesh(innerGeometry, innerMaterial);
+    innerMesh.position.x = 5.5; // Shift to the right
     this.scene.add(innerMesh);
 
     // 2. Particle Geometry

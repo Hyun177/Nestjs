@@ -1,17 +1,20 @@
 <div class="homepage-container">
     <!-- Hero Section -->
     <section class="hero-section">
+        <!-- Full width 3D Background -->
+        <div class="hero-3d-bg" #hero3dContainer>
+            <img src="assets/images/hero-3d-bg.png" alt="Hero Premium 3D Tech Background" class="fallback-img">
+        </div>
+        
+        <!-- Foreground Content -->
         <div class="container hero-grid">
             <div class="hero-content">
                 <h1 class="hero-title">{{ heroData.title }}</h1>
                 <p class="hero-subtitle">{{ heroData.subtitle }}</p>
-                <button class="btn-black" [routerLink]="['/products']">{{ heroData.primaryCta }}</button>
+                <button class="btn-primary-glow" [routerLink]="['/products']">{{ heroData.primaryCta }}</button>
             </div>
-            <div class="hero-image" #hero3dContainer>
-                <!-- Three.js Canvas will spawn here. Fallback image below. -->
-                <img src="assets/images/hero-3d-bg.png"
-                    alt="Hero Premium 3D Tech Background" class="fallback-img">
-            </div>
+            <!-- Empty div for grid alignment -->
+            <div class="hero-empty"></div>
         </div>
     </section>
 
