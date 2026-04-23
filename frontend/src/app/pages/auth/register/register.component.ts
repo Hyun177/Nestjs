@@ -3,6 +3,7 @@ import { isPlatformBrowser, CommonModule } from '@angular/common';
 import { RouterLink, Router } from '@angular/router';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import * as THREE from 'three';
+import { OrbitControls } from 'three-stdlib';
 import {
   ReactiveFormsModule,
   FormsModule,
@@ -136,6 +137,11 @@ export class RegisterComponent implements OnInit, AfterViewInit, OnDestroy {
     accentLight.position.set(5, 5, 5);
     this.scene.add(accentLight);
 
+    const controls = new OrbitControls(this.camera, this.renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.enableZoom = false;
+
     const geometry = new THREE.IcosahedronGeometry(3, 15);
     const material = new THREE.MeshPhysicalMaterial({
       color: 0x00f2ff,
@@ -169,9 +175,11 @@ export class RegisterComponent implements OnInit, AfterViewInit, OnDestroy {
       posAttr.needsUpdate = true;
 
       this.shard.rotation.y += 0.005;
-      this.shard.position.x += (this.mouseX * 2 - this.shard.position.x) * 0.1;
-      this.shard.position.y += (-this.mouseY * 2 - this.shard.position.y) * 0.1;
       
+      // Follow mouse only if not dragging (OrbitControls handles dragging)
+      // We can just rely on OrbitControls for interaction now
+      controls.update();
+
       this.renderer.render(this.scene, this.camera);
     };
     animate();

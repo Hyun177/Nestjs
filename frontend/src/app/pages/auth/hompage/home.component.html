@@ -1,12 +1,9 @@
 <div class="homepage-container">
+    <!-- Full width 3D Background Image with Interactive Parallax -->
+    <div class="webgl-bg" #hero3dContainer></div>
+    
     <!-- Hero Section -->
-    <section class="hero-section">
-        <!-- Full width 3D Background Image with Interactive Parallax -->
-        <div class="hero-3d-bg" #hero3dContainer>
-            <img src="assets/images/sci-fi-hero.png" alt="Sci-Fi Premium Background" class="interactive-3d-img"
-                 [style.transform]="'perspective(1200px) scale(1.1) rotateX(' + (-mouseY * 8) + 'deg) rotateY(' + (mouseX * 12) + 'deg)'">
-        </div>
-        
+    <section class="hero-section section-full">
         <!-- Foreground Content -->
         <div class="container hero-grid">
             <div class="hero-content">
@@ -30,7 +27,7 @@
         </div>
     </div>
     <!-- Top Selling -->
-    <section class="products-section section-padding">
+    <section class="products-section section-padding section-full">
         <div class="container">
             <h2 class="section-heading">XU HƯỚNG MUA SẮM</h2>
 
@@ -114,7 +111,7 @@
         </div>
     </section>
     <!-- New Arrivals -->
-    <section class="products-section section-padding">
+    <section class="products-section section-padding section-full">
         <div class="container">
             <h2 class="section-heading">SẢN PHẨM MỚI NHẤT</h2>
 

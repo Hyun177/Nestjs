@@ -138,6 +138,11 @@ export class LoginComponent implements OnInit, AfterViewInit, OnDestroy {
     accentLight.position.set(5, 5, 5);
     this.scene.add(accentLight);
 
+    const controls = new OrbitControls(this.camera, this.renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.enableZoom = false;
+
     const geometry = new THREE.IcosahedronGeometry(3, 15);
     const material = new THREE.MeshPhysicalMaterial({
       color: 0x4f46e5,
@@ -176,9 +181,7 @@ export class LoginComponent implements OnInit, AfterViewInit, OnDestroy {
 
       this.shard.rotation.y += 0.005;
       
-      // Follow mouse
-      this.shard.position.x += (this.mouseX * 2 - this.shard.position.x) * 0.1;
-      this.shard.position.y += (-this.mouseY * 2 - this.shard.position.y) * 0.1;
+      controls.update();
       
       this.renderer.render(this.scene, this.camera);
     };

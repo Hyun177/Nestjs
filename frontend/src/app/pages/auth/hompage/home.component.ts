@@ -43,6 +43,10 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   // Interactive 3D Parallax State
   mouseX = 0;
   mouseY = 0;
+  scrollY = 0;
+  private currentScroll = 0;
+  private objectsDistance = 4;
+  private sectionMeshes: THREE.Mesh[] = [];
 
   products: Product[] = [];
   topSelling: Product[] = [];
@@ -110,14 +114,21 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   @HostListener('document:mousemove', ['$event'])
   onMouseMove(event: MouseEvent) {
     if (isPlatformBrowser(this.platformId)) {
-      this.mouseX = (event.clientX / window.innerWidth - 0.5) * 2;
-      this.mouseY = (event.clientY / window.innerHeight - 0.5) * 2;
+      this.mouseX = event.clientX / window.innerWidth - 0.5;
+      this.mouseY = event.clientY / window.innerHeight - 0.5;
       
       // Update CSS variables for shine effect
       const xPercent = (event.clientX / window.innerWidth) * 100;
       const yPercent = (event.clientY / window.innerHeight) * 100;
       document.documentElement.style.setProperty('--mouse-x', xPercent + '%');
       document.documentElement.style.setProperty('--mouse-y', yPercent + '%');
+    }
+  }
+
+  @HostListener('window:scroll', ['$event'])
+  onScroll() {
+    if (isPlatformBrowser(this.platformId)) {
+      this.scrollY = window.scrollY;
     }
   }
 
@@ -144,81 +155,108 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
     if (!parent) return;
 
     this.scene = new THREE.Scene();
-    this.camera = new THREE.PerspectiveCamera(45, parent.clientWidth / parent.clientHeight, 0.1, 1000);
-    this.camera.position.z = 15;
-    this.camera.position.x = 4;
+
+    // Camera Group for Parallax
+    const cameraGroup = new THREE.Group();
+    this.scene.add(cameraGroup);
+
+    // Base camera
+    this.camera = new THREE.PerspectiveCamera(35, window.innerWidth / window.innerHeight, 0.1, 100);
+    this.camera.position.z = 6;
+    cameraGroup.add(this.camera);
 
     this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
-    this.renderer.setSize(parent.clientWidth, parent.clientHeight);
-    this.renderer.setPixelRatio(window.devicePixelRatio); // Full resolution
+    this.renderer.setSize(window.innerWidth, window.innerHeight);
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
+    this.renderer.setClearAlpha(0); // Transparent background
     parent.appendChild(this.renderer.domElement);
 
-    // Environment Map from the Background Image
-    const textureLoader = new THREE.TextureLoader();
-    const envTexture = textureLoader.load('assets/images/sci-fi-hero.png');
-    envTexture.mapping = THREE.EquirectangularReflectionMapping;
-
     // Lights
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+    const directionalLight = new THREE.DirectionalLight('#ffffff', 3);
+    directionalLight.position.set(1, 1, 0);
+    this.scene.add(directionalLight);
+
+    const ambientLight = new THREE.AmbientLight('#ffffff', 0.5);
     this.scene.add(ambientLight);
 
-    const mainLight = new THREE.SpotLight(0x00f2ff, 150);
-    mainLight.position.set(10, 10, 10);
-    mainLight.castShadow = true;
-    this.scene.add(mainLight);
+    // Objects
+    const textureLoader = new THREE.TextureLoader();
+    const gradientTexture = textureLoader.load('https://threejs.org/examples/textures/gradient.png');
+    gradientTexture.magFilter = THREE.NearestFilter;
 
-    const purpleLight = new THREE.PointLight(0xbc13fe, 100);
-    purpleLight.position.set(-10, -5, 5);
-    this.scene.add(purpleLight);
-
-    // Crystalline Group
-    const crystalGroup = new THREE.Group();
-    this.scene.add(crystalGroup);
-
-    const crystalMaterial = new THREE.MeshPhysicalMaterial({
-      color: 0xffffff,
-      metalness: 0.1,
-      roughness: 0.02,
-      transmission: 0.98,
-      thickness: 2.5,
-      ior: 2.4, // Diamond-like refraction
-      clearcoat: 1.0,
-      envMap: envTexture,
-      envMapIntensity: 1.5,
-      dispersion: 5.0
+    const material = new THREE.MeshToonMaterial({
+      color: '#ffeded',
+      gradientMap: gradientTexture
     });
 
-    const crystals: THREE.Mesh[] = [];
-    for (let i = 0; i < 6; i++) {
-      const size = Math.random() * 1.5 + 0.5;
-      const crystalGeo = new THREE.IcosahedronGeometry(size, 0);
-      const mesh = new THREE.Mesh(crystalGeo, crystalMaterial);
-      
-      mesh.position.set(
-        Math.random() * 6 - 3 + 6, // Offset to the right
-        Math.random() * 6 - 3,
-        Math.random() * 4 - 2
-      );
-      mesh.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, 0);
-      
-      crystalGroup.add(mesh);
-      crystals.push(mesh);
+    const mesh1 = new THREE.Mesh(new THREE.TorusGeometry(1, 0.4, 16, 60), material);
+    const mesh2 = new THREE.Mesh(new THREE.ConeGeometry(1, 2, 32), material);
+    const mesh3 = new THREE.Mesh(new THREE.TorusKnotGeometry(0.8, 0.35, 100, 16), material);
+
+    mesh1.position.x = 2;
+    mesh2.position.x = -2;
+    mesh3.position.x = 2;
+
+    mesh1.position.y = -this.objectsDistance * 0;
+    mesh2.position.y = -this.objectsDistance * 1;
+    mesh3.position.y = -this.objectsDistance * 2;
+
+    this.scene.add(mesh1, mesh2, mesh3);
+    this.sectionMeshes = [mesh1, mesh2, mesh3];
+
+    // Particles
+    const particlesCount = 200;
+    const positions = new Float32Array(particlesCount * 3);
+
+    for(let i = 0; i < particlesCount; i++) {
+        positions[i * 3 + 0] = (Math.random() - 0.5) * 10;
+        positions[i * 3 + 1] = this.objectsDistance * 0.5 - Math.random() * this.objectsDistance * 3;
+        positions[i * 3 + 2] = (Math.random() - 0.5) * 10;
     }
+
+    const particlesGeometry = new THREE.BufferGeometry();
+    particlesGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    const particlesMaterial = new THREE.PointsMaterial({
+        color: '#ffeded',
+        sizeAttenuation: true,
+        size: 0.03
+    });
+    const particles = new THREE.Points(particlesGeometry, particlesMaterial);
+    this.scene.add(particles);
+
+    // Handle Resize
+    window.addEventListener('resize', () => {
+      if (!this.camera || !this.renderer) return;
+      this.camera.aspect = window.innerWidth / window.innerHeight;
+      this.camera.updateProjectionMatrix();
+      this.renderer.setSize(window.innerWidth, window.innerHeight);
+      this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    });
+
+    let previousTime = 0;
 
     const animate = () => {
       this.animationId = requestAnimationFrame(animate);
       
-      // Floating motion
-      crystals.forEach((c, i) => {
-        c.rotation.y += 0.005 + (i * 0.001);
-        c.rotation.x += 0.003;
-        c.position.y += Math.sin(Date.now() * 0.001 + i) * 0.005;
-      });
+      const elapsedTime = Date.now() * 0.001;
+      const deltaTime = elapsedTime - previousTime;
+      previousTime = elapsedTime;
 
-      // Mouse Parallax for the whole group
-      crystalGroup.position.x = this.mouseX * 2;
-      crystalGroup.position.y = -this.mouseY * 2;
+      // Animate camera (Scroll)
+      this.camera.position.y = -this.scrollY / window.innerHeight * this.objectsDistance;
+
+      // Parallax
+      const parallaxX = this.mouseX * 0.5;
+      const parallaxY = -this.mouseY * 0.5;
+      cameraGroup.position.x += (parallaxX - cameraGroup.position.x) * 5 * deltaTime;
+      cameraGroup.position.y += (parallaxY - cameraGroup.position.y) * 5 * deltaTime;
+
+      // Animate meshes
+      for(const mesh of this.sectionMeshes) {
+          mesh.rotation.x += deltaTime * 0.1;
+          mesh.rotation.y += deltaTime * 0.12;
+      }
       
       this.renderer.render(this.scene, this.camera);
     };
