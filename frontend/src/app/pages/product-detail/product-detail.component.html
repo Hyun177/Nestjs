@@ -19,146 +19,161 @@
         <span class="active">{{ product.name }}</span>
       </nav>
   
-      <div class="product-main-grid">
-        <!-- Gallery Section (Left) -->
-        <div class="gallery-section">
-          <div class="thumbnails">
-            <div class="thumb" [class.active]="selectedImage === product.image" (click)="selectImage(product.image)">
-              <img [src]="getFullUrl(product.image)" [alt]="product.name">
-            </div>
-            <div class="thumb" *ngFor="let img of product.images" [class.active]="selectedImage === img" (click)="selectImage(img)">
-              <img [src]="getFullUrl(img)" [alt]="product.name">
+      <div class="product-main-layout">
+        <!-- Gallery Section (Left - Full Scrollable) -->
+        <div class="gallery-immersive">
+          <div class="gallery-scroll-container">
+            <div class="image-item" *ngFor="let img of allImages" [id]="'img-' + img">
+              <img [src]="getFullUrl(img)" [alt]="product.name" loading="lazy">
             </div>
           </div>
-          <div class="main-image">
-            <img [src]="getFullUrl(selectedImage)" [alt]="product.name">
-            <!-- Prev/Next arrows -->
-            <button class="gallery-arrow prev" (click)="prevImage()" *ngIf="allImages.length > 1">
-              <span nz-icon nzType="left"></span>
-            </button>
-            <button class="gallery-arrow next" (click)="nextImage()" *ngIf="allImages.length > 1">
-              <span nz-icon nzType="right"></span>
-            </button>
-            <div class="gallery-dots" *ngIf="allImages.length > 1">
-              <span *ngFor="let img of allImages; let i = index"
-                    class="dot" [class.active]="selectedImage === img"
-                    (click)="selectImage(img)"></span>
-            </div>
+          
+          <!-- Floating Thumbnails for quick navigation -->
+          <div class="gallery-nav">
+             <div class="nav-thumb" *ngFor="let img of allImages" 
+                  [class.active]="selectedImage === img"
+                  (click)="scrollToImage(img)">
+                <img [src]="getFullUrl(img)" alt="nav">
+             </div>
           </div>
         </div>
   
-        <!-- Info & Variants Section (Right) -->
-        <div class="info-section">
-          <h1 class="product-name">{{ product.name }}</h1>
-          
-          <div class="rating-row">
-            <nz-rate [ngModel]="product.rating" nzDisabled></nz-rate>
-            <span class="rating-text">{{ product.rating }}/5</span>
-            <span class="review-count">({{ product.numReviews }} Reviews)</span>
-            <span class="sold-count-divider">|</span>
-            <span class="sold-count">Đã bán {{ product.soldCount || 0 }}</span>
-          </div>
+        <!-- Info & Variants Section (Right - Sticky) -->
+        <div class="sticky-info-panel">
+          <div class="info-card">
+            <div class="brand-row" *ngIf="product.brand">
+               <span class="brand-tag">{{ product.brand.name }}</span>
+               <span class="category-tag">{{ product.category?.name }}</span>
+            </div>
 
-          <!-- Shop Section -->
-          <div class="shop-entry" *ngIf="shop">
-            <div class="shop-badge">
-              <img [src]="getFullUrl(shop.logo, 'https://ui-avatars.com/api/?name=' + (shop.name | urlEncode) + '&background=e2e8f0&color=64748b&size=128&bold=true')" class="shop-avatar">
-              <div class="shop-mini-details">
-                <p class="sold-by">Cung cấp bởi</p>
-                <a [routerLink]="['/shop', shop.userId]" class="shop-link">{{ shop.name }}</a>
-              </div>
-            </div>
-            <button class="shop-chat-btn" (click)="chatWithSeller()">
-              <span nz-icon nzType="message"></span> Chat ngay
-            </button>
-          </div>
-  
-          <div class="price-row">
-            <span class="current-price">{{ (currentVariant?.price || product.price) | vndCurrency }}</span>
-            <span class="old-price" *ngIf="product.originalPrice && product.originalPrice > (currentVariant?.price || product.price)">
-              {{ product.originalPrice | vndCurrency }}
-            </span>
-            <span class="discount-badge" *ngIf="getDiscountPercent(product) > 0">
-              -{{ getDiscountPercent(product) }}%
-            </span>
-          </div>
-
-          <div class="stock-status" [class.out]="(currentVariant?.stock ?? product.stock) <= 0">
-            <span nz-icon [nzType]="(currentVariant?.stock ?? product.stock) > 0 ? 'check-circle' : 'close-circle'"></span>
-            @if((currentVariant?.stock ?? product.stock) > 0) {
-              Còn lại: {{ currentVariant?.stock ?? product.stock }} sản phẩm
-            } @else {
-              <strong>HẾT HÀNG</strong>
-            }
-          </div>
-  
-          <!-- Short label or snippet (optional) -->
-          <div class="promo-note" *ngIf="product.promoNote">
-             <span nz-icon nzType="gift" nzTheme="outline"></span> {{ product.promoNote }}
-          </div>
-  
-          <hr class="divider">
-  
-          <!-- ADVANCED VARIANT DESIGN PATTERN -->
-          <div class="variants-container">
-            <div class="variant-group" *ngFor="let attr of product.attributes">
-              <div class="variant-header">
-                <span class="variant-label">Chọn {{ attr.name }}:</span>
-                <span class="selected-value">{{ selectedAttributes[attr.name] }}</span>
-              </div>
-              
-              <div class="variant-options">
-                <!-- Color Pattern (Circular Swatches) -->
-                <ng-container *ngIf="isColorAttr(attr.name); else defaultBoxPattern">
-                  <div class="color-swatch-wrapper" 
-                       *ngFor="let opt of attr.options" 
-                       [class.active]="selectedAttributes[attr.name] === opt"
-                       [class.disabled]="isAttrDisabled(attr.name, opt)"
-                       (click)="!isAttrDisabled(attr.name, opt) && selectAttribute(attr.name, opt)">
-                    <div class="color-circle" [style.background-color]="getColorCode(opt)" [title]="opt">
-                      <span nz-icon nzType="check" *ngIf="selectedAttributes[attr.name] === opt" 
-                            [style.color]="getColorCode(opt).toLowerCase() === 'white' ? 'black' : 'white'"></span>
-                    </div>
-                  </div>
-                </ng-container>
-  
-                <!-- Box Pattern (Size, Storage, Number, etc.) -->
-                <ng-template #defaultBoxPattern>
-                  <button class="box-option" 
-                       *ngFor="let opt of attr.options" 
-                       [class.active]="selectedAttributes[attr.name] === opt"
-                       [class.disabled]="isAttrDisabled(attr.name, opt)"
-                       [disabled]="isAttrDisabled(attr.name, opt)"
-                       (click)="selectAttribute(attr.name, opt)">
-                    {{ opt }}
-                  </button>
-                </ng-template>
-              </div>
-            </div>
-          </div>
-  
-          <hr class="divider">
-  
-          <!-- Actions & Quantity -->
-          <div class="actions-row">
-            <div class="quantity-picker">
-              <button (click)="updateQuantity(-1)"><span nz-icon nzType="minus"></span></button>
-              <input type="number" [(ngModel)]="quantity" readonly>
-              <button (click)="updateQuantity(1)"><span nz-icon nzType="plus"></span></button>
-            </div>
+            <h1 class="product-title">{{ product.name }}</h1>
             
-            <button nz-button class="add-to-cart-btn" 
-                    [disabled]="(currentVariant?.stock ?? product.stock) <= 0"
-                    (click)="addToCart()">
-              {{ (currentVariant?.stock ?? product.stock) > 0 ? 'Add to Cart' : 'Out of Stock' }}
-            </button>
+            <div class="rating-bar">
+              <div class="stars">
+                <nz-rate [ngModel]="product.rating" nzDisabled></nz-rate>
+                <span class="rating-value">{{ product.rating }}</span>
+              </div>
+              <span class="dot"></span>
+              <span class="review-stats">{{ product.numReviews }} đánh giá</span>
+              <span class="dot"></span>
+              <span class="sold-stats">Đã bán {{ product.soldCount || 0 }}</span>
+            </div>
 
-            <button nz-button class="buy-now-btn"
-                    [disabled]="(currentVariant?.stock ?? product.stock) <= 0"
-                    (click)="buyNow()">
-              <span nz-icon nzType="thunderbolt" nzTheme="fill"></span>
-              Mua ngay
-            </button>
+            <div class="price-box">
+              <div class="main-price">
+                <span class="price-current">{{ (currentVariant?.price || product.price) | vndCurrency }}</span>
+                <span class="price-old" *ngIf="product.originalPrice && product.originalPrice > (currentVariant?.price || product.price)">
+                  {{ product.originalPrice | vndCurrency }}
+                </span>
+              </div>
+              <div class="discount-pill" *ngIf="getDiscountPercent(product) > 0">
+                Tiết kiệm {{ getDiscountPercent(product) }}%
+              </div>
+            </div>
+
+            <div class="stock-indicator" [class.out]="(currentVariant?.stock ?? product.stock) <= 0">
+              <div class="indicator-dot"></div>
+              @if((currentVariant?.stock ?? product.stock) > 0) {
+                Còn hàng ({{ currentVariant?.stock ?? product.stock }} sản phẩm)
+              } @else {
+                Hết hàng
+              }
+            </div>
+
+            <!-- Shop Section -->
+            <div class="shop-preview" *ngIf="shop">
+              <div class="shop-info">
+                <img [src]="getFullUrl(shop.logo, 'https://ui-avatars.com/api/?name=' + (shop.name | urlEncode) + '&background=e2e8f0&color=64748b&size=128&bold=true')" alt="shop">
+                <div class="shop-text">
+                  <p class="provided-by">Người bán</p>
+                  <a [routerLink]="['/shop', shop.userId]" class="shop-name">{{ shop.name }}</a>
+                </div>
+              </div>
+              <button class="chat-btn" (click)="chatWithSeller()">
+                <span nz-icon nzType="message" nzTheme="outline"></span>
+                Chat
+              </button>
+            </div>
+
+            <hr class="panel-divider">
+
+            <!-- Selection Area -->
+            <div class="selection-area">
+              <div class="attribute-group" *ngFor="let attr of product.attributes">
+                <div class="attr-header">
+                  <span class="attr-label">{{ attr.name }}</span>
+                  <span class="attr-selected">{{ selectedAttributes[attr.name] }}</span>
+                </div>
+                
+                <div class="attr-options">
+                  <!-- Color Swatches -->
+                  <ng-container *ngIf="isColorAttr(attr.name); else defaultPills">
+                    <div class="swatch-item" 
+                         *ngFor="let opt of attr.options" 
+                         [class.active]="selectedAttributes[attr.name] === opt"
+                         [class.disabled]="isAttrDisabled(attr.name, opt)"
+                         (click)="!isAttrDisabled(attr.name, opt) && selectAttribute(attr.name, opt)">
+                      <div class="swatch-color" [style.background-color]="getColorCode(opt)">
+                        <div class="swatch-inner-ring"></div>
+                      </div>
+                      <span class="swatch-name">{{ opt }}</span>
+                    </div>
+                  </ng-container>
+    
+                  <!-- Text Pills -->
+                  <ng-template #defaultPills>
+                    <button class="pill-option" 
+                         *ngFor="let opt of attr.options" 
+                         [class.active]="selectedAttributes[attr.name] === opt"
+                         [class.disabled]="isAttrDisabled(attr.name, opt)"
+                         [disabled]="isAttrDisabled(attr.name, opt)"
+                         (click)="selectAttribute(attr.name, opt)">
+                      {{ opt }}
+                    </button>
+                  </ng-template>
+                </div>
+              </div>
+
+              <!-- Quantity Selector -->
+              <div class="quantity-section">
+                <span class="attr-label">Số lượng</span>
+                <div class="qty-control">
+                  <button class="qty-btn" (click)="updateQuantity(-1)"><span nz-icon nzType="minus"></span></button>
+                  <input type="number" [(ngModel)]="quantity" readonly>
+                  <button class="qty-btn" (click)="updateQuantity(1)"><span nz-icon nzType="plus"></span></button>
+                </div>
+              </div>
+            </div>
+
+            <div class="buy-actions">
+              <button nz-button class="btn-cart-modern" 
+                      [disabled]="(currentVariant?.stock ?? product.stock) <= 0"
+                      (click)="addToCart()">
+                <span nz-icon nzType="shopping-cart"></span>
+                Thêm vào giỏ
+              </button>
+  
+              <button nz-button class="btn-buy-modern"
+                      [disabled]="(currentVariant?.stock ?? product.stock) <= 0"
+                      (click)="buyNow()">
+                Mua ngay
+              </button>
+            </div>
+
+            <div class="service-badges">
+              <div class="service-item">
+                <span nz-icon nzType="safety-certificate" nzTheme="outline"></span>
+                <span>Hàng chính hãng</span>
+              </div>
+              <div class="service-item">
+                <span nz-icon nzType="retweet" nzTheme="outline"></span>
+                <span>7 ngày đổi trả</span>
+              </div>
+              <div class="service-item">
+                <span nz-icon nzType="car" nzTheme="outline"></span>
+                <span>Miễn phí vận chuyển</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>

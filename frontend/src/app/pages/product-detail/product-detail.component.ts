@@ -306,6 +306,14 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
     this.cdr.markForCheck();
   }
 
+  scrollToImage(img: string) {
+    this.selectedImage = img;
+    const element = document.getElementById('img-' + img);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }
+
   get allImages(): string[] {
     if (!this.product) return [];
     return [this.product.image, ...(this.product.images || [])];
