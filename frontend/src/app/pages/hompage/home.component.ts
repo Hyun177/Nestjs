@@ -4,11 +4,11 @@ import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import * as THREE from 'three';
 import { OrbitControls } from 'three-stdlib';
-import { ProductService, Product } from '../../../core/services/product.service';
-import { BrandService } from '../../../core/services/brand.service';
-import { CartService } from '../../../core/services/cart.service';
-import { FavoriteService } from '../../../core/services/favorite.service';
-import { VndCurrencyPipe } from '../../../shared/pipes/vnd-currency.pipe';
+import { ProductService, Product } from '../../core/services/product.service';
+import { BrandService } from '../../core/services/brand.service';
+import { CartService } from '../../core/services/cart.service';
+import { FavoriteService } from '../../core/services/favorite.service';
+import { VndCurrencyPipe } from '../../shared/pipes/vnd-currency.pipe';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzMessageService } from 'ng-zorro-antd/message';
@@ -23,7 +23,7 @@ import { NzMessageService } from 'ng-zorro-antd/message';
 })
 export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('hero3dContainer') hero3dContainer!: ElementRef;
-  
+
   private productService = inject(ProductService);
   private brandService = inject(BrandService);
   private cartService = inject(CartService);
@@ -32,14 +32,14 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   private message = inject(NzMessageService);
   private cdr = inject(ChangeDetectorRef);
   private platformId = inject(PLATFORM_ID);
-  
+
   // Three.js Logic for REAL 3D Depth
   private scene!: THREE.Scene;
   private camera!: THREE.PerspectiveCamera;
   private renderer!: THREE.WebGLRenderer;
   private floatingKnot!: THREE.Mesh;
   private animationId: number = 0;
-  
+
   // Interactive 3D Parallax State
   mouseX = 0;
   mouseY = 0;
@@ -116,7 +116,7 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
     if (isPlatformBrowser(this.platformId)) {
       this.mouseX = event.clientX / window.innerWidth - 0.5;
       this.mouseY = event.clientY / window.innerHeight - 0.5;
-      
+
       // Update CSS variables for shine effect
       const xPercent = (event.clientX / window.innerWidth) * 100;
       const yPercent = (event.clientY / window.innerHeight) * 100;
@@ -173,29 +173,51 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
     parent.appendChild(this.renderer.domElement);
 
     // Lights
-    const directionalLight = new THREE.DirectionalLight('#ffffff', 3);
+    const directionalLight = new THREE.DirectionalLight('#ffffff', 2);
     directionalLight.position.set(1, 1, 0);
     this.scene.add(directionalLight);
 
-    const ambientLight = new THREE.AmbientLight('#ffffff', 0.5);
+    const ambientLight = new THREE.AmbientLight('#404040', 2); // Soft white light
     this.scene.add(ambientLight);
 
-    // Objects
+    // Planet Textures (Using unpkg as reliable CORS CDN)
     const textureLoader = new THREE.TextureLoader();
-    const gradientTexture = textureLoader.load('https://threejs.org/examples/textures/gradient.png');
-    gradientTexture.magFilter = THREE.NearestFilter;
 
-    const material = new THREE.MeshToonMaterial({
-      color: '#ffeded',
-      gradientMap: gradientTexture
+    // Mesh 1: Earth (Hero Section)
+    const earthTexture = textureLoader.load('https://unpkg.com/three@0.160.0/examples/textures/planets/earth_atmos_2048.jpg');
+    const earthNormal = textureLoader.load('https://unpkg.com/three@0.160.0/examples/textures/planets/earth_normal_2048.jpg');
+    const earthSpecular = textureLoader.load('https://unpkg.com/three@0.160.0/examples/textures/planets/earth_specular_2048.jpg');
+
+    const earthMaterial = new THREE.MeshPhongMaterial({
+      map: earthTexture,
+      normalMap: earthNormal,
+      specularMap: earthSpecular,
+      specular: new THREE.Color('grey'),
+      shininess: 50
     });
+    const mesh1 = new THREE.Mesh(new THREE.SphereGeometry(1.5, 64, 64), earthMaterial);
 
-    const mesh1 = new THREE.Mesh(new THREE.TorusGeometry(1, 0.4, 16, 60), material);
-    const mesh2 = new THREE.Mesh(new THREE.ConeGeometry(1, 2, 32), material);
-    const mesh3 = new THREE.Mesh(new THREE.TorusKnotGeometry(0.8, 0.35, 100, 16), material);
+    // Mesh 2: Mars (Top Selling)
+    const marsTexture = textureLoader.load('https://unpkg.com/three@0.160.0/examples/textures/planets/mars_1k_color.jpg');
+    const marsNormal = textureLoader.load('https://unpkg.com/three@0.160.0/examples/textures/planets/mars_1k_normal.jpg');
+    const marsMaterial = new THREE.MeshPhongMaterial({
+      map: marsTexture,
+      normalMap: marsNormal,
+      shininess: 10
+    });
+    const mesh2 = new THREE.Mesh(new THREE.SphereGeometry(1.2, 64, 64), marsMaterial);
+
+    // Mesh 3: Moon (New Arrivals)
+    const moonTexture = textureLoader.load('https://unpkg.com/three@0.160.0/examples/textures/planets/moon_1024.jpg');
+    const moonMaterial = new THREE.MeshStandardMaterial({
+      map: moonTexture,
+      roughness: 0.8,
+      metalness: 0.2
+    });
+    const mesh3 = new THREE.Mesh(new THREE.SphereGeometry(1.2, 64, 64), moonMaterial);
 
     mesh1.position.x = 2;
-    mesh2.position.x = -2;
+    mesh2.position.x = -2.5;
     mesh3.position.x = 2;
 
     mesh1.position.y = -this.objectsDistance * 0;
@@ -205,22 +227,44 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
     this.scene.add(mesh1, mesh2, mesh3);
     this.sectionMeshes = [mesh1, mesh2, mesh3];
 
-    // Particles
-    const particlesCount = 200;
-    const positions = new Float32Array(particlesCount * 3);
+    // Glow Effect (Atmosphere) for Earth
+    const atmosphereMaterial = new THREE.MeshBasicMaterial({
+      color: 0x00f2ff,
+      transparent: true,
+      opacity: 0.2,
+      side: THREE.BackSide,
+      blending: THREE.AdditiveBlending
+    });
+    const atmosphere = new THREE.Mesh(new THREE.SphereGeometry(1.65, 64, 64), atmosphereMaterial);
+    mesh1.add(atmosphere);
 
-    for(let i = 0; i < particlesCount; i++) {
-        positions[i * 3 + 0] = (Math.random() - 0.5) * 10;
-        positions[i * 3 + 1] = this.objectsDistance * 0.5 - Math.random() * this.objectsDistance * 3;
-        positions[i * 3 + 2] = (Math.random() - 0.5) * 10;
+    // Asteroids / Particles
+    const particlesCount = 800;
+    const positions = new Float32Array(particlesCount * 3);
+    const colors = new Float32Array(particlesCount * 3);
+
+    for (let i = 0; i < particlesCount; i++) {
+      positions[i * 3 + 0] = (Math.random() - 0.5) * 15;
+      positions[i * 3 + 1] = this.objectsDistance * 0.5 - Math.random() * this.objectsDistance * 3;
+      positions[i * 3 + 2] = (Math.random() - 0.5) * 10;
+
+      // Random star colors (white, slight blue, slight yellow)
+      const mix = Math.random();
+      colors[i * 3] = mix > 0.8 ? 0.5 : 1; // R
+      colors[i * 3 + 1] = mix > 0.8 ? 0.8 : 1; // G
+      colors[i * 3 + 2] = 1; // B
     }
 
     const particlesGeometry = new THREE.BufferGeometry();
     particlesGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    particlesGeometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
     const particlesMaterial = new THREE.PointsMaterial({
-        color: '#ffeded',
-        sizeAttenuation: true,
-        size: 0.03
+      size: 0.05,
+      sizeAttenuation: true,
+      vertexColors: true,
+      transparent: true,
+      opacity: 0.8
     });
     const particles = new THREE.Points(particlesGeometry, particlesMaterial);
     this.scene.add(particles);
@@ -238,7 +282,7 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
 
     const animate = () => {
       this.animationId = requestAnimationFrame(animate);
-      
+
       const elapsedTime = Date.now() * 0.001;
       const deltaTime = elapsedTime - previousTime;
       previousTime = elapsedTime;
@@ -252,12 +296,11 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
       cameraGroup.position.x += (parallaxX - cameraGroup.position.x) * 5 * deltaTime;
       cameraGroup.position.y += (parallaxY - cameraGroup.position.y) * 5 * deltaTime;
 
-      // Animate meshes
-      for(const mesh of this.sectionMeshes) {
-          mesh.rotation.x += deltaTime * 0.1;
-          mesh.rotation.y += deltaTime * 0.12;
+      // Animate meshes (Planets rotate slowly)
+      for (const mesh of this.sectionMeshes) {
+        mesh.rotation.y += deltaTime * 0.15; // Only rotate Y for planets
       }
-      
+
       this.renderer.render(this.scene, this.camera);
     };
     animate();

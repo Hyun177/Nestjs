@@ -1,0 +1,133 @@
+<div class="container">
+    <div class="cart-page">
+        <nav class="breadcrumb">
+            <a routerLink="/home">Trang chủ</a>
+            <span nz-icon nzType="right"></span>
+            <span class="active">Giỏ hàng</span>
+        </nav>
+
+        <h1 class="page-title">GIỎ HÀNG CỦA BẠN</h1>
+
+        <div class="cart-grid">
+            <!-- Cột danh sách sản phẩm -->
+            <div class="cart-items-column">
+                @if (cartItems.length > 0) {
+                <div class="cart-header-actions" style="margin-bottom: 1rem; display: flex; align-items: center; padding: 0 0.5rem;">
+                    <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: 500;">
+                        <input type="checkbox" 
+                               [checked]="isAllSelected()"
+                               [indeterminate]="isIndeterminate()"
+                               (change)="toggleAll($any($event.target).checked)"
+                               style="width: 18px; height: 18px; accent-color: #000; cursor: pointer;">
+                        Chọn tất cả ({{ cartItems.length }} sản phẩm)
+                    </label>
+                </div>
+                <div class="items-list">
+                    @for (item of cartItems; track item.id) {
+                    <div class="cart-item">
+                        <div class="item-checkbox" style="display: flex; align-items: center; padding-right: 0.5rem;">
+                            <input type="checkbox" 
+                                   [checked]="selectedItems.has(item.id)"
+                                   (change)="toggleItem(item.id, $any($event.target).checked)"
+                                   style="width: 18px; height: 18px; accent-color: #000; cursor: pointer;">
+                        </div>
+                        <div class="item-img">
+                            <img [src]="item.product.image | imageUrl" [alt]="item.product.name">
+                        </div>
+                        <div class="item-details">
+                            <div class="item-row">
+                                <h3 class="item-name">{{ item.product.name }}</h3>
+                                <button class="remove-btn" (click)="removeItem(item.id)" title="Xóa sản phẩm">
+                                    <span nz-icon nzType="delete" nzTheme="outline"></span>
+                                    <span class="remove-text">Xóa</span>
+                                </button>
+                            </div>
+                            <div class="item-meta">
+                                <span>Thương hiệu: {{ item.product.brand?.name }}</span>
+                                <span class="meta-dot" *ngIf="item.size">•</span>
+                                <span *ngIf="item.size">Size/Dung lượng: {{ item.size }}</span>
+                                <span class="meta-dot" *ngIf="item.color">•</span>
+                                <span *ngIf="item.color">Màu: {{ item.color }}</span>
+                            </div>
+
+                            <div class="item-row bottom-row">
+                                <div class="item-price-info">
+                                    <span class="item-price">{{ item.product.price | vndCurrency }}</span>
+                                    <span class="item-old-price"
+                                        *ngIf="item.product.originalPrice && item.product.originalPrice > item.product.price">
+                                        {{ item.product.originalPrice | vndCurrency }}
+                                    </span>
+                                </div>
+
+                                <div class="item-actions">
+                                    <div class="quantity-picker">
+                                        <button (click)="updateQuantity(item, item.quantity - 1)"
+                                            [disabled]="item.quantity <= 1">
+                                            <span nz-icon nzType="minus"></span>
+                                        </button>
+                                        <span class="quantity-val">{{ item.quantity }}</span>
+                                        <button (click)="updateQuantity(item, item.quantity + 1)">
+                                            <span nz-icon nzType="plus"></span>
+                                        </button>
+                                    </div>
+                                    
+                                 
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    }
+                </div>
+                } @else {
+                <div class="empty-cart">
+                    <span nz-icon nzType="shopping-cart"></span>
+                    <p>Giỏ hàng của bạn đang trống.</p>
+                    <button class="btn-black-lg" routerLink="/home">Tiếp tục mua sắm</button>
+                </div>
+                }
+            </div>
+
+            <!-- Cột tổng kết đơn hàng -->
+            <div class="summary-column">
+                <div class="summary-card">
+                    <h2 class="summary-title">TỔNG KẾT ĐƠN HÀNG</h2>
+
+                    <div class="summary-row">
+                        <span class="label">Tạm tính (Giá gốc)</span>
+                        <span class="value">{{ subtotal | vndCurrency }}</span>
+                    </div>
+
+                    <div class="summary-row" *ngIf="discountValue > 0">
+                        <span class="label">Giảm giá mã/sale ({{ discountPercent }}%)</span>
+                        <span class="value discount-val">-{{ discountValue | vndCurrency }}</span>
+                    </div>
+
+                    <div class="summary-row" *ngIf="appliedVoucher">
+                        <span class="label">Mã giảm giá ({{ voucherCode }})</span>
+                        <span class="value discount-val">-{{ appliedVoucher.discount | vndCurrency }}</span>
+                    </div>
+
+                    <div class="summary-row">
+                        <span class="label">Phí vận chuyển</span>
+                        <span class="value">Tính khi xác nhận đơn</span>
+                    </div>
+
+                    <hr class="summary-divider">
+
+                    <div class="summary-row total-row">
+                        <span class="label">Tổng cộng</span>
+                        <span class="value font-bold">{{ total | vndCurrency }}</span>
+                    </div>
+
+                    <button class="checkout-btn" (click)="checkout()">
+                        Tiến hành đặt hàng
+                        <span nz-icon nzType="arrow-right"></span>
+                    </button>
+                </div>
+                <div class="safe-checkout">
+                    <p><span nz-icon nzType="safety" nzTheme="outline"></span> Cam kết chính hãng 100%</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
