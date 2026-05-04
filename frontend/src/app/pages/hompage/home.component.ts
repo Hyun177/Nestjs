@@ -193,7 +193,8 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
       normalMap: earthNormal,
       specularMap: earthSpecular,
       specular: new THREE.Color('grey'),
-      shininess: 50
+      shininess: 50,
+      color: 0x2233ff // Fallback blue
     });
     const mesh1 = new THREE.Mesh(new THREE.SphereGeometry(1.5, 64, 64), earthMaterial);
 
@@ -203,7 +204,8 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
     const marsMaterial = new THREE.MeshPhongMaterial({
       map: marsTexture,
       normalMap: marsNormal,
-      shininess: 10
+      shininess: 10,
+      color: 0xff5522 // Fallback reddish-orange
     });
     const mesh2 = new THREE.Mesh(new THREE.SphereGeometry(1.2, 64, 64), marsMaterial);
 
@@ -212,7 +214,8 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
     const moonMaterial = new THREE.MeshStandardMaterial({
       map: moonTexture,
       roughness: 0.8,
-      metalness: 0.2
+      metalness: 0.2,
+      color: 0xaaaaaa // Fallback gray
     });
     const mesh3 = new THREE.Mesh(new THREE.SphereGeometry(1.2, 64, 64), moonMaterial);
 

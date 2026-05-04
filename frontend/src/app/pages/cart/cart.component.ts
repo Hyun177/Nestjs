@@ -1,8 +1,8 @@
 import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { CartService, CartItem } from '../../../core/services/cart.service';
-import { VndCurrencyPipe } from '../../../shared/pipes/vnd-currency.pipe';
-import { ImageUrlPipe } from '../../../shared/pipes/image-url.pipe';
+import { CartService, CartItem } from '../../core/services/cart.service';
+import { VndCurrencyPipe } from '../../shared/pipes/vnd-currency.pipe';
+import { ImageUrlPipe } from '../../shared/pipes/image-url.pipe';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzInputNumberModule } from 'ng-zorro-antd/input-number';
 import { NzButtonModule } from 'ng-zorro-antd/button';
@@ -10,9 +10,9 @@ import { NzMessageService } from 'ng-zorro-antd/message';
 import { NzSelectModule } from 'ng-zorro-antd/select';
 import { FormsModule } from '@angular/forms';
 import { RouterLink, Router } from '@angular/router';
-import { VoucherService, VoucherApplyResult } from '../../../core/services/voucher.service';
-import { OrderService } from '../../../core/services/order.service';
-import { LocationService, Province, Ward } from '../../../core/services/location.service';
+import { VoucherService, VoucherApplyResult } from '../../core/services/voucher.service';
+import { OrderService } from '../../core/services/order.service';
+import { LocationService, Province, Ward } from '../../core/services/location.service';
 
 const HCM_CODE = '12';
 const SHIP_HCM = 15000;
@@ -85,17 +85,17 @@ export class CartComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.locationService.getProvinces().subscribe(res => {
+    this.locationService.getProvinces().subscribe((res: Province[]) => {
       this.provinces = res;
       this.cdr.markForCheck();
     });
 
-    this.cartService.cartItems$.subscribe((items) => {
+    this.cartService.cartItems$.subscribe((items: CartItem[]) => {
       this.cartItems = items;
-      const currentItemIds = new Set(items.map((i) => i.id));
+      const currentItemIds = new Set(items.map((i: CartItem) => i.id));
       this.selectedItems = new Set([...this.selectedItems].filter((id) => currentItemIds.has(id)));
       if (this.selectedItems.size === 0 && items.length > 0) {
-        items.forEach((item) => this.selectedItems.add(item.id));
+        items.forEach((item: CartItem) => this.selectedItems.add(item.id));
       }
       this.calculateTotals();
       this.cdr.markForCheck();
@@ -109,7 +109,7 @@ export class CartComponent implements OnInit {
     this.wards = [];
     if (code) {
       this.loadingWards = true;
-      this.locationService.getWards(code).subscribe(res => {
+      this.locationService.getWards(code).subscribe((res: Ward[]) => {
         this.wards = res;
         this.loadingWards = false;
         this.cdr.markForCheck();
@@ -180,14 +180,14 @@ export class CartComponent implements OnInit {
     if (this.selectedItems.size === 0) { this.message.warning('Vui lòng chọn sản phẩm để áp dụng mã'); return; }
 
     this.voucherService.applyVoucher(this.voucherCode).subscribe({
-      next: (res) => {
+      next: (res: VoucherApplyResult) => {
         this.appliedVoucher = res;
         this.voucherError = '';
         this.message.success('Đã áp dụng mã giảm giá thành công!');
         this.calculateTotals();
         this.cdr.markForCheck();
       },
-      error: (err) => {
+      error: (err: any) => {
         this.appliedVoucher = null;
         this.voucherError = err.error?.message || 'Không thể áp dụng mã giảm giá này';
         this.message.error(this.voucherError);

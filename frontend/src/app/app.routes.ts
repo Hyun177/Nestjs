@@ -22,7 +22,7 @@ export const routes: Routes = [
       {
         path: 'cart',
         loadComponent: () =>
-          import('./pages/auth/cart/cart.component').then((m) => m.CartComponent),
+          import('./pages/cart/cart.component').then((m) => m.CartComponent),
       },
       {
         path: 'order-confirm',
