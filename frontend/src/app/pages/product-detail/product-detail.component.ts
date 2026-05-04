@@ -365,6 +365,11 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
         return selectedVal === variantVal;
       });
     });
+
+    if (this.currentVariant?.image) {
+      this.selectedImage = this.currentVariant.image;
+    }
+
     const maxStock = this.currentVariant?.stock ?? this.product?.stock ?? 0;
     if (this.quantity > maxStock) this.quantity = Math.max(1, maxStock);
   }

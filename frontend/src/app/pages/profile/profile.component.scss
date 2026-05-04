@@ -718,7 +718,161 @@
   &.collected { background: var(--color-success-subtle); color: var(--color-success); border: 1px solid var(--color-success); pointer-events: none; }
 }
 
-/* ── ng-zorro overrides ─────────────────────────────────────── */
+/* ── Order Detail Modal & Tracker ────────────────────────────── */
+.order-detail-header {
+  .rounded-3xl { border-radius: 24px; }
+}
+
+.order-tracker {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin: 2rem 0;
+  padding: 0 10px;
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 20px;
+    left: 40px;
+    right: 40px;
+    height: 2px;
+    background: var(--color-border);
+    z-index: 0;
+  }
+
+  .tracker-step {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+
+    .step-icon-wrap {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--color-surface-raised);
+      border: 2px solid var(--color-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--color-text-tertiary);
+      transition: all 0.3s;
+
+      svg {
+        width: 18px;
+        height: 18px;
+        display: block;
+      }
+    }
+
+    .step-info {
+      text-align: center;
+      .step-label {
+        font-size: 0.65rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--color-text-tertiary);
+      }
+      .step-time {
+        font-size: 10px;
+        color: var(--color-text-tertiary);
+        font-weight: 500;
+        margin-top: 2px;
+      }
+    }
+
+    &.active {
+      .step-icon-wrap {
+        background: var(--color-text-primary);
+        border-color: var(--color-text-primary);
+        color: #fff;
+        box-shadow: 0 0 0 4px oklch(0 0 0 / 0.05);
+      }
+      .step-label { color: var(--color-text-primary); }
+    }
+
+    &.current {
+      .step-icon-wrap {
+        background: var(--color-accent);
+        border-color: var(--color-accent);
+        color: var(--color-text-primary);
+        animation: pulse-glow-accent 2s infinite;
+      }
+      .step-label { color: var(--color-text-primary); font-weight: 900; }
+    }
+  }
+}
+
+.order-items-list {
+  .rounded-2xl { border-radius: 16px; }
+  .rounded-xl { border-radius: 12px; }
+}
+
+.cancel-order-section {
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 1px dashed var(--color-border);
+
+  .cancel-warning-box {
+    display: flex;
+    gap: 12px;
+    background: var(--color-danger-subtle);
+    padding: 1rem;
+    border-radius: var(--radius-md);
+    margin-bottom: 1.5rem;
+    
+    .cancel-warning-icon {
+      color: var(--color-danger);
+      font-size: 1.2rem;
+      margin-top: 2px;
+    }
+
+    p {
+      margin: 0;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--color-danger);
+      line-height: 1.5;
+    }
+  }
+
+  .cancel-order-btn {
+    width: 100%;
+    height: 44px;
+    border: 1.5px solid var(--color-danger);
+    background: transparent;
+    color: var(--color-danger);
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.3s;
+
+    &:hover {
+      background: var(--color-danger);
+      color: #fff;
+    }
+  }
+}
+
+@keyframes pulse-glow-accent {
+  0% { box-shadow: 0 0 0 0 oklch(0.70 0.19 80 / 0.4); }
+  70% { box-shadow: 0 0 0 10px oklch(0.70 0.19 80 / 0); }
+  100% { box-shadow: 0 0 0 0 oklch(0.70 0.19 80 / 0); }
+}
+
 :host ::ng-deep {
   .ant-input {
     height: 44px;
@@ -746,5 +900,20 @@
     font-weight: 800;
     text-transform: uppercase;
     color: var(--color-text-secondary);
+  }
+
+  .ant-modal-content {
+    border-radius: 24px !important;
+    overflow: hidden;
+  }
+  .ant-modal-header {
+    border-bottom: 1px solid var(--color-border) !important;
+    padding: 20px 24px !important;
+  }
+  .ant-modal-title {
+    font-family: var(--font-display);
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    font-size: 1.2rem;
   }
 }

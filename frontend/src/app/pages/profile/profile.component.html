@@ -445,7 +445,7 @@
           <div class="space-y-4">
             <div *ngFor="let item of selectedOrder.items" class="flex gap-4 items-center p-3 border border-gray-100 rounded-2xl relative">
               <div class="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 bg-gray-50">
-                <img [src]="item.product?.image?.startsWith('http') ? item.product?.image : 'https://nestjs-zvmg.onrender.com' + item.product?.image" class="w-full h-full object-cover">
+                <img [src]="getItemImage(item)" class="w-full h-full object-cover">
               </div>
               <div class="flex-grow">
                 <h5 class="font-bold text-gray-900 leading-tight">{{ item.product?.name }}</h5>

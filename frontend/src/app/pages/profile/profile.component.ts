@@ -529,4 +529,22 @@ export class ProfileComponent implements OnInit {
       },
     });
   }
+
+  getItemImage(item: any): string {
+    const baseUrl = 'https://nestjs-zvmg.onrender.com';
+    let imagePath = item.product?.image;
+
+    if (item.product?.variants?.length > 0) {
+      const variant = item.product.variants.find((v: any) => {
+        const colorMatch = !item.color || (v.attributes?.['Màu sắc'] === item.color || v.attributes?.['Màu'] === item.color || v.attributes?.['color'] === item.color);
+        const sizeMatch = !item.size || (v.attributes?.['Size'] === item.size || v.attributes?.['Dung lượng'] === item.size || v.attributes?.['size'] === item.size);
+        return colorMatch && sizeMatch;
+      });
+      if (variant?.image) imagePath = variant.image;
+    }
+
+    if (!imagePath) return 'assets/images/placeholder.png';
+    if (imagePath.startsWith('http')) return imagePath;
+    return `${baseUrl}${imagePath.startsWith('/') ? '' : '/'}${imagePath}`;
+  }
 }
