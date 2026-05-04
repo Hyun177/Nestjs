@@ -20,21 +20,31 @@
       </nav>
   
       <div class="product-main-layout">
-        <!-- Gallery Section (Left - Full Scrollable) -->
+        <!-- Gallery Section (Left - Classic Slider) -->
         <div class="gallery-immersive">
-          <div class="gallery-scroll-container">
-            <div class="image-item" *ngFor="let img of allImages" [id]="'img-' + img">
-              <img [src]="getFullUrl(img)" [alt]="product.name" loading="lazy">
-            </div>
-          </div>
-          
-          <!-- Floating Thumbnails for quick navigation -->
+          <!-- Sidebar Thumbnails -->
           <div class="gallery-nav">
              <div class="nav-thumb" *ngFor="let img of allImages" 
                   [class.active]="selectedImage === img"
-                  (click)="scrollToImage(img)">
+                  (mouseenter)="selectImage(img)"
+                  (click)="selectImage(img)">
                 <img [src]="getFullUrl(img)" alt="nav">
              </div>
+          </div>
+
+          <!-- Main Image Viewer -->
+          <div class="main-image-stage">
+            <div class="image-viewer-inner">
+              <img [src]="getFullUrl(selectedImage)" [alt]="product.name" class="active-display-img">
+              
+              <!-- Navigation Buttons -->
+              <button class="stage-nav-btn prev" (click)="prevImage()" *ngIf="allImages.length > 1">
+                <span nz-icon nzType="left"></span>
+              </button>
+              <button class="stage-nav-btn next" (click)="nextImage()" *ngIf="allImages.length > 1">
+                <span nz-icon nzType="right"></span>
+              </button>
+            </div>
           </div>
         </div>
   
