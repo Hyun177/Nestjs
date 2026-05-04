@@ -60,14 +60,12 @@
             </div>
 
             <div class="price-box">
-              <div class="main-price">
-                <span class="price-current">{{ (currentVariant?.price || product.price) | vndCurrency }}</span>
-                <span class="price-old" *ngIf="product.originalPrice && product.originalPrice > (currentVariant?.price || product.price)">
-                  {{ product.originalPrice | vndCurrency }}
-                </span>
-              </div>
-              <div class="discount-pill" *ngIf="getDiscountPercent(product) > 0">
-                Tiết kiệm {{ getDiscountPercent(product) }}%
+              <span class="price-current">{{ (currentVariant?.price || product.price) | vndCurrency }}</span>
+              <span class="price-old" *ngIf="product.originalPrice && product.originalPrice > (currentVariant?.price || product.price)">
+                {{ product.originalPrice | vndCurrency }}
+              </span>
+              <div class="discount-tag" *ngIf="getDiscountPercent(product) > 0">
+                -{{ getDiscountPercent(product) }}%
               </div>
             </div>
 
@@ -99,13 +97,12 @@
 
             <!-- Selection Area -->
             <div class="selection-area">
-              <div class="attribute-group" *ngFor="let attr of product.attributes">
-                <div class="attr-header">
-                  <span class="attr-label">{{ attr.name }}</span>
-                  <span class="attr-selected">{{ selectedAttributes[attr.name] }}</span>
-                </div>
+              <div class="selection-group" *ngFor="let attr of product.attributes">
+                <label class="label">
+                  {{ attr.name }}: <span>{{ selectedAttributes[attr.name] }}</span>
+                </label>
                 
-                <div class="attr-options">
+                <div class="option-grid">
                   <!-- Color Swatches -->
                   <ng-container *ngIf="isColorAttr(attr.name); else defaultPills">
                     <div class="swatch-item" 
@@ -113,30 +110,26 @@
                          [class.active]="selectedAttributes[attr.name] === opt"
                          [class.disabled]="isAttrDisabled(attr.name, opt)"
                          (click)="!isAttrDisabled(attr.name, opt) && selectAttribute(attr.name, opt)">
-                      <div class="swatch-color" [style.background-color]="getColorCode(opt)">
-                        <div class="swatch-inner-ring"></div>
-                      </div>
-                      <span class="swatch-name">{{ opt }}</span>
+                      <div class="swatch-inner" [style.background-color]="getColorCode(opt)"></div>
                     </div>
                   </ng-container>
     
                   <!-- Text Pills -->
                   <ng-template #defaultPills>
-                    <button class="pill-option" 
+                    <div class="pill-item" 
                          *ngFor="let opt of attr.options" 
                          [class.active]="selectedAttributes[attr.name] === opt"
                          [class.disabled]="isAttrDisabled(attr.name, opt)"
-                         [disabled]="isAttrDisabled(attr.name, opt)"
-                         (click)="selectAttribute(attr.name, opt)">
+                         (click)="!isAttrDisabled(attr.name, opt) && selectAttribute(attr.name, opt)">
                       {{ opt }}
-                    </button>
+                    </div>
                   </ng-template>
                 </div>
               </div>
 
               <!-- Quantity Selector -->
-              <div class="quantity-section">
-                <span class="attr-label">Số lượng</span>
+              <div class="quantity-row">
+                <span class="qty-label">Số lượng</span>
                 <div class="qty-control">
                   <button class="qty-btn" (click)="updateQuantity(-1)"><span nz-icon nzType="minus"></span></button>
                   <input type="number" [(ngModel)]="quantity" readonly>
@@ -145,7 +138,7 @@
               </div>
             </div>
 
-            <div class="buy-actions">
+            <div class="action-buttons">
               <button nz-button class="btn-cart-modern" 
                       [disabled]="(currentVariant?.stock ?? product.stock) <= 0"
                       (click)="addToCart()">
