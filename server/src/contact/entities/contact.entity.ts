@@ -1,4 +1,10 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
 export enum ContactStatus {
   PENDING = 'pending',
@@ -8,39 +14,39 @@ export enum ContactStatus {
 @Entity('contacts')
 export class Contact {
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
 
   @Column({ nullable: true })
-  userId: number;
+  userId!: number;
 
   @Column()
-  name: string;
+  name!: string;
 
   @Column()
-  email: string;
+  email!: string;
 
   @Column({ nullable: true })
-  subject: string;
+  subject!: string;
 
   @Column('text')
-  message: string;
+  message!: string;
 
   @Column({
     type: 'enum',
     enum: ContactStatus,
     default: ContactStatus.PENDING,
   })
-  status: ContactStatus;
+  status!: ContactStatus;
 
   @Column('text', { nullable: true })
-  replyMessage: string;
+  replyMessage!: string;
 
   @Column({ nullable: true })
-  repliedAt: Date;
+  repliedAt!: Date;
 
   @CreateDateColumn()
-  createdAt: Date;
+  createdAt!: Date;
 
   @UpdateDateColumn()
-  updatedAt: Date;
+  updatedAt!: Date;
 }

@@ -16,7 +16,7 @@
   --color-surface-base:    oklch(0.98 0.005 255);    /* page bg — near-white, cool tint */
   --color-surface-raised:  oklch(1.00 0.000 0);      /* card bg */
   --color-surface-sunken:  oklch(0.95 0.007 255);    /* input, sidebar bg */
-  --color-surface-dark:    oklch(0.13 0.030 260);    /* footer/newsletter block — deep navy */
+  --color-surface-dark:    oklch(0.53 0.01 269.34);    /* footer/newsletter block — deep navy */
   --color-surface-dark-2:  oklch(0.18 0.025 258);    /* secondary dark section */
 
   /* Text */
@@ -24,7 +24,7 @@
   --color-text-secondary:  oklch(0.45 0.015 255);    /* muted body text */
   --color-text-tertiary:   oklch(0.63 0.010 255);    /* timestamps, breadcrumb */
   --color-text-on-dark:    oklch(0.94 0.005 255);    /* text on dark surface */
-  --color-text-on-dark-muted: oklch(0.70 0.010 255);
+  --color-text-on-dark-muted: oklch(0.86 0.2 199.09);
 
   /* Accent – Light Tech Blue (CTAs, active, badges) */
   --color-accent:          oklch(0.68 0.160 250);

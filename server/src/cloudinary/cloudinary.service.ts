@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { v2 as cloudinary, UploadApiResponse } from 'cloudinary';
+import { v2 as cloudinary } from 'cloudinary';
 import { CloudinaryResponse, LocalUploadResponse } from './cloudinary-response';
 import { Readable } from 'stream';
 import * as fs from 'fs';
@@ -13,17 +13,22 @@ export class CloudinaryService {
       process.env.CLOUDINARY_API_KEY &&
       process.env.CLOUDINARY_API_SECRET
     );
-    
+
     if (!configured) {
       console.warn('Cloudinary not configured - missing env vars');
     } else {
-      console.log('Cloudinary configured with cloud:', process.env.CLOUDINARY_CLOUD_NAME);
+      console.log(
+        'Cloudinary configured with cloud:',
+        process.env.CLOUDINARY_CLOUD_NAME,
+      );
     }
-    
+
     return configured;
   }
 
-  async uploadFile(file: Express.Multer.File): Promise<CloudinaryResponse | LocalUploadResponse> {
+  async uploadFile(
+    file: Express.Multer.File,
+  ): Promise<CloudinaryResponse | LocalUploadResponse> {
     // Nếu Cloudinary không được cấu hình, sử dụng local storage
     if (!this.isCloudinaryConfigured()) {
       console.warn('Cloudinary not configured, using local storage fallback');
@@ -32,7 +37,7 @@ export class CloudinaryService {
 
     try {
       console.log('Uploading to Cloudinary:', file.originalname);
-      
+
       return new Promise((resolve, reject) => {
         const uploadStream = cloudinary.uploader.upload_stream(
           {
@@ -46,13 +51,15 @@ export class CloudinaryService {
             if (error) {
               console.error('Cloudinary upload failed:', error);
               // Fallback to local storage
-              return this.uploadToLocal(file).then(resolve).catch(reject);
+              this.uploadToLocal(file).then(resolve).catch(reject);
+              return;
             }
             if (!result) {
               console.error('Cloudinary upload failed: No result');
-              return this.uploadToLocal(file).then(resolve).catch(reject);
+              this.uploadToLocal(file).then(resolve).catch(reject);
+              return;
             }
-            
+
             console.log('Cloudinary upload successful:', result.secure_url);
             resolve(result);
           },
@@ -65,10 +72,12 @@ export class CloudinaryService {
     }
   }
 
-  private async uploadToLocal(file: Express.Multer.File): Promise<LocalUploadResponse> {
+  private uploadToLocal(
+    file: Express.Multer.File,
+  ): Promise<LocalUploadResponse> {
     try {
       console.log('Using local storage fallback for:', file.originalname);
-      
+
       // Tạo thư mục uploads nếu chưa có
       const uploadsDir = path.join(process.cwd(), 'uploads');
       if (!fs.existsSync(uploadsDir)) {
@@ -86,12 +95,13 @@ export class CloudinaryService {
       fs.writeFileSync(filePath, file.buffer);
 
       // Trả về format giống Cloudinary
-      const baseUrl = process.env.BASE_URL || 'https://nestjs-zvmg.onrender.com';
+      const baseUrl =
+        process.env.BASE_URL || 'https://nestjs-zvmg.onrender.com';
       const publicUrl = `${baseUrl}/uploads/${fileName}`;
 
       console.log('Local upload successful:', publicUrl);
 
-      return {
+      return Promise.resolve({
         public_id: fileName.replace(fileExtension, ''),
         secure_url: publicUrl,
         url: publicUrl,
@@ -101,9 +111,10 @@ export class CloudinaryService {
         width: undefined,
         height: undefined,
         created_at: new Date().toISOString(),
-      };
-    } catch (error) {
-      throw new Error(`Local upload failed: ${error.message}`);
+      });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      throw new Error(`Local upload failed: ${message}`);
     }
   }
 }
