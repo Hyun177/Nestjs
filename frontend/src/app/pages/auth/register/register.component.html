@@ -2,8 +2,6 @@
     <div class="auth-card">
         <!-- Visual Side -->
         <div class="auth-left" #auth3dContainer>
-            <img src="assets/images/sci-fi-auth.png" class="interactive-auth-img" alt="Sci Fi 3D Tech Background"
-                 [style.transform]="'perspective(1000px) rotateX(' + (-mouseY * 5) + 'deg) rotateY(' + (mouseX * 7) + 'deg) scale(1.1)'">
             <!-- Overlay and branding go on top (z-index 10) -->
             <div class="overlay" style="z-index: 5; pointer-events: none;"></div>
             <div class="branding">
@@ -55,10 +53,11 @@
                     <label>Mật khẩu</label>
                     <div class="input-container">
                         <span nz-icon nzType="lock" class="icon"></span>
-                        <input [type]="passwordVisible ? 'text' : 'password'" placeholder="••••••••" formControlName="password" required>
-                        <span nz-icon [nzType]="passwordVisible ? 'eye-invisible' : 'eye'" 
-                              (click)="passwordVisible = !passwordVisible"
-                              style="position: absolute; right: 24px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #d1d5db;"></span>
+                        <input [type]="passwordVisible ? 'text' : 'password'" placeholder="••••••••"
+                            formControlName="password" required>
+                        <span nz-icon [nzType]="passwordVisible ? 'eye-invisible' : 'eye'"
+                            (click)="passwordVisible = !passwordVisible"
+                            style="position: absolute; right: 24px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #d1d5db;"></span>
                     </div>
                 </div>
 
@@ -66,23 +65,26 @@
                     <label>Xác nhận mật khẩu</label>
                     <div class="input-container">
                         <span nz-icon nzType="check-circle" class="icon"></span>
-                        <input [type]="confirmPasswordVisible ? 'text' : 'password'" placeholder="••••••••" formControlName="confirmPassword" required>
-                        <span nz-icon [nzType]="confirmPasswordVisible ? 'eye-invisible' : 'eye'" 
-                              (click)="confirmPasswordVisible = !confirmPasswordVisible"
-                              style="position: absolute; right: 24px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #d1d5db;"></span>
+                        <input [type]="confirmPasswordVisible ? 'text' : 'password'" placeholder="••••••••"
+                            formControlName="confirmPassword" required>
+                        <span nz-icon [nzType]="confirmPasswordVisible ? 'eye-invisible' : 'eye'"
+                            (click)="confirmPasswordVisible = !confirmPasswordVisible"
+                            style="position: absolute; right: 24px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #d1d5db;"></span>
                     </div>
                 </div>
 
                 <div class="flex items-center gap-2 py-2">
-                    <input type="checkbox" id="terms" formControlName="agree" class="w-4 h-4 rounded border-gray-200 accent-black">
-                    <label for="terms" class="text-xs font-bold text-gray-400 cursor-pointer">Tôi đồng ý với các <span class="text-black underline cursor-help">Điều khoản dịch vụ</span></label>
+                    <input type="checkbox" id="terms" formControlName="agree"
+                        class="w-4 h-4 rounded border-gray-200 accent-black">
+                    <label for="terms" class="text-xs font-bold text-gray-400 cursor-pointer">Tôi đồng ý với các <span
+                            class="text-black underline cursor-help">Điều khoản dịch vụ</span></label>
                 </div>
 
                 <button type="submit" class="btn-main" [disabled]="loading">
                     @if (loading) {
-                        <span nz-icon nzType="loading"></span>
+                    <span nz-icon nzType="loading"></span>
                     } @else {
-                        Đăng ký ngay
+                    Đăng ký ngay
                     }
                 </button>
 
